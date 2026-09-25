@@ -24,6 +24,7 @@ public final class Palette {
     public static final int WARN = 0xFFF6C453;
     public static final int GOOD = 0xFF68D391;
     public static final int MUFFLED = 0xFFF6995C;
+    public static final int BAD = 0xFFF56565;
 
     public static final int BADGE = 0xF0181D24;
     public static final int BADGE_BORDER = 0xFF4A5563;

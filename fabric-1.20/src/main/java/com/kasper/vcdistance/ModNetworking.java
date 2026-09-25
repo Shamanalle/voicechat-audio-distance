@@ -14,6 +14,7 @@ public final class ModNetworking {
 
     public static final ResourceLocation HELLO = new ResourceLocation(LinkProtocol.NAMESPACE, LinkProtocol.HELLO);
     public static final ResourceLocation PROFILE = new ResourceLocation(LinkProtocol.NAMESPACE, LinkProtocol.PROFILE);
+    public static final ResourceLocation NEARBY = new ResourceLocation(LinkProtocol.NAMESPACE, LinkProtocol.NEARBY);
 
     private ModNetworking() {
     }
@@ -43,5 +44,22 @@ public final class ModNetworking {
             buf.writeUtf(AudioDistancePlugin.serverProfileMessage(), LinkProtocol.MAX_LENGTH);
             ServerPlayNetworking.send(player, PROFILE, buf);
         }
+    }
+
+    /** Sends the voice chat state of the players nearby; skipped for clients without a 1.3+ addon. */
+    public static void sendNearby(ServerPlayer player) {
+        if (ServerPlayNetworking.canSend(player, NEARBY)) {
+            String text = AudioDistancePlugin.nearbyMessage(player, ModNetworking::visible);
+            if (text != null) {
+                FriendlyByteBuf buf = PacketByteBufs.create();
+                buf.writeUtf(text, LinkProtocol.MAX_LENGTH);
+                ServerPlayNetworking.send(player, NEARBY, buf);
+            }
+        }
+    }
+
+    /** Spectators are listed only to other spectators. */
+    private static boolean visible(Object viewer, Object other) {
+        return !((ServerPlayer) other).isSpectator() || ((ServerPlayer) viewer).isSpectator();
     }
 }

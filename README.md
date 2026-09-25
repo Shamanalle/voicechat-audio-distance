@@ -51,9 +51,12 @@ It works on either side, and each side is useful alone:
 
 #### Monitor (client)
 Shows live:
-- who is talking and how far away;
+- every player within voice range, talking or not, and how far away;
 - how loud each voice reaches you and how much the walls take off;
+- when the server has the addon: who has no Simple Voice Chat, has it disconnected, turned the sound off, or is in a voice chat group;
 - whether the server has the addon.
+
+Talking players come first, then the others by distance. Only players you can see are listed: spectators (unless you are one), invisible players and, on Paper, players hidden by vanish plugins are left out.
 
 #### Presets (client)
 - **Vanilla** — exactly like Simple Voice Chat.
@@ -71,6 +74,7 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
   - `suggest` — they get a chat notice and an *Apply server profile* button;
   - `enforce` — the server's profile is used while they play there (fair play for PvP and events); their own settings return when they leave.
 - **Exact whisper range:** the server sends its real voice and whisper distances, so the whisper curve on the graph is exact.
+- **Voice chat state of nearby players:** once a second the server tells each player with the addon who within voice range has no Simple Voice Chat, has it disconnected, turned the sound off, or is in a group, for the monitor.
 - **Hot reload:** edits to the server settings file are picked up without a restart and sent to connected players.
 
 ### What works where
@@ -79,20 +83,20 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 |---|---|---|---|
 | Distance curve | ✅ | — | ✅ (the server profile can be suggested or enforced) |
 | Wall muffling | ✅ locally | ✅ for players without the addon | ✅ locally; the server skips these players |
-| Settings screen and monitor | ✅ | — | ✅ plus server status |
+| Settings screen and monitor | ✅ | — | ✅ plus server status and nearby players' voice chat state |
 | Whisper curve on the graph | approximate (½ of the range) | — | exact |
 
 ### Versions and files
 
 | Loader | Minecraft | File | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.2.4+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.2.4+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.2.4+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voicechat-audio-distance-bukkit-1.2.4.jar` | 17+ | Bukkit version |
-| Forge | 1.20.1 | `voicechat-audio-distance-forge-1.2.4+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.2.4+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| NeoForge / Forge | 26.1 – 26.3 | `voicechat-audio-distance-{neoforge,forge}-1.2.4+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.3.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.3.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.3.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voicechat-audio-distance-bukkit-1.3.0.jar` | 17+ | Bukkit version |
+| Forge | 1.20.1 | `voicechat-audio-distance-forge-1.3.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.3.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| NeoForge / Forge | 26.1 – 26.3 | `voicechat-audio-distance-{neoforge,forge}-1.3.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** is the full version, on the client and on the server. It needs [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 - **Paper / Purpur / Spigot / Bukkit** is the server side as a plugin: walls for players without the addon, and the server profile for players with it. Players can join with any client: with the Fabric addon, without it, or without mods at all. The plugin is compiled against the 1.20.1 API and checked in CI against every Paper release from 1.20.1 to 26.3: every class, method, field and override it uses resolves the same way (Paper 1.20.5 cannot be checked: its API snapshot is no longer downloadable).
@@ -115,7 +119,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 3. Walls for players without the addon are on by default. To share a profile, set `profile_mode` to `suggest` or `enforce` and pick a `profile_preset`. Every key in the file has a comment in English and Russian, and the file is re-read automatically.
 
 **Server (Paper / Purpur / Spigot / Bukkit)**
-1. Put `voicechat-audio-distance-bukkit-1.2.4.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
+1. Put `voicechat-audio-distance-bukkit-1.3.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
 2. Start the server once; it creates `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. The settings are the same as on Fabric (see below), and the file is also re-read automatically.
 
@@ -214,9 +218,12 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 #### Монитор (клиент)
 Показывает в реальном времени:
-- кто говорит и на каком расстоянии;
+- всех игроков в радиусе голоса, говорят они или нет, и на каком расстоянии;
 - с какой громкостью доходит каждый голос и сколько отнимают стены;
+- если на сервере есть аддон: у кого нет Simple Voice Chat, у кого он не подключён, кто выключил звук и кто в группе голосового чата;
 - есть ли аддон на сервере.
+
+Сначала идут те, кто говорит, затем остальные по расстоянию. В списке только те, кого вы видите: наблюдатели (если вы сами не наблюдатель), невидимые игроки и, на Paper, игроки, скрытые плагинами ваниша, не показываются.
 
 #### Пресеты (клиент)
 - **Ваниль** — ровно как Simple Voice Chat.
@@ -234,6 +241,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
   - `suggest` — они получают сообщение в чате и кнопку «Применить профиль сервера»;
   - `enforce` — профиль сервера действует, пока они на нём играют (честная игра в PvP и на ивентах); их собственные настройки возвращаются при выходе.
 - **Точная дальность шёпота:** сервер передаёт настоящие дальности голоса и шёпота, поэтому кривая шёпота на графике точная.
+- **Состояние голосового чата у игроков рядом:** раз в секунду сервер сообщает каждому игроку с аддоном, у кого в радиусе голоса нет Simple Voice Chat, у кого он не подключён, кто выключил звук и кто в группе, — для монитора.
 - **Горячая перезагрузка:** изменения в файле настроек сервера подхватываются без перезапуска и отправляются подключённым игрокам.
 
 ### Что где работает
@@ -242,20 +250,20 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 |---|---|---|---|
 | Кривая громкости | ✅ | — | ✅ (профиль сервера можно рекомендовать или закрепить) |
 | Приглушение стенами | ✅ у себя | ✅ для игроков без аддона | ✅ у себя; сервер этих игроков пропускает |
-| Экран настроек и монитор | ✅ | — | ✅ плюс статус сервера |
+| Экран настроек и монитор | ✅ | — | ✅ плюс статус сервера и состояние голосового чата у игроков рядом |
 | Кривая шёпота на графике | примерная (½ дальности) | — | точная |
 
 ### Версии и файлы
 
 | Загрузчик | Minecraft | Файл | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.2.4+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.2.4+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.2.4+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voicechat-audio-distance-bukkit-1.2.4.jar` | 17+ | версия для Bukkit |
-| Forge | 1.20.1 | `voicechat-audio-distance-forge-1.2.4+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.2.4+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| NeoForge / Forge | 26.1 – 26.3 | `voicechat-audio-distance-{neoforge,forge}-1.2.4+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.3.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.3.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.3.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voicechat-audio-distance-bukkit-1.3.0.jar` | 17+ | версия для Bukkit |
+| Forge | 1.20.1 | `voicechat-audio-distance-forge-1.3.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.3.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| NeoForge / Forge | 26.1 – 26.3 | `voicechat-audio-distance-{neoforge,forge}-1.3.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** — полная версия, на клиенте и на сервере. Нужен [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
 - **Paper / Purpur / Spigot / Bukkit** — серверная часть в виде плагина: стены для игроков без аддона и профиль сервера для игроков с ним. Заходить можно с любым клиентом: с аддоном для Fabric, без него или совсем без модов. Плагин собран против API 1.20.1 и в CI проверяется на каждом релизе Paper от 1.20.1 до 26.3: каждый класс, метод, поле и переопределение, которые он использует, разрешаются одинаково (Paper 1.20.5 проверить нельзя: снимок его API больше не скачивается).
@@ -278,7 +286,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 3. Стены для игроков без аддона включены по умолчанию. Чтобы передавать профиль, поставьте `profile_mode` в `suggest` или `enforce` и выберите `profile_preset`. У каждого ключа в файле есть комментарий на английском и русском, файл перечитывается автоматически.
 
 **Сервер (Paper / Purpur / Spigot / Bukkit)**
-1. Положите `voicechat-audio-distance-bukkit-1.2.4.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
+1. Положите `voicechat-audio-distance-bukkit-1.3.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
 2. Запустите сервер один раз — он создаст `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. Настройки те же, что на Fabric (см. ниже), файл тоже перечитывается автоматически.
 

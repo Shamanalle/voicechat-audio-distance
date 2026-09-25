@@ -21,6 +21,7 @@ public final class SpeakerTicker {
     private int lastMaterialRevision = Integer.MIN_VALUE;
     private Object lastWorld;
     private boolean loggedFailure;
+    private boolean loggedNearbyFailure;
 
     public SpeakerTicker(WorldAccess access) {
         this.access = access;
@@ -62,6 +63,7 @@ public final class SpeakerTicker {
 
         List<SpeakerRegistry.Speaker> active = registry.active(now);
         if (!access.inWorld()) {
+            AudioDistancePlugin.NEARBY.clear();
             for (SpeakerRegistry.Speaker s : active) {
                 s.setDistance(-1.0);
                 s.clearOcclusion();
@@ -71,6 +73,7 @@ public final class SpeakerTicker {
 
         boolean tracing = AudioDistancePlugin.occlusionStatus() == AudioDistancePlugin.OcclusionStatus.ACTIVE;
         Vec3 listener = access.listenerPosition();
+        updateNearby(listener);
         int budget = MAX_TRACES_PER_TICK;
 
         for (SpeakerRegistry.Speaker s : active) {
@@ -99,8 +102,22 @@ public final class SpeakerTicker {
         }
     }
 
+    /** The monitor's list of nearby players; a failure here must not stop the wall tracing. */
+    private void updateNearby(Vec3 listener) {
+        try {
+            AudioDistancePlugin.NEARBY.update(access.nearbyPlayers(listener, AudioDistancePlugin.getServerMaxDistance()));
+        } catch (Throwable t) {
+            AudioDistancePlugin.NEARBY.clear();
+            if (!loggedNearbyFailure) {
+                loggedNearbyFailure = true;
+                DistanceConfig.LOGGER.warn("Could not list nearby players for the monitor: {}", t.toString());
+            }
+        }
+    }
+
     private void reset() {
         AudioDistancePlugin.SPEAKERS.clear();
+        AudioDistancePlugin.NEARBY.clear();
         access.reset();
     }
 }

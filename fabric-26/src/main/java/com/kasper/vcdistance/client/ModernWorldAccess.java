@@ -1,12 +1,16 @@
 package com.kasper.vcdistance.client;
 
 import com.kasper.vcdistance.AudioDistancePlugin;
+import com.kasper.vcdistance.NearbyPlayers;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -56,6 +60,26 @@ public final class ModernWorldAccess implements WorldAccess {
             speaker.setDisplayName(entity.getName().getString());
         }
         return entity.getEyePosition();
+    }
+
+    @Override
+    public List<NearbyPlayers.Player> nearbyPlayers(Vec3 listener, double range) {
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer self = mc.player;
+        if (mc.level == null || self == null || listener == null) {
+            return List.of();
+        }
+        List<NearbyPlayers.Player> list = new ArrayList<>();
+        for (AbstractClientPlayer p : mc.level.players()) {
+            if (p == self || (p.isSpectator() && !self.isSpectator()) || p.isInvisibleTo(self)) {
+                continue;
+            }
+            double d = listener.distanceTo(p.getEyePosition());
+            if (d <= range) {
+                list.add(new NearbyPlayers.Player(p.getUUID(), p.getName().getString(), d));
+            }
+        }
+        return list;
     }
 
     @Override

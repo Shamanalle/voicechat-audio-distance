@@ -1,8 +1,11 @@
 package com.kasper.vcdistance.client;
 
+import com.kasper.vcdistance.NearbyPlayers;
 import com.kasper.vcdistance.RayBundle;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.List;
 
 /**
  * The few world operations that differ between Minecraft versions. Every method is called on the
@@ -27,6 +30,12 @@ public interface WorldAccess {
      * @return the position, or {@code null} when the entity is not loaded
      */
     Vec3 entitySpeakerPosition(SpeakerRegistry.Speaker speaker, long nowNanos);
+
+    /**
+     * Other players within {@code range} blocks of {@code listener} (eye to eye) whom the local
+     * player can see: spectators and invisible players are left out.
+     */
+    List<NearbyPlayers.Player> nearbyPlayers(Vec3 listener, double range);
 
     /** Acoustic thickness (in stone blocks) along one straight ray. */
     double traceRay(Vec3 from, Vec3 to);

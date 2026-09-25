@@ -13,6 +13,8 @@ public final class ModClientNetworking {
     public static void register() {
         ClientPlayNetworking.registerGlobalReceiver(ModNetworking.Profile.TYPE,
                 (payload, context) -> AudioDistancePlugin.LINK.onProfile(payload.text()));
+        ClientPlayNetworking.registerGlobalReceiver(ModNetworking.Nearby.TYPE,
+                (payload, context) -> AudioDistancePlugin.LINK.onNearby(payload.text()));
     }
 
     /** @return {@code true} once the hello was sent (the server has the addon) */
