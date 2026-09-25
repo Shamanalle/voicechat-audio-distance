@@ -53,6 +53,7 @@ It works on either side, and each side is useful alone:
 - **Echo in caves and halls:** every half second 18 rays from your head measure how closed and how big the space around you is. A big cave or hall gives a long echo, a small room a short one, the open air none. The echo glides as you walk and has its own strength setting.
 - **Under water:** when your head or the speaker's is under water, voices become dull (~600 Hz) and 10 dB quieter.
 - **Rain and thunder:** under the open sky, rain takes up to 6 dB off far voices and a thunderstorm up to about 10 dB; close voices stay clear.
+- **Around corners:** when a wall is between you, the addon looks for a way round it through open blocks (air, water, open doors and gates, fences). If a doorway or window is close, the voice comes through it: less muffled than through the wall, and from the doorway's side, like a voice from the next room through an open door.
 - The *Effects* tab has a switch for each, the echo strength, and a live view of what is around you right now.
 - With Sound Physics Remastered installed, our echo and water stay off (it does them itself); rain still works.
 
@@ -95,6 +96,20 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 - **Exact whisper range:** the server sends its real voice and whisper distances, so the whisper curve on the graph is exact.
 - **Voice chat state of nearby players:** once a second the server tells each player with the addon who within voice range has no Simple Voice Chat, has it disconnected, turned the sound off, or is in a group, for the monitor.
 - **Hot reload:** edits to the server settings file are picked up without a restart and sent to connected players.
+- **Sound zones:** a world (dimension) or, on Paper with WorldGuard, a region can have its own profile mode and preset — a quiet library, a loud arena, a stealth dungeon. The profile follows players as they move, and the HUD names the zone.
+- **`/vcd` command** for operators (level 2+) and the console:
+
+  | Command | What it does |
+  |---|---|
+  | `/vcd` or `/vcd status` | Version, voice range, walls, players with the addon, profile, zones |
+  | `/vcd reload` | Re-read the settings file |
+  | `/vcd profile off\|suggest\|enforce` | How the profile is offered |
+  | `/vcd preset vanilla\|realistic\|clear\|stealth\|custom` | The server's sound |
+  | `/vcd walls 0-100\|off` | Wall strength for everyone, in % |
+  | `/vcd serverwalls on\|off` | Walls for players without the addon |
+  | `/vcd zones` | Worlds and regions with their own profile |
+
+  Changes are saved to the settings file and sent to players with the addon right away. On Paper the permission is `vcd.admin` (operators by default). Replies are in English or Russian (`messages_language`).
 
 ### What works where
 
@@ -159,6 +174,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 | `reverb_strength` | 0.0 – 1.0 | 0.6 | Echo strength |
 | `underwater_enabled` | true / false | true | Dull, quiet voices under water |
 | `weather_enabled` | true / false | true | Rain and thunder cover far voices |
+| `diffraction_enabled` | true / false | true | Voices come round walls through doorways |
 | `hud_mode` | `off` / `talking` / `always` | `talking` | Voice HUD |
 | `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_left` | Corner of the voice HUD |
 
@@ -166,7 +182,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 
 On Paper / Purpur / Spigot / Bukkit the file is `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 
-The file has four sections, and every key has a comment in English and Russian. Changes apply within 2 seconds without a restart. The voice and whisper range itself is set in Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
+The file has six sections, and every key has a comment in English and Russian. Changes apply within 2 seconds without a restart. The voice and whisper range itself is set in Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
 
 **1. Walls, for every player**
 
@@ -194,7 +210,23 @@ The file has four sections, and every key has a comment in English and Russian. 
 
 | Key | Values | Default | What it does |
 |---|---|---|---|
-| `profile.reverb_enabled`, `profile.reverb_strength`, `profile.underwater_enabled`, `profile.weather_enabled` | as in the client file | as in the client file | Part of the profile whatever `profile_preset` says, so an event can turn the echo off for everyone |
+| `profile.reverb_enabled`, `profile.reverb_strength`, `profile.underwater_enabled`, `profile.weather_enabled`, `profile.diffraction_enabled` | as in the client file | as in the client file | Part of the profile whatever `profile_preset` says, so an event can turn the echo off for everyone |
+
+**5. Zones**
+
+| Key | Values | What it does |
+|---|---|---|
+| `zone.world.<world>.profile_mode` | `off` / `suggest` / `enforce` | How the profile is offered in this world |
+| `zone.world.<world>.profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` | The preset in this world |
+| `zone.region.<region id>.profile_mode`, `zone.region.<region id>.profile_preset` | as above | The same for a WorldGuard region (Paper); a region wins over its world |
+
+On Paper the world is its folder name (`world_nether`); on Fabric it is the dimension (`the_nether`, or `minecraft:the_nether` written as `minecraft\:the_nether`). What a zone leaves out comes from section 3; walls always come from section 1.
+
+**6. Messages**
+
+| Key | Values | Default | What it does |
+|---|---|---|---|
+| `messages_language` | `en` / `ru` | `en` | Language of the `/vcd` replies |
 
 Walls always come from section 1, whichever preset is chosen. Older files are rewritten in this format on the first start, keeping their values.
 
@@ -252,6 +284,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Эхо в пещерах и залах:** раз в полсекунды 18 лучей от вашей головы измеряют, насколько пространство вокруг закрытое и большое. Большая пещера или зал дают долгое эхо, маленькая комната — короткое, открытый воздух — никакого. Эхо плавно меняется, пока вы идёте, у него своя настройка силы.
 - **Под водой:** когда ваша голова или голова говорящего под водой, голоса становятся глухими (~600 Гц) и на 10 дБ тише.
 - **Дождь и гроза:** под открытым небом дождь отнимает у дальних голосов до 6 дБ, гроза — примерно до 10 дБ; близкие голоса остаются чёткими.
+- **Из-за угла:** если между вами стена, аддон ищет путь в обход через открытые блоки (воздух, вода, открытые двери и калитки, заборы). Если рядом есть проём или окно, голос проходит через него: глушится меньше, чем сквозь стену, и слышен со стороны проёма — как голос из соседней комнаты через открытую дверь.
 - На вкладке «Эффекты» — переключатель для каждого, сила эха и живая панель того, что вокруг вас сейчас.
 - Если установлен Sound Physics Remastered, наши эхо и вода выключены (он делает их сам); дождь работает.
 
@@ -294,6 +327,20 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Точная дальность шёпота:** сервер передаёт настоящие дальности голоса и шёпота, поэтому кривая шёпота на графике точная.
 - **Состояние голосового чата у игроков рядом:** раз в секунду сервер сообщает каждому игроку с аддоном, у кого в радиусе голоса нет Simple Voice Chat, у кого он не подключён, кто выключил звук и кто в группе, — для монитора.
 - **Горячая перезагрузка:** изменения в файле настроек сервера подхватываются без перезапуска и отправляются подключённым игрокам.
+- **Звуковые зоны:** у мира (измерения) или, на Paper с WorldGuard, у региона может быть свой режим и пресет профиля — тихая библиотека, громкая арена, стелс-подземелье. Профиль следует за игроком, а HUD называет зону.
+- **Команда `/vcd`** для операторов (уровень 2+) и консоли:
+
+  | Команда | Что делает |
+  |---|---|
+  | `/vcd` или `/vcd status` | Версия, дальность голоса, стены, игроки с аддоном, профиль, зоны |
+  | `/vcd reload` | Перечитать файл настроек |
+  | `/vcd profile off\|suggest\|enforce` | Как предлагать профиль |
+  | `/vcd preset vanilla\|realistic\|clear\|stealth\|custom` | Звук сервера |
+  | `/vcd walls 0-100\|off` | Сила стен для всех, в % |
+  | `/vcd serverwalls on\|off` | Стены для игроков без аддона |
+  | `/vcd zones` | Миры и регионы со своим профилем |
+
+  Изменения сохраняются в файл настроек и сразу отправляются игрокам с аддоном. На Paper право — `vcd.admin` (по умолчанию у операторов). Ответы на английском или русском (`messages_language`).
 
 ### Что где работает
 
@@ -358,6 +405,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 | `reverb_strength` | 0.0 – 1.0 | 0.6 | Сила эха |
 | `underwater_enabled` | true / false | true | Глухие, тихие голоса под водой |
 | `weather_enabled` | true / false | true | Дождь и гроза заглушают дальние голоса |
+| `diffraction_enabled` | true / false | true | Голоса обходят стены через проёмы |
 | `hud_mode` | `off` / `talking` / `always` | `talking` | HUD голоса |
 | `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_left` | Угол экрана для HUD |
 
@@ -365,7 +413,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 На Paper / Purpur / Spigot / Bukkit файл находится в `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 
-В файле четыре раздела, у каждого ключа есть комментарий на английском и русском. Изменения применяются в течение 2 секунд без перезапуска. Сама дальность голоса и шёпота задаётся в Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
+В файле шесть разделов, у каждого ключа есть комментарий на английском и русском. Изменения применяются в течение 2 секунд без перезапуска. Сама дальность голоса и шёпота задаётся в Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
 
 **1. Стены, для всех игроков**
 
@@ -393,7 +441,23 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 | Ключ | Значения | По умолчанию | Что делает |
 |---|---|---|---|
-| `profile.reverb_enabled`, `profile.reverb_strength`, `profile.underwater_enabled`, `profile.weather_enabled` | как в файле клиента | как в файле клиента | Входят в профиль при любом `profile_preset` — например, на ивенте можно выключить эхо всем |
+| `profile.reverb_enabled`, `profile.reverb_strength`, `profile.underwater_enabled`, `profile.weather_enabled`, `profile.diffraction_enabled` | как в файле клиента | как в файле клиента | Входят в профиль при любом `profile_preset` — например, на ивенте можно выключить эхо всем |
+
+**5. Зоны**
+
+| Ключ | Значения | Что делает |
+|---|---|---|
+| `zone.world.<мир>.profile_mode` | `off` / `suggest` / `enforce` | Как предлагать профиль в этом мире |
+| `zone.world.<мир>.profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` | Пресет в этом мире |
+| `zone.region.<id региона>.profile_mode`, `zone.region.<id региона>.profile_preset` | как выше | То же для региона WorldGuard (Paper); регион главнее своего мира |
+
+На Paper мир — это имя его папки (`world_nether`); на Fabric — измерение (`the_nether` или `minecraft:the_nether`, записанное как `minecraft\:the_nether`). Чего в зоне нет, берётся из раздела 3; стены всегда из раздела 1.
+
+**6. Сообщения**
+
+| Ключ | Значения | По умолчанию | Что делает |
+|---|---|---|---|
+| `messages_language` | `en` / `ru` | `en` | Язык ответов `/vcd` |
 
 Стены всегда берутся из раздела 1, какой бы пресет ни был выбран. Старые файлы при первом запуске переписываются в этот формат с сохранением значений.
 
