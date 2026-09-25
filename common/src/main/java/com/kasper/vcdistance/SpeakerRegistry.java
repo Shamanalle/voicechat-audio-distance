@@ -30,6 +30,7 @@ public final class SpeakerRegistry {
     public static final class Speaker {
         private final UUID channelId;
         private final VoiceFilter filter = new VoiceFilter();
+        private final Reverb reverb = new Reverb();
 
         volatile Kind kind;
         volatile UUID entityId;
@@ -46,6 +47,8 @@ public final class SpeakerRegistry {
         private volatile boolean occlusionKnown;
         private volatile double distance = -1.0;
         private volatile double bearing = Double.NaN;
+        private volatile boolean underWater;
+        private volatile EnvironmentEffects.Weather weather = EnvironmentEffects.Weather.CLEAR;
         private volatile String displayName;
         private volatile long lastTraceNanos;
         private volatile int cachedEntityNetworkId = Integer.MIN_VALUE;
@@ -99,6 +102,25 @@ public final class SpeakerRegistry {
 
         public VoiceFilter getFilter() {
             return filter;
+        }
+
+        public Reverb getReverb() {
+            return reverb;
+        }
+
+        /** The speaker's head is under water (client tick). */
+        public boolean isUnderWater() {
+            return underWater;
+        }
+
+        /** Weather over the speaker (client tick). */
+        public EnvironmentEffects.Weather getWeather() {
+            return weather;
+        }
+
+        public void setSurroundings(boolean underWater, EnvironmentEffects.Weather weather) {
+            this.underWater = underWater;
+            this.weather = weather == null ? EnvironmentEffects.Weather.CLEAR : weather;
         }
 
         public double getThickness() {

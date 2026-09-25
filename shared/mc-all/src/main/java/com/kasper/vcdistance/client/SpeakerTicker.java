@@ -3,6 +3,8 @@ package com.kasper.vcdistance.client;
 import com.kasper.vcdistance.AudioDistancePlugin;
 import com.kasper.vcdistance.Bearing;
 import com.kasper.vcdistance.DistanceConfig;
+import com.kasper.vcdistance.ListenerEnvironment;
+import com.kasper.vcdistance.RoomEstimate;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.world.phys.Vec3;
 
@@ -17,12 +19,16 @@ public final class SpeakerTicker {
 
     private static final long TRACE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(50);
     private static final int MAX_TRACES_PER_TICK = 12;
+    /** The room around the listener is measured this often (18 rays). */
+    private static final int ROOM_INTERVAL_TICKS = 10;
 
     private final WorldAccess access;
     private int lastMaterialRevision = Integer.MIN_VALUE;
     private Object lastWorld;
     private boolean loggedFailure;
     private boolean loggedNearbyFailure;
+    private boolean loggedEnvironmentFailure;
+    private int ticks;
 
     public SpeakerTicker(WorldAccess access) {
         this.access = access;
@@ -65,6 +71,7 @@ public final class SpeakerTicker {
         List<SpeakerRegistry.Speaker> active = registry.active(now);
         if (!access.inWorld()) {
             AudioDistancePlugin.NEARBY.clear();
+            AudioDistancePlugin.ENVIRONMENT.reset();
             for (SpeakerRegistry.Speaker s : active) {
                 s.setDistance(-1.0);
                 s.clearOcclusion();
@@ -76,6 +83,7 @@ public final class SpeakerTicker {
         Vec3 listener = access.listenerPosition();
         double yaw = access.listenerYaw();
         updateNearby(listener);
+        updateEnvironment(listener);
         int budget = MAX_TRACES_PER_TICK;
 
         for (SpeakerRegistry.Speaker s : active) {
@@ -90,6 +98,7 @@ public final class SpeakerTicker {
                 }
                 s.setDistance(listener.distanceTo(source));
                 s.setBearing(Bearing.relative(source.x - listener.x, source.z - listener.z, yaw));
+                s.setSurroundings(access.isUnderWater(source), access.weatherAt(source));
 
                 if (!tracing) {
                     s.clearOcclusion();
@@ -118,9 +127,36 @@ public final class SpeakerTicker {
         }
     }
 
+    /** Water and weather every tick, the echo of the room every half second. */
+    private void updateEnvironment(Vec3 listener) {
+        try {
+            ListenerEnvironment env = AudioDistancePlugin.ENVIRONMENT;
+            if (listener == null) {
+                env.reset();
+                return;
+            }
+            env.update(access.isUnderWater(listener), access.weatherAt(listener));
+            if (ticks++ % ROOM_INTERVAL_TICKS == 0) {
+                double[] hits = new double[RoomEstimate.DIRECTIONS.length];
+                for (int i = 0; i < hits.length; i++) {
+                    double[] d = RoomEstimate.DIRECTIONS[i];
+                    hits[i] = access.rayDistance(listener, d[0], d[1], d[2], RoomEstimate.RAY_LENGTH);
+                }
+                env.updateRoom(RoomEstimate.of(hits));
+            }
+        } catch (Throwable t) {
+            AudioDistancePlugin.ENVIRONMENT.reset();
+            if (!loggedEnvironmentFailure) {
+                loggedEnvironmentFailure = true;
+                DistanceConfig.LOGGER.warn("Could not measure the surroundings, echo and water are paused: {}", t.toString());
+            }
+        }
+    }
+
     private void reset() {
         AudioDistancePlugin.SPEAKERS.clear();
         AudioDistancePlugin.NEARBY.clear();
+        AudioDistancePlugin.ENVIRONMENT.reset();
         access.reset();
     }
 }

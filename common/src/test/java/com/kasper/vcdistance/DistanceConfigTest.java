@@ -88,7 +88,8 @@ public class DistanceConfigTest {
         c.load();
         assertEquals(AttenuationModel.REALISTIC_INVERSE, c.getModel());
         String text = Files.readString(file);
-        assertTrue(text.contains("config_version=4"));
+        assertTrue(text.contains("config_version=5"));
+        assertTrue(text.contains("reverb_enabled=true"));
         assertTrue(text.contains("material.stone"));
         assertTrue(text.contains("hud_mode=talking"));
     }
@@ -127,7 +128,8 @@ public class DistanceConfigTest {
         String text = Files.readString(file);
         String[] keys = {"config_version=", "distance_model=", "attenuation_factor=", "openal_reference_ratio=",
                 "min_volume_fraction=", "whisper_multiplier=", "occlusion_enabled=", "occlusion_strength=",
-                "material.stone=", "material.liquid=", "hud_mode=", "hud_corner=", "welcome_shown="};
+                "material.stone=", "material.liquid=", "reverb_enabled=", "reverb_strength=", "underwater_enabled=",
+                "weather_enabled=", "hud_mode=", "hud_corner=", "welcome_shown="};
         int last = -1;
         for (String key : keys) {
             int at = text.indexOf("\n" + key);

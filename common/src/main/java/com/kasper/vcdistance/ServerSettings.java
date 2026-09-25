@@ -23,7 +23,7 @@ public final class ServerSettings {
     private static final String FILE_NAME = "vc-audio-distance-server.properties";
     private static final String PROFILE_PREFIX = "profile.";
     /** 2: sections with comments, walls_strength and material.* at the top level, profile_preset. */
-    private static final int SETTINGS_VERSION = 2;
+    private static final int SETTINGS_VERSION = 3;
     public static final String CUSTOM_PRESET = "custom";
 
     public static final int DEFAULT_MAX_STREAMS = 24;
@@ -219,6 +219,11 @@ public final class ServerSettings {
                 .comment("Custom profile: used only when profile_preset=custom.",
                         "Свой профиль: работает, только когда profile_preset=custom.");
         profile.writeCurve(w, PROFILE_PREFIX);
+
+        w.section("4. Echo, water and weather in the profile", "4. Эхо, вода и погода в профиле")
+                .comment("Part of the profile above whatever profile_preset says; they only matter when it is suggested or enforced.",
+                        "Входят в профиль выше при любом profile_preset; действуют, только когда он рекомендован или закреплён.");
+        profile.writeEffects(w, PROFILE_PREFIX);
         w.save(getPath());
     }
 
