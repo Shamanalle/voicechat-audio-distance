@@ -1,18 +1,22 @@
-## Description
+## What changed / Что изменено
 
-Please describe the changes proposed in this pull request and the rationale behind them.
+<!-- Briefly: what and why. / Кратко: что и зачем. -->
 
-## Type of Change
+## How it was tested / Как проверено
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Performance optimization / Refactoring
-- [ ] Documentation update
+<!-- Minecraft, loader and Simple Voice Chat versions tested in game; client, server or both. / Версии Minecraft, загрузчика и Simple Voice Chat, на которых проверяли в игре; клиент, сервер или оба. -->
 
-## Checklist
+## Type of change / Тип изменения
 
-- [ ] My code follows the project style and conventions.
-- [ ] I have tested these changes in a local development environment.
-- [ ] All unit tests pass (`./gradlew test`).
-- [ ] The mod compiles cleanly (`./gradlew build`).
-- [ ] Translations have been updated (if applicable: `en_us.json`, `ru_ru.json`).
+- [ ] Bug fix / Исправление ошибки
+- [ ] New feature / Новая возможность
+- [ ] Refactoring or performance / Рефакторинг или производительность
+- [ ] Documentation / Документация
+
+## Checklist / Чек-лист
+
+- [ ] `./gradlew :common:test` passes / проходит
+- [ ] `./gradlew build` builds every target / собирает все версии
+- [ ] Translations added to every language file in `common/src/main/resources/assets/vc-audio-distance/lang/` / Переводы добавлены во все файлы языков
+- [ ] For the 1.21 module, new Minecraft methods exist on every 1.21.x / Для модуля 1.21 новые методы Minecraft есть во всех 1.21.x
+- [ ] `CHANGELOG.md` entry in English, then Russian / Запись в `CHANGELOG.md` на английском, затем на русском

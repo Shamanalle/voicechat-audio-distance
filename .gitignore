@@ -16,6 +16,7 @@ out/
 
 # Minecraft runtime run directories
 run/
+config/
 logs/
 
 # Knowledge graph

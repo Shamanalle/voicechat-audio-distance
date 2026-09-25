@@ -1,30 +1,40 @@
-name: Feature Request
-description: Suggest an idea or enhancement for VoiceChat Audio Distance Addon
+name: "💡 Feature request / Идея"
+description: "Suggest an improvement / Предложить улучшение"
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Have an idea to make 3D voice chat physics or controls even better? Let us know!
+        Describe the problem you want solved — that helps find the best solution, not just the first one.
+        Опишите, какую задачу хотите решить, — так проще найти лучшее решение, а не первое попавшееся.
+
+  - type: dropdown
+    id: side
+    attributes:
+      label: "Which side? / Какая сторона?"
+      options:
+        - "Client / Клиент"
+        - "Server / Сервер"
+        - "Both / Обе"
+        - "Not sure / Не знаю"
+
   - type: textarea
     id: problem
     attributes:
-      label: Is your feature request related to a problem?
-      description: A clear description of what the problem is.
-      placeholder: "I find it difficult to..."
+      label: "What problem does it solve / Какую задачу решаем"
+      placeholder: "At events distant players are barely audible, even when… / На ивентах далёких игроков почти не слышно, даже когда…"
     validations:
-      required: false
+      required: true
+
   - type: textarea
     id: solution
     attributes:
-      label: Describe the Solution You'd Like
-      description: A clear and concise description of what you want to happen.
+      label: "How it could work / Как это могло бы работать"
     validations:
       required: true
+
   - type: textarea
     id: alternatives
     attributes:
-      label: Describe Alternatives You've Considered
-      description: Any alternative solutions or features you've thought about.
-    validations:
-      required: false
+      label: "Alternatives you tried / Что пробовали вместо"
+      description: "Presets, settings, other mods / Пресеты, настройки, другие моды"

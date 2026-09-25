@@ -10,32 +10,45 @@ permissions:
 
 jobs:
   release:
-    name: Build & Publish Release
+    name: Build & publish
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      # The 26.x module needs Java 25
+      - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Make Gradle Wrapper Executable
+      - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Run Tests & Build
+      - name: Check tag matches mod_version
+        run: |
+          version=$(grep '^mod_version=' gradle.properties | cut -d= -f2)
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match mod_version ${version}" >&2
+            exit 1
+          fi
+
+      - name: Test & build
         run: ./gradlew build --no-daemon
 
-      - name: Create GitHub Release
+      - name: Release notes from CHANGELOG.md
+        run: bash .github/scripts/release-notes.sh "${GITHUB_REF_NAME}" > release_body.md
+
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
+          name: ${{ github.ref_name }}
           files: build/libs/*.jar
-          generate_release_notes: true
+          body_path: release_body.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

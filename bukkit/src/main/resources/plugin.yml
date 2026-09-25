@@ -1,0 +1,10 @@
+name: VoicechatAudioDistance
+version: '${version}'
+main: com.kasper.vcdistance.bukkit.AudioDistanceBukkit
+api-version: '1.20'
+depend: [voicechat]
+author: Kasper
+website: https://github.com/Shamanalle/voicechat-audio-distance
+description: >-
+  Server side of VoiceChat Audio Distance for Simple Voice Chat. Muffles voices through walls
+  for players without the addon and shares the server's sound profile with players who have it.

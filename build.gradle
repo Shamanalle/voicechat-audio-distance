@@ -2,70 +2,50 @@ plugins {
     id 'base'
 }
 
+// Every release target: the Fabric jar is the full addon. The Forge / NeoForge files are the same jar,
+// published under their loader's name: they load the Simple Voice Chat plugin (distance curves,
+// configured through config/vc-audio-distance.properties) without the Fabric-only client features.
+def releaseTargets = [
+        [project: ':fabric-1.20', target: 'mc1.20.1', aliases: ['forge']],
+        [project: ':fabric-1.21', target: 'mc1.21.x', aliases: ['neoforge', 'forge']],
+        [project: ':fabric-26', target: 'mc26.x', aliases: ['neoforge', 'forge']],
+]
+
 tasks.register('buildAll') {
     group = 'build'
-    description = 'Builds and packages release JARs for all supported Minecraft versions and loaders'
-    dependsOn ':fabric-1.20:build', ':fabric-1.21:build', ':fabric-26:build'
+    description = 'Builds and collects the release jars for every Minecraft version and loader into build/libs'
+    dependsOn releaseTargets.collect { "${it.project}:build" }
+    dependsOn ':bukkit:build'
 
     doLast {
-        def targetDir = layout.buildDirectory.dir("libs").get().asFile
-        targetDir.mkdirs()
-
-        // 1. Copy Fabric 1.20.1 release JAR
-        def fabric120Jar = file("${project(':fabric-1.20').layout.buildDirectory.get().asFile}/libs/voicechat-audio-distance-fabric-1.1.0+mc1.20.1.jar")
-        if (fabric120Jar.exists()) {
-            copy {
-                from fabric120Jar
-                into targetDir
+        def outDir = layout.buildDirectory.dir("libs").get().asFile
+        outDir.mkdirs()
+        releaseTargets.each { t ->
+            def version = "${project.mod_version}+${t.target}"
+            def jar = file("${project(t.project).layout.buildDirectory.get().asFile}/libs/voicechat-audio-distance-fabric-${version}.jar")
+            if (!jar.exists()) {
+                throw new GradleException("Expected release jar is missing: ${jar}")
             }
-            // 2. Package dedicated Forge 1.20.1 release JAR (with META-INF/mods.toml & @ForgeVoicechatPlugin)
             copy {
-                from fabric120Jar
-                into targetDir
-                rename { "voicechat-audio-distance-forge-1.1.0+mc1.20.1.jar" }
+                from jar
+                into outDir
             }
-        }
-
-        // 1. Copy Fabric 1.21.x release JAR
-        def fabric121Jar = file("${project(':fabric-1.21').layout.buildDirectory.get().asFile}/libs/voicechat-audio-distance-fabric-1.1.0+mc1.21.x.jar")
-        if (fabric121Jar.exists()) {
-            copy {
-                from fabric121Jar
-                into targetDir
-            }
-            // 2. Package dedicated NeoForge release JAR (with full META-INF/neoforge.mods.toml & @ForgeVoicechatPlugin)
-            copy {
-                from fabric121Jar
-                into targetDir
-                rename { "voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar" }
-            }
-            // 3. Package dedicated Forge release JAR (with META-INF/mods.toml & @ForgeVoicechatPlugin)
-            copy {
-                from fabric121Jar
-                into targetDir
-                rename { "voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar" }
+            t.aliases.each { loader ->
+                copy {
+                    from jar
+                    into outDir
+                    rename { "voicechat-audio-distance-${loader}-${version}.jar" }
+                }
             }
         }
-
-        // 4. Copy Fabric 26.x release JAR
-        def fabric26Jar = file("${project(':fabric-26').layout.buildDirectory.get().asFile}/libs/voicechat-audio-distance-fabric-1.1.0+mc26.x.jar")
-        if (fabric26Jar.exists()) {
-            copy {
-                from fabric26Jar
-                into targetDir
-            }
-            // 5. Package dedicated NeoForge 26.x release JAR (with META-INF/neoforge.mods.toml & @ForgeVoicechatPlugin)
-            copy {
-                from fabric26Jar
-                into targetDir
-                rename { "voicechat-audio-distance-neoforge-1.1.0+mc26.x.jar" }
-            }
-            // 6. Package dedicated Forge 26.x release JAR (with META-INF/mods.toml & @ForgeVoicechatPlugin)
-            copy {
-                from fabric26Jar
-                into targetDir
-                rename { "voicechat-audio-distance-forge-1.1.0+mc26.x.jar" }
-            }
+        // Bukkit / Spigot / Paper / Purpur plugin (server side, every supported Minecraft version)
+        def plugin = file("${project(':bukkit').layout.buildDirectory.get().asFile}/libs/voicechat-audio-distance-bukkit-${project.mod_version}.jar")
+        if (!plugin.exists()) {
+            throw new GradleException("Expected release jar is missing: ${plugin}")
+        }
+        copy {
+            from plugin
+            into outDir
         }
     }
 }
