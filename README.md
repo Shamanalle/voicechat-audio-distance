@@ -1,6 +1,6 @@
 # 🎙️ VoiceChat Audio Distance Addon
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21%20--%201.21.8%2B-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.21%2B-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-lightgrey.svg?logo=fabric&logoColor=white)](https://fabricmc.net/)
 [![Simple Voice Chat](https://img.shields.io/badge/Simple%20Voice%20Chat-2.4.0%2B-orange.svg)](https://modrinth.com/plugin/simple-voice-chat)
 [![Build Status](https://github.com/Shamanalle/voicechat-audio-distance/actions/workflows/build.yml/badge.svg)](https://github.com/Shamanalle/voicechat-audio-distance/actions/workflows/build.yml)
@@ -87,7 +87,7 @@
 
 ## 📦 Установка / Installation
 
-1. Установите **Minecraft** (версии `1.21` – `1.21.8+`).
+1. Установите **Minecraft** `1.21+` (любую версию 1.21.x).
 2. Установите **Fabric Loader** и **Fabric API**.
 3. Установите мод **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)** (версии `2.4.0` или новее).
 4. Поместите файл `voicechat-audio-distance-addon-1.1.0.jar` в папку `.minecraft/mods/`.
