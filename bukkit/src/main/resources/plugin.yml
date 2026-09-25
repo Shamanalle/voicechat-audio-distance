@@ -3,8 +3,18 @@ version: '${version}'
 main: com.kasper.vcdistance.bukkit.AudioDistanceBukkit
 api-version: '1.20'
 depend: [voicechat]
+softdepend: [WorldGuard]
 author: Shamanalle
 website: https://github.com/Shamanalle/voicechat-audio-distance
 description: >-
   Server side of VoiceChat Audio Distance for Simple Voice Chat. Muffles voices through walls
   for players without the addon and shares the server's sound profile with players who have it.
+commands:
+  vcd:
+    description: Voice Physics - status and settings of the voice addon
+    usage: /vcd [status|reload|profile|preset|walls|serverwalls|zones|help]
+    permission: vcd.admin
+permissions:
+  vcd.admin:
+    description: Use /vcd
+    default: op

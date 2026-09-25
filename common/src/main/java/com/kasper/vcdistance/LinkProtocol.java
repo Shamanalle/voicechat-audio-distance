@@ -46,7 +46,7 @@ public final class LinkProtocol {
 
     /** What a client learns from a server that has the addon. */
     public record ServerProfile(ServerSettings.ProfileMode mode, DistanceConfig config,
-                                double voiceDistance, double whisperDistance, boolean serverWalls) {
+                                double voiceDistance, double whisperDistance, boolean serverWalls, String zone) {
 
         /** Whisper range as a share of the voice range, for the distance graph. */
         public double whisperShare() {
@@ -74,13 +74,21 @@ public final class LinkProtocol {
     }
 
     public static String profile(ServerSettings settings, double voiceDistance, double whisperDistance) {
+        return profile(settings, null, voiceDistance, whisperDistance);
+    }
+
+    /** The profile as it applies in {@code zone} ({@code null}: the server's main profile). */
+    public static String profile(ServerSettings settings, Zone zone, double voiceDistance, double whisperDistance) {
         Properties p = new Properties();
         p.setProperty("protocol", String.valueOf(VERSION));
-        p.setProperty("mode", settings.getProfileMode().getId());
+        p.setProperty("mode", settings.modeIn(zone).getId());
         p.setProperty("voice_distance", DistanceConfig.format(voiceDistance));
         p.setProperty("whisper_distance", DistanceConfig.format(whisperDistance));
         p.setProperty("server_walls", String.valueOf(settings.isServerWalls()));
-        settings.profile().writeTo(p, PROFILE_PREFIX);
+        if (zone != null) {
+            p.setProperty("zone", zone.name());
+        }
+        settings.profileIn(zone).writeTo(p, PROFILE_PREFIX);
         return write(p);
     }
 
@@ -97,7 +105,8 @@ public final class LinkProtocol {
                 config,
                 DistanceConfig.parseDouble(p, "voice_distance", 0.0),
                 DistanceConfig.parseDouble(p, "whisper_distance", 0.0),
-                DistanceConfig.parseBoolean(p, "server_walls", false));
+                DistanceConfig.parseBoolean(p, "server_walls", false),
+                p.getProperty("zone"));
     }
 
     /** @param states voice chat state per player UUID, closest first; only the first {@link #MAX_NEARBY} are sent */

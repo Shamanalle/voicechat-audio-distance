@@ -3,7 +3,10 @@ package com.kasper.vcdistance;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -15,6 +18,8 @@ import java.util.Properties;
  *     <li>Players without the addon: whether the server muffles walls for them, and its CPU limit.</li>
  *     <li>Players with the addon: how the profile is offered, and the profile itself, either a
  *     named preset or custom {@code profile.*} values.</li>
+ *     <li>Echo, water and weather in the profile.</li>
+ *     <li>Zones: worlds and WorldGuard regions with their own mode or preset.</li>
  * </ol>
  * All of it ends up in {@link #profile()}, which drives server walls and is sent to the addon.
  */
@@ -22,8 +27,12 @@ public final class ServerSettings {
 
     private static final String FILE_NAME = "vc-audio-distance-server.properties";
     private static final String PROFILE_PREFIX = "profile.";
-    /** 2: sections with comments, walls_strength and material.* at the top level, profile_preset. */
-    private static final int SETTINGS_VERSION = 3;
+    /**
+     * 2: sections with comments, walls_strength and material.* at the top level, profile_preset;
+     * 3: echo, water and weather; 4: zones and messages_language.
+     */
+    private static final int SETTINGS_VERSION = 4;
+    private static final String ZONE_PREFIX = "zone.";
     public static final String CUSTOM_PRESET = "custom";
 
     public static final int DEFAULT_MAX_STREAMS = 24;
@@ -67,6 +76,8 @@ public final class ServerSettings {
     private volatile boolean serverWalls = true;
     private volatile int maxStreams = DEFAULT_MAX_STREAMS;
     private volatile long loadedModified = Long.MIN_VALUE;
+    private volatile Map<String, Zone> zones = Map.of();
+    private volatile String messagesLanguage = "en";
 
     public ServerSettings() {
         this(null);
@@ -123,6 +134,8 @@ public final class ServerSettings {
             return;
         }
         profileMode = ProfileMode.fromId(props.getProperty("profile_mode"), ProfileMode.OFF);
+        messagesLanguage = "ru".equalsIgnoreCase(props.getProperty("messages_language", "en").trim()) ? "ru" : "en";
+        zones = readZones(props, file);
         serverWalls = DistanceConfig.parseBoolean(props, "server_walls", true);
         maxStreams = (int) DistanceConfig.clamp(DistanceConfig.parseDouble(props, "server_walls_max_streams", DEFAULT_MAX_STREAMS), 0, MAX_STREAMS_LIMIT);
 
@@ -224,7 +237,118 @@ public final class ServerSettings {
                 .comment("Part of the profile above whatever profile_preset says; they only matter when it is suggested or enforced.",
                         "Входят в профиль выше при любом profile_preset; действуют, только когда он рекомендован или закреплён.");
         profile.writeEffects(w, PROFILE_PREFIX);
+
+        w.section("5. Zones", "5. Зоны")
+                .comment("A world or a WorldGuard region (Paper) can have its own profile_mode and/or profile_preset;",
+                        "what a zone leaves out comes from section 3. A region wins over its world.",
+                        "  zone.world.<world>.profile_preset=stealth      e.g. zone.world.world_nether.profile_preset=stealth",
+                        "  zone.world.<world>.profile_mode=enforce        on Fabric the world is the dimension: the_nether, the_end, ...",
+                        "  zone.region.<region id>.profile_preset=clear   needs WorldGuard on Paper",
+                        "Зона - мир или регион WorldGuard (Paper) со своими profile_mode и/или profile_preset;",
+                        "чего в зоне нет, берётся из раздела 3. Регион главнее своего мира.",
+                        "  zone.world.<мир>.profile_preset=stealth        например zone.world.world_nether.profile_preset=stealth",
+                        "  zone.world.<мир>.profile_mode=enforce          на Fabric мир - это измерение: the_nether, the_end, ...",
+                        "  zone.region.<id региона>.profile_preset=clear  нужен WorldGuard на Paper");
+        for (Zone z : zones.values()) {
+            String base = ZONE_PREFIX + z.kind() + "." + z.name() + ".";
+            if (z.mode() != null) {
+                w.value(base + "profile_mode", z.mode().getId());
+            }
+            if (z.preset() != null) {
+                w.value(base + "profile_preset", z.preset());
+            }
+        }
+
+        w.section("6. Messages", "6. Сообщения")
+                .comment("Language of the /vcd command replies: en or ru. Default en.",
+                        "Язык ответов команды /vcd: en или ru. По умолчанию en.")
+                .value("messages_language", messagesLanguage);
         w.save(getPath());
+        // Our own write is not an edit to pick up again
+        loadedModified = lastModified(getPath());
+    }
+
+    /** Zones by {@link Zone#key()}. */
+    public Map<String, Zone> zones() {
+        return zones;
+    }
+
+    /** Language of command replies: "en" or "ru". */
+    public String getMessagesLanguage() {
+        return messagesLanguage;
+    }
+
+    /** How the profile is offered in a zone ({@code null}: the main profile). */
+    public ProfileMode modeIn(Zone zone) {
+        return zone != null && zone.mode() != null ? zone.mode() : profileMode;
+    }
+
+    /** The profile in a zone: the main profile with the zone's preset on top (walls stay as in section 1). */
+    public DistanceConfig profileIn(Zone zone) {
+        Preset preset = zone != null && zone.preset() != null ? presetByName(zone.preset()) : null;
+        if (preset == null) {
+            return profile;
+        }
+        DistanceConfig c = profile.copy();
+        boolean walls = c.isOcclusionEnabled();
+        double strength = c.getOcclusionStrength();
+        preset.apply(c);
+        c.setOcclusionEnabled(walls);
+        c.setOcclusionStrength(strength);
+        return c;
+    }
+
+    private static Map<String, Zone> readZones(Properties props, Path file) {
+        Map<String, String[]> parts = new LinkedHashMap<>();
+        for (String key : props.stringPropertyNames()) {
+            if (!key.startsWith(ZONE_PREFIX)) {
+                continue;
+            }
+            String rest = key.substring(ZONE_PREFIX.length());
+            int kindEnd = rest.indexOf('.');
+            int fieldStart = rest.lastIndexOf('.');
+            if (kindEnd <= 0 || fieldStart <= kindEnd + 1) {
+                DistanceConfig.LOGGER.warn("Ignoring '{}' in {}: expected zone.world.<name>.<setting> or zone.region.<id>.<setting>", key, file);
+                continue;
+            }
+            String kind = rest.substring(0, kindEnd).toLowerCase(Locale.ROOT);
+            String name = Zone.normalize(rest.substring(kindEnd + 1, fieldStart));
+            String field = rest.substring(fieldStart + 1);
+            if (!kind.equals(Zone.WORLD) && !kind.equals(Zone.REGION)) {
+                DistanceConfig.LOGGER.warn("Ignoring '{}' in {}: a zone is a world or a region", key, file);
+                continue;
+            }
+            String[] values = parts.computeIfAbsent(kind + ":" + name, k -> new String[]{kind, name, null, null});
+            String value = props.getProperty(key).trim();
+            if (field.equals("profile_mode")) {
+                values[2] = value;
+            } else if (field.equals("profile_preset")) {
+                values[3] = value;
+            } else {
+                DistanceConfig.LOGGER.warn("Ignoring '{}' in {}: a zone has profile_mode and profile_preset", key, file);
+            }
+        }
+        Map<String, Zone> result = new LinkedHashMap<>();
+        for (String[] v : parts.values()) {
+            ProfileMode mode = v[2] == null ? null : ProfileMode.fromId(v[2], null);
+            String preset = null;
+            if (v[3] != null) {
+                Preset p = presetByName(v[3]);
+                if (p == null) {
+                    DistanceConfig.LOGGER.warn("Unknown preset '{}' for zone {} in {}", v[3], v[1], file);
+                } else {
+                    preset = nameOf(p);
+                }
+            }
+            if (v[2] != null && mode == null) {
+                DistanceConfig.LOGGER.warn("Unknown profile_mode '{}' for zone {} in {}", v[2], v[1], file);
+            }
+            if (mode != null || preset != null) {
+                Zone z = new Zone(v[0], v[1], mode, preset);
+                result.put(z.key(), z);
+            }
+        }
+        return Collections.unmodifiableMap(result);
     }
 
     /** A preset by the name used in the settings file (or its internal id), or {@code null}. */
@@ -276,12 +400,19 @@ public final class ServerSettings {
         return true;
     }
 
-    /** For tests and tools: changes the mode in memory. */
+    /** Walls for every player, 0 - 1 (0 = off). */
+    public void setWallsStrength(double strength) {
+        double s = DistanceConfig.clamp(strength, DistanceConfig.STRENGTH_MIN, DistanceConfig.STRENGTH_MAX);
+        profile.setOcclusionEnabled(s > 0.0);
+        profile.setOcclusionStrength(s);
+    }
+
+    /** Changes the mode in memory; call {@link #save()} to keep it. */
     public void setProfileMode(ProfileMode mode) {
         this.profileMode = mode == null ? ProfileMode.OFF : mode;
     }
 
-    /** For tests and tools: applies a preset by name ({@link #CUSTOM_PRESET} keeps the current values). */
+    /** Applies a preset by name ({@link #CUSTOM_PRESET} keeps the current values); call {@link #save()} to keep it. */
     public void setProfilePreset(String name) {
         Preset preset = presetByName(name);
         if (preset == null) {

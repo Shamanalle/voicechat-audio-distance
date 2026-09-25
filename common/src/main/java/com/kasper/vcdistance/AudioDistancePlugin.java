@@ -143,8 +143,13 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         }
     }
 
-    /** Text of the {@code profile} message for players who have the addon. */
+    /** Text of the {@code profile} message for players who have the addon, outside any zone. */
     public static String serverProfileMessage() {
+        return serverProfileMessage(null);
+    }
+
+    /** Text of the {@code profile} message for a player in {@code zone} ({@code null}: no zone). */
+    public static String serverProfileMessage(Zone zone) {
         double voice = FALLBACK_DISTANCE;
         double whisper = FALLBACK_DISTANCE / 2.0;
         VoicechatServerApi s = serverApi;
@@ -155,7 +160,27 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             } catch (Throwable ignored) {
             }
         }
-        return LinkProtocol.profile(SERVER_SETTINGS, voice, whisper);
+        return LinkProtocol.profile(SERVER_SETTINGS, zone, voice, whisper);
+    }
+
+    /** Simple Voice Chat's voice range on this server, or 0 when it is not running. */
+    public static double serverVoiceDistance() {
+        VoicechatServerApi s = serverApi;
+        try {
+            return s != null ? s.getVoiceChatDistance() : 0.0;
+        } catch (Throwable t) {
+            return 0.0;
+        }
+    }
+
+    /** Simple Voice Chat's whisper range on this server, or 0 when it is not running. */
+    public static double serverWhisperDistance() {
+        VoicechatServerApi s = serverApi;
+        try {
+            return s != null ? s.getServerConfig().getDouble("whisper_distance", s.getVoiceChatDistance() / 2.0) : 0.0;
+        } catch (Throwable t) {
+            return 0.0;
+        }
     }
 
     /** How often the server sends {@code nearby} messages, in ticks. */
