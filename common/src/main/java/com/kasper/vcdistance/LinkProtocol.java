@@ -6,7 +6,11 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 /**
  * Messages exchanged between the addon on the client and on the server. Both sides are optional:
@@ -15,6 +19,8 @@ import java.util.Properties;
  *     <li>{@code hello} (client to server): "I have the addon and process walls myself".</li>
  *     <li>{@code profile} (server to client): the server's sound profile, how it is offered, and the
  *     server's real voice and whisper distances.</li>
+ *     <li>{@code nearby} (server to client, about once a second): the voice chat state of the
+ *     players within voice range, for the monitor.</li>
  * </ul>
  * Payloads are plain {@link Properties} text, so both sides tolerate unknown or missing keys.
  * On the wire each payload is one Minecraft string (VarInt byte length, then UTF-8), which is what
@@ -26,10 +32,14 @@ public final class LinkProtocol {
     public static final String NAMESPACE = "vc-audio-distance";
     public static final String HELLO = "hello";
     public static final String PROFILE = "profile";
+    public static final String NEARBY = "nearby";
+    /** Most players one {@code nearby} message lists (the closest ones); keeps it far below {@link #MAX_LENGTH}. */
+    public static final int MAX_NEARBY = 64;
     /** Upper bound for a payload string; profiles are well under 2 KB. */
     public static final int MAX_LENGTH = 16384;
 
     private static final String PROFILE_PREFIX = "profile.";
+    private static final String PLAYER_PREFIX = "player.";
 
     private LinkProtocol() {
     }
@@ -88,6 +98,43 @@ public final class LinkProtocol {
                 DistanceConfig.parseDouble(p, "voice_distance", 0.0),
                 DistanceConfig.parseDouble(p, "whisper_distance", 0.0),
                 DistanceConfig.parseBoolean(p, "server_walls", false));
+    }
+
+    /** @param states voice chat state per player UUID, closest first; only the first {@link #MAX_NEARBY} are sent */
+    public static String nearby(Map<UUID, VoiceState> states) {
+        Properties p = new Properties();
+        p.setProperty("protocol", String.valueOf(VERSION));
+        int n = 0;
+        for (Map.Entry<UUID, VoiceState> e : states.entrySet()) {
+            if (n++ >= MAX_NEARBY) {
+                break;
+            }
+            p.setProperty(PLAYER_PREFIX + e.getKey(), e.getValue().getId());
+        }
+        return write(p);
+    }
+
+    /** @return the state per player, or {@code null} when the text is not a valid nearby message; unknown entries are skipped */
+    public static Map<UUID, VoiceState> parseNearby(String text) {
+        Properties p = read(text);
+        if (p == null || DistanceConfig.parseDouble(p, "protocol", -1) < 1) {
+            return null;
+        }
+        Map<UUID, VoiceState> states = new LinkedHashMap<>();
+        for (String key : p.stringPropertyNames()) {
+            if (!key.startsWith(PLAYER_PREFIX) || states.size() >= MAX_NEARBY) {
+                continue;
+            }
+            VoiceState state = VoiceState.fromId(p.getProperty(key));
+            if (state == null) {
+                continue;
+            }
+            try {
+                states.put(UUID.fromString(key.substring(PLAYER_PREFIX.length())), state);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        return Collections.unmodifiableMap(states);
     }
 
     /** Wire form of a payload: VarInt length in bytes, then the UTF-8 text (Minecraft's string encoding). */

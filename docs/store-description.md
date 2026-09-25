@@ -28,7 +28,7 @@ It works on either side, and each side is useful alone:
 ### Features
 - **Distance curves:** linear (Simple Voice Chat's own), realistic 1/r and exponential, with a live graph of the loudness at every distance.
 - **Walls:** voices behind walls become quieter and duller. Real block shapes (slabs, open doors, fences) and materials (wool muffles more, glass and leaves less) are taken into account. Five rays per voice give soft edges around corners and doorways.
-- **Monitor:** who is talking, how far away, and how much the walls take off.
+- **Monitor:** everyone within voice range, who is talking, how far away and how much the walls take off; with the server side, also who has no voice chat or turned the sound off.
 - **Presets:** Vanilla, Realistic, Clear, Stealth.
 - **Server side (optional):** walls for players without the addon, and a server sound profile that can be suggested or enforced. Available in the Fabric mod and as a plugin for Paper, Purpur, Spigot and Bukkit.
 - Works together with Sound Physics Remastered: our wall muffling turns itself off so voices are not muffled twice.
@@ -64,7 +64,7 @@ Source code, full documentation and the changelog: https://github.com/Shamanalle
 ### Возможности
 - **Кривые громкости:** линейная (как в Simple Voice Chat), реалистичная 1/r и экспоненциальная, с живым графиком громкости на любом расстоянии.
 - **Стены:** голоса за стенами становятся тише и глуше. Учитываются настоящие формы блоков (плиты, открытые двери, заборы) и материалы (шерсть глушит сильнее, стекло и листва слабее). Пять лучей на каждый голос дают плавный переход за углами и в дверных проёмах.
-- **Монитор:** кто говорит, на каком расстоянии и сколько забирают стены.
+- **Монитор:** все игроки в радиусе голоса, кто говорит, на каком расстоянии и сколько забирают стены; с серверной частью — ещё и у кого нет голосового чата или выключен звук.
 - **Пресеты:** Vanilla, Realistic, Clear, Stealth.
 - **Серверная часть (по желанию):** стены для игроков без аддона и звуковой профиль сервера, который можно предложить или сделать обязательным. Есть в моде для Fabric и как плагин для Paper, Purpur, Spigot и Bukkit.
 - Совместим с Sound Physics Remastered: наше приглушение стенами само выключается, чтобы голоса не глушились дважды.

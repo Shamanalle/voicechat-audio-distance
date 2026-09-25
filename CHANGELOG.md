@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [1.3.0] - 2026-09-25
+
+### English
+
+#### Added
+- **The monitor lists everyone within voice range**, not only the people talking: talking players first, then the others by distance, each with their distance. Players you cannot see (spectators, invisible players) are left out.
+- **Voice chat state of nearby players** when the server has the addon (Fabric or the Paper / Purpur / Spigot plugin): the monitor shows who has no Simple Voice Chat, has it disconnected, turned the sound off (and so will not hear you), or is in a voice chat group. The server sends it once a second, only about players the receiving player may see; players hidden by vanish plugins on Paper are never listed.
+
+### Русский
+
+#### Добавлено
+- **Монитор показывает всех в радиусе голоса**, а не только говорящих: сначала те, кто говорит, затем остальные по расстоянию, у каждого — дистанция. Игроки, которых вы не видите (наблюдатели, невидимые), не показываются.
+- **Состояние голосового чата у игроков рядом**, если на сервере есть аддон (Fabric или плагин для Paper / Purpur / Spigot): монитор показывает, у кого нет Simple Voice Chat, у кого он не подключён, кто выключил звук (и поэтому вас не услышит) и кто в группе голосового чата. Сервер присылает это раз в секунду и только про игроков, которых получатель может видеть; игроки, скрытые плагинами ваниша на Paper, в список не попадают.
+
 ## [1.2.4] - 2026-09-25
 
 ### English

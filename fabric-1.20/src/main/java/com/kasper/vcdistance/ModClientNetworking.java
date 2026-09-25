@@ -17,6 +17,10 @@ public final class ModClientNetworking {
             String text = buf.readUtf(LinkProtocol.MAX_LENGTH);
             AudioDistancePlugin.LINK.onProfile(text);
         });
+        ClientPlayNetworking.registerGlobalReceiver(ModNetworking.NEARBY, (client, handler, buf, responseSender) -> {
+            String text = buf.readUtf(LinkProtocol.MAX_LENGTH);
+            AudioDistancePlugin.LINK.onNearby(text);
+        });
     }
 
     /** @return {@code true} once the hello was sent (the server has the addon) */
