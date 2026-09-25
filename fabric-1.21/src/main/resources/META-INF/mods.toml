@@ -9,7 +9,7 @@ version = "${version}"
 displayName = "VoiceChat Audio Distance (lite)"
 displayURL = "https://github.com/Shamanalle/voicechat-audio-distance"
 logoFile = "assets/vc-audio-distance/icon.png"
-authors = "Kasper"
+authors = "Shamanalle"
 displayTest = "IGNORE_ALL_VERSION"
 description = '''
 Distance curves for Simple Voice Chat, configured in config/vc-audio-distance.properties.

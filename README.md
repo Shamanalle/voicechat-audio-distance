@@ -30,7 +30,7 @@ It works on either side, and each side is useful alone:
 ### Features
 
 #### Distance curve (client)
-- **Three curves:** linear (Simple Voice Chat's own), realistic 1/r and exponential.
+- **Three curves:** linear (Simple Voice Chat's own), realistic 1/r and a true exponential. Each one fades to silence at the edge of the range, so voices never cut off abruptly.
 - **Adjustable:** falloff, the distance heard at full volume, the volume at the edge of the range, and whisper falloff.
 - **Live graph:**
   - shows the loudness at every distance;
@@ -177,7 +177,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### License
 
-[MIT](LICENSE). Author: **Kasper / Shamanalle**.
+[MIT](LICENSE). Author: **Shamanalle**.
 
 ---
 
@@ -193,7 +193,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 ### Возможности
 
 #### Кривая громкости (клиент)
-- **Три кривые:** линейная (как в Simple Voice Chat), реалистичная 1/r и экспоненциальная.
+- **Три кривые:** линейная (как в Simple Voice Chat), реалистичная 1/r и настоящая экспоненциальная. Каждая сходит на нет к краю дальности, поэтому голоса никогда не обрываются резко.
 - **Настраивается:** сила спада, дистанция с полной громкостью, громкость на краю слышимости и спад шёпота.
 - **Живой график:**
   - показывает громкость на каждой дистанции;
@@ -340,4 +340,4 @@ cd voicechat-audio-distance
 
 ### Лицензия
 
-[MIT](LICENSE). Автор: **Kasper / Shamanalle**.
+[MIT](LICENSE). Автор: **Shamanalle**.
