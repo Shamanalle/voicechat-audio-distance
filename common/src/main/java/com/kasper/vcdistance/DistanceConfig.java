@@ -19,8 +19,8 @@ public final class DistanceConfig {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("VC-AudioDistance");
 
-    /** 3: the file is written with a comment for every key; 4: interface section; 5: echo, water, weather. */
-    private static final int CONFIG_VERSION = 5;
+    /** 3: the file is written with a comment for every key; 4: interface section; 5: echo, water, weather; 6: sound around corners. */
+    private static final int CONFIG_VERSION = 6;
     private static final String FILE_NAME = "vc-audio-distance.properties";
 
     // -------------------------------------------------------------------------
@@ -54,6 +54,7 @@ public final class DistanceConfig {
     public static final double DEFAULT_REVERB_STRENGTH = 0.60;
     public static final boolean DEFAULT_UNDERWATER_ENABLED = true;
     public static final boolean DEFAULT_WEATHER_ENABLED = true;
+    public static final boolean DEFAULT_DIFFRACTION_ENABLED = true;
 
     private volatile AttenuationModel model = DEFAULT_MODEL;
     private volatile double attenuationFactor = DEFAULT_ATTENUATION_FACTOR;
@@ -66,6 +67,7 @@ public final class DistanceConfig {
     private volatile double reverbStrength = DEFAULT_REVERB_STRENGTH;
     private volatile boolean underwaterEnabled = DEFAULT_UNDERWATER_ENABLED;
     private volatile boolean weatherEnabled = DEFAULT_WEATHER_ENABLED;
+    private volatile boolean diffractionEnabled = DEFAULT_DIFFRACTION_ENABLED;
     private final double[] materialWeights = new double[AcousticMaterial.values().length];
 
     // Interface: only ever read from the player's own file, never part of a server profile
@@ -201,6 +203,16 @@ public final class DistanceConfig {
         changed();
     }
 
+    /** Voices behind a wall come round through a nearby doorway: less muffled, from its direction. */
+    public boolean isDiffractionEnabled() {
+        return diffractionEnabled;
+    }
+
+    public void setDiffractionEnabled(boolean value) {
+        diffractionEnabled = value;
+        changed();
+    }
+
     public double getMaterialWeight(AcousticMaterial material) {
         synchronized (materialWeights) {
             return materialWeights[material.ordinal()];
@@ -283,6 +295,7 @@ public final class DistanceConfig {
         reverbStrength = DEFAULT_REVERB_STRENGTH;
         underwaterEnabled = DEFAULT_UNDERWATER_ENABLED;
         weatherEnabled = DEFAULT_WEATHER_ENABLED;
+        diffractionEnabled = DEFAULT_DIFFRACTION_ENABLED;
         resetMaterials();
     }
 
@@ -306,6 +319,7 @@ public final class DistanceConfig {
         reverbStrength = other.reverbStrength;
         underwaterEnabled = other.underwaterEnabled;
         weatherEnabled = other.weatherEnabled;
+        diffractionEnabled = other.diffractionEnabled;
         for (AcousticMaterial m : AcousticMaterial.values()) {
             double w = other.getMaterialWeight(m);
             synchronized (materialWeights) {
@@ -380,7 +394,7 @@ public final class DistanceConfig {
         w.section("Walls", "Стены");
         writeWalls(w, "");
         writeMaterials(w, "");
-        w.section("Echo, water and weather", "Эхо, вода и погода");
+        w.section("Echo, water, weather, corners", "Эхо, вода, погода, углы");
         writeEffects(w, "");
         w.section("Interface", "Интерфейс");
         w.comment("Voice HUD on screen: off, talking (while someone nearby or you talk), always. Default talking.",
@@ -437,7 +451,10 @@ public final class DistanceConfig {
                 .value(prefix + "underwater_enabled", underwaterEnabled)
                 .comment("Rain and thunder cover far voices under the open sky: true / false. Default true.",
                         "Дождь и гроза заглушают дальние голоса под открытым небом: true / false. По умолчанию true.")
-                .value(prefix + "weather_enabled", weatherEnabled);
+                .value(prefix + "weather_enabled", weatherEnabled)
+                .comment("Voices behind a wall come round through a nearby doorway or window: less muffled, from its direction. Default true.",
+                        "Голоса за стеной обходят её через ближайший проём или окно: глушатся меньше и слышны с его стороны. По умолчанию true.")
+                .value(prefix + "diffraction_enabled", diffractionEnabled);
     }
 
     /** Per-material weights with their explanations (shared by the client and server files). */
@@ -463,6 +480,7 @@ public final class DistanceConfig {
         props.setProperty(prefix + "reverb_strength", format(reverbStrength));
         props.setProperty(prefix + "underwater_enabled", String.valueOf(underwaterEnabled));
         props.setProperty(prefix + "weather_enabled", String.valueOf(weatherEnabled));
+        props.setProperty(prefix + "diffraction_enabled", String.valueOf(diffractionEnabled));
         for (AcousticMaterial m : AcousticMaterial.values()) {
             props.setProperty(prefix + "material." + m.getId(), format(getMaterialWeight(m)));
         }
@@ -481,6 +499,7 @@ public final class DistanceConfig {
         reverbStrength = clamp(parseDouble(props, prefix + "reverb_strength", DEFAULT_REVERB_STRENGTH), REVERB_MIN, REVERB_MAX);
         underwaterEnabled = parseBoolean(props, prefix + "underwater_enabled", DEFAULT_UNDERWATER_ENABLED);
         weatherEnabled = parseBoolean(props, prefix + "weather_enabled", DEFAULT_WEATHER_ENABLED);
+        diffractionEnabled = parseBoolean(props, prefix + "diffraction_enabled", DEFAULT_DIFFRACTION_ENABLED);
         synchronized (materialWeights) {
             for (AcousticMaterial m : AcousticMaterial.values()) {
                 materialWeights[m.ordinal()] = clamp(parseDouble(props, prefix + "material." + m.getId(), m.getDefaultWeight()), 0.0, AcousticMaterial.MAX_WEIGHT);

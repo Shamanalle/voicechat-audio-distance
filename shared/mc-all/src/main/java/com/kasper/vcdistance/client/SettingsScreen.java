@@ -345,7 +345,11 @@ public abstract class SettingsScreen extends Screen {
             config.setWeatherEnabled(!config.isWeatherEnabled());
             b.setMessage(onOff("effects.weather", config.isWeatherEnabled()));
         }).bounds(right - colW, contentTop + ROW, colW, 20).tooltip(tip("effects.weather.tooltip")).build());
-        panelTop = contentTop + ROW * 2 + 2;
+        edit(Button.builder(onOff("effects.corners", shown().isDiffractionEnabled()), b -> {
+            config.setDiffractionEnabled(!config.isDiffractionEnabled());
+            b.setMessage(onOff("effects.corners", config.isDiffractionEnabled()));
+        }).bounds(left, contentTop + ROW * 2, colW, 20).tooltip(tip("effects.corners.tooltip")).build());
+        panelTop = contentTop + ROW * 3 + 2;
     }
 
     private static Component onOff(String key, boolean on) {
@@ -765,6 +769,20 @@ public abstract class SettingsScreen extends Screen {
         c.text(fit(c, tr(weatherKey), w), x, rowY,
                 weather != EnvironmentEffects.Weather.CLEAR && shown.isWeatherEnabled() ? Palette.WARN : Palette.TEXT_MUTED);
         rowY += 14;
+
+        // Corners: voices that come round a wall right now
+        int round = 0;
+        for (SpeakerRegistry.Speaker sp : AudioDistancePlugin.SPEAKERS.active(System.nanoTime())) {
+            if (sp.hasOpening()) {
+                round++;
+            }
+        }
+        boolean cornersOn = shown.isDiffractionEnabled() && status == AudioDistancePlugin.OcclusionStatus.ACTIVE;
+        if (rowY + 10 <= contentBottom - 4) {
+            c.text(fit(c, round > 0 ? tr("effects.corners.now", round) : tr("effects.corners.none"), w), x, rowY,
+                    round > 0 && cornersOn ? Palette.ACCENT_LINE : Palette.TEXT_MUTED);
+            rowY += 14;
+        }
 
         if (rowY + 22 <= contentBottom - 4) {
             c.text(fit(c, tr("effects.hint"), w), x, contentBottom - 14, Palette.TEXT_MUTED);

@@ -393,6 +393,8 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             double curve = AudioPhysics.calculateGain(sourceDistance(source) / range, c.getModel(),
                     effectiveRolloff(c, whispering), c.getMinVolumeFraction(), c.getOpenalReferenceRatio());
 
+            redirectThroughOpening(event, source, c);
+
             float sourceGain = Math.max(0.0F, AL11.alGetSourcef(source, AL11.AL_GAIN));
             AL11.alSourcef(source, AL11.AL_ROLLOFF_FACTOR, 0.0F);
             AL11.alSourcef(source, AL11.AL_MAX_GAIN, (float) (curve * sourceGain));
@@ -404,6 +406,35 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     }
 
     /** Distance between the source and the listener, the way OpenAL measures it. */
+    /**
+     * A voice coming round a wall through a doorway is heard from the doorway's direction, at its
+     * real distance (so the distance curve stays the same). Directions are taken in world axes,
+     * which Simple Voice Chat's OpenAL space shares.
+     */
+    private static void redirectThroughOpening(OpenALSoundEvent event, int source, DistanceConfig c) {
+        SpeakerRegistry.Speaker speaker = SPEAKERS.get(event.getChannelId());
+        if (speaker == null || !speaker.hasOpening() || !c.isDiffractionEnabled()
+                || occlusionStatus() != OcclusionStatus.ACTIVE
+                || AL11.alGetSourcei(source, AL11.AL_SOURCE_RELATIVE) != AL11.AL_FALSE) {
+            return;
+        }
+        double[] eye = ENVIRONMENT.position();
+        double dx = speaker.getOpeningX() - eye[0];
+        double dy = speaker.getOpeningY() - eye[1];
+        double dz = speaker.getOpeningZ() - eye[2];
+        double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (!(len > 0.01)) {
+            return;
+        }
+        float[] lx = new float[1];
+        float[] ly = new float[1];
+        float[] lz = new float[1];
+        AL11.alGetListener3f(AL11.AL_POSITION, lx, ly, lz);
+        double dist = sourceDistance(source);
+        AL11.alSource3f(source, AL11.AL_POSITION,
+                (float) (lx[0] + dx / len * dist), (float) (ly[0] + dy / len * dist), (float) (lz[0] + dz / len * dist));
+    }
+
     private static double sourceDistance(int source) {
         float[] sx = new float[1];
         float[] sy = new float[1];
@@ -472,8 +503,9 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             EnvironmentEffects.Effect effect = EnvironmentEffects.Effect.NONE;
             if (status == OcclusionStatus.ACTIVE && speaker.isOcclusionKnown()) {
                 double strength = c.getOcclusionStrength();
-                effect = new EnvironmentEffects.Effect(OcclusionModel.muffle(speaker.getThickness(), strength),
-                        OcclusionModel.lossDb(speaker.getThickness(), strength));
+                double thickness = speaker.getEffectiveThickness();
+                effect = new EnvironmentEffects.Effect(OcclusionModel.muffle(thickness, strength),
+                        OcclusionModel.lossDb(thickness, strength));
             }
             // Sound Physics Remastered does its own water and echo; weather is ours either way
             boolean ownPhysics = status != OcclusionStatus.SOUND_PHYSICS && status != OcclusionStatus.UNAVAILABLE;
