@@ -69,7 +69,7 @@ public class AudioDistanceClient implements ClientModInitializer {
             }
             if (client.player != null && AudioDistancePlugin.LINK.consumeNotice()) {
                 String mode = AudioDistancePlugin.LINK.isEnforced() ? "enforce" : "suggest";
-                client.player.displayClientMessage(Component.translatable("message.vc-audio-distance.server_profile." + mode), false);
+                client.player.sendSystemMessage(Component.translatable("message.vc-audio-distance.server_profile." + mode));
             }
         } catch (Throwable t) {
             DistanceConfig.LOGGER.debug("Server link tick failed: {}", t.toString());
