@@ -9,9 +9,9 @@
 
 **[English](#english)** · **[Русский](#русский)**
 
-| Distance / Дистанция | Walls / Стены | Monitor / Монитор |
-|---|---|---|
-| ![Distance](docs/images/ui-distance.png) | ![Walls](docs/images/ui-walls.png) | ![Monitor](docs/images/ui-monitor.png) |
+| Distance / Дистанция | Walls / Стены | Monitor / Монитор | Server profile / Профиль сервера |
+|---|---|---|---|
+| ![Distance](docs/images/ui-distance.png) | ![Walls](docs/images/ui-walls.png) | ![Monitor](docs/images/ui-monitor.png) | ![Server profile](docs/images/ui-server-enforced.png) |
 
 <sub>Renders of the settings screen made outside the game with the mod's own layout and drawing code. · Рендеры экрана настроек вне игры тем же кодом раскладки и отрисовки, что в моде.</sub>
 
