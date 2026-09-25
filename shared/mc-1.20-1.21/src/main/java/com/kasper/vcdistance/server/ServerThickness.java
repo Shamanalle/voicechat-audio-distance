@@ -23,11 +23,11 @@ public final class ServerThickness implements ServerWalls.ThicknessProvider {
     private static final double MAX_TRACE_DISTANCE = 160.0;
 
     @Override
-    public double thickness(Object listener, UUID speakerEntity, double x, double y, double z) {
-        if (!(listener instanceof ServerPlayer player)) {
+    public double thickness(Object listener, Object levelObject, UUID speakerEntity, double x, double y, double z) {
+        // The level comes from Simple Voice Chat: the accessor for it is named differently across versions
+        if (!(listener instanceof ServerPlayer player) || !(levelObject instanceof ServerLevel level)) {
             return Double.NaN;
         }
-        ServerLevel level = player.serverLevel();
         Vec3 ear = player.getEyePosition();
         Vec3 source;
         if (speakerEntity != null) {

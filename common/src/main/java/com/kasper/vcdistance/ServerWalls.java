@@ -45,10 +45,11 @@ public final class ServerWalls {
     public interface ThicknessProvider {
         /**
          * @param listener      the listener's Minecraft player object ({@code ServerPlayer})
+         * @param level         the listener's Minecraft level ({@code ServerLevel}), as reported by Simple Voice Chat
          * @param speakerEntity the speaking entity, or {@code null} for a fixed position
          * @return thickness in stone blocks, or {@code NaN} when it cannot be determined
          */
-        double thickness(Object listener, UUID speakerEntity, double x, double y, double z);
+        double thickness(Object listener, Object level, UUID speakerEntity, double x, double y, double z);
     }
 
     private static final long ACTIVE_NANOS = TimeUnit.MILLISECONDS.toNanos(800);
@@ -64,6 +65,7 @@ public final class ServerWalls {
         final UUID listener;
         final VoiceFilter filter = new VoiceFilter();
         volatile Object listenerPlayer;
+        volatile Object listenerLevel;
         volatile UUID speakerEntity;
         volatile double x;
         volatile double y;
@@ -202,6 +204,9 @@ public final class ServerWalls {
         Pair pair = pairs.computeIfAbsent(new PairKey(channel, listener), k -> new Pair(listener));
         pair.lastSeenNanos = now;
         pair.listenerPlayer = receiver.getPlayer().getPlayer();
+        pair.listenerLevel = receiver.getPlayer().getServerLevel() != null
+                ? receiver.getPlayer().getServerLevel().getServerLevel()
+                : null;
         pair.speakerEntity = speakerEntity;
         if (position != null) {
             pair.x = position.getX();
@@ -309,11 +314,12 @@ public final class ServerWalls {
                 continue;
             }
             Object listener = pair.listenerPlayer;
-            if (listener == null) {
+            Object level = pair.listenerLevel;
+            if (listener == null || level == null) {
                 continue;
             }
             try {
-                pair.thickness = provider.thickness(listener, pair.speakerEntity, pair.x, pair.y, pair.z);
+                pair.thickness = provider.thickness(listener, level, pair.speakerEntity, pair.x, pair.y, pair.z);
             } catch (Throwable t) {
                 pair.thickness = Double.NaN;
                 logFailure(t);
