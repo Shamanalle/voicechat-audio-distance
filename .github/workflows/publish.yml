@@ -1,0 +1,150 @@
+name: Publish to Modrinth & CurseForge
+
+# Uploads the jars of one GitHub release to Modrinth and CurseForge. The files are downloaded from the
+# release, so the stores get exactly what GitHub has. Runs after "Publish Release", or by hand
+# (Actions -> Publish to Modrinth & CurseForge -> Run workflow) for a tag that already has a release.
+#
+# Project ids live in .github/publish.json; the tokens are the MODRINTH_TOKEN and CURSEFORGE_TOKEN
+# secrets. A store whose id or token is missing is skipped with a warning.
+#
+# Modrinth gets the mod (one file per Minecraft version, for every loader) and the
+# Paper/Purpur/Spigot plugin. CurseForge gets the mod only: Bukkit plugins need a separate project
+# in its Bukkit section.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag, e.g. v1.2.1'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  config:
+    name: Check settings
+    runs-on: ubuntu-latest
+    outputs:
+      modrinth: ${{ steps.ids.outputs.modrinth }}
+      curseforge: ${{ steps.ids.outputs.curseforge }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          sparse-checkout: .github
+
+      - name: Read project ids and tokens
+        id: ids
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+        run: |
+          modrinth=$(jq -r '.modrinth // ""' .github/publish.json)
+          curseforge=$(jq -r '.curseforge // ""' .github/publish.json)
+          if [ -z "${modrinth}" ] || [ -z "${MODRINTH_TOKEN}" ]; then
+            echo "::warning::Modrinth skipped: set \"modrinth\" in .github/publish.json and the MODRINTH_TOKEN secret"
+            modrinth=""
+          fi
+          if [ -z "${curseforge}" ] || [ -z "${CURSEFORGE_TOKEN}" ]; then
+            echo "::warning::CurseForge skipped: set \"curseforge\" in .github/publish.json and the CURSEFORGE_TOKEN secret"
+            curseforge=""
+          fi
+          echo "modrinth=${modrinth}" >> "$GITHUB_OUTPUT"
+          echo "curseforge=${curseforge}" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: ${{ matrix.name }}
+    needs: config
+    if: needs.config.outputs.modrinth != '' || needs.config.outputs.curseforge != ''
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        # The Fabric and Forge/NeoForge files of one Minecraft version are the same jar, and Modrinth
+        # refuses a file it already has, so each Minecraft version is one upload with every loader.
+        # Fabric API is marked optional: a required one would be pulled into Forge installs too, and
+        # Fabric itself still insists on it.
+        include:
+          - name: Mod for 1.20.1
+            file: fabric-{v}+mc1.20.1.jar
+            target: mc1.20.1
+            loaders: fabric quilt forge
+            game-versions: 1.20 1.20.1
+            java: 17
+            dependencies: simple-voice-chat(required) fabric-api(optional) modmenu(optional)
+            curseforge: true
+          - name: Mod for 1.21.x
+            file: fabric-{v}+mc1.21.x.jar
+            target: mc1.21.x
+            loaders: fabric quilt neoforge forge
+            game-versions: 1.21 1.21.1 1.21.2 1.21.3 1.21.4 1.21.5 1.21.6 1.21.7 1.21.8 1.21.9 1.21.10 1.21.11
+            java: 21
+            dependencies: simple-voice-chat(required) fabric-api(optional) modmenu(optional)
+            curseforge: true
+          - name: Mod for 26.3
+            file: fabric-{v}+mc26.x.jar
+            target: mc26.x
+            loaders: fabric neoforge forge
+            game-versions: 26.3
+            java: 25
+            dependencies: simple-voice-chat(required) fabric-api(optional) modmenu(optional)
+            curseforge: true
+          - name: Paper/Purpur/Spigot plugin
+            file: bukkit-{v}.jar
+            target: bukkit
+            loaders: paper purpur spigot bukkit
+            game-versions: 1.20.1 1.20.2 1.20.3 1.20.4 1.20.5 1.20.6 1.21 1.21.1 1.21.2 1.21.3 1.21.4 1.21.5 1.21.6 1.21.7 1.21.8 1.21.9 1.21.10 1.21.11
+            java: 17
+            dependencies: simple-voice-chat(required)
+            curseforge: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Download the release file and notes
+        id: files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+          PATTERN: ${{ matrix.file }}
+        run: |
+          version="${TAG#v}"
+          file="voicechat-audio-distance-${PATTERN//\{v\}/${version}}"
+          gh release download "${TAG}" --pattern "${file}" --dir dist
+          # The mod jar serves every loader, so the stores get it without "fabric" in the name
+          upload="${file/-fabric-/-}"
+          if [ "${upload}" != "${file}" ]; then
+            mv "dist/${file}" "dist/${upload}"
+          fi
+          bash .github/scripts/release-notes.sh "${TAG}" > dist/notes.md
+          echo "file=dist/${upload}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ needs.config.outputs.modrinth }}
+          modrinth-token: ${{ needs.config.outputs.modrinth != '' && secrets.MODRINTH_TOKEN || '' }}
+          curseforge-id: ${{ matrix.curseforge && needs.config.outputs.curseforge || '' }}
+          curseforge-token: ${{ matrix.curseforge && needs.config.outputs.curseforge != '' && secrets.CURSEFORGE_TOKEN || '' }}
+          files: ${{ steps.files.outputs.file }}
+          name: ${{ steps.files.outputs.version }} · ${{ matrix.name }}
+          version: ${{ steps.files.outputs.version }}+${{ matrix.target }}
+          version-type: release
+          changelog-file: dist/notes.md
+          loaders: ${{ matrix.loaders }}
+          game-versions: ${{ matrix.game-versions }}
+          java: ${{ matrix.java }}
+          dependencies: ${{ matrix.dependencies }}
