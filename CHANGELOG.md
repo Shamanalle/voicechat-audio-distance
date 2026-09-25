@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - *Exact whisper range:* the server sends its real voice and whisper distances for the whisper curve.
   - `config/vc-audio-distance-server.properties`, re-read automatically when edited, with changes sent to connected players.
   - Players who have the addon muffle walls locally, so the server skips them.
+- **Plugin for Paper, Purpur, Spigot and Bukkit** (1.20.1 and newer): `voicechat-audio-distance-bukkit-1.2.0.jar`. The same server side as on Fabric, with the same settings, stored in `plugins/VoicechatAudioDistance/`. It speaks the same protocol, so the Fabric client works with it just as with a Fabric server.
 - **New settings screen** with four tabs:
   - *Distance* — live curve, whisper curve, hover readout in blocks / % / dB, dots for the people you hear right now;
   - *Walls* — how a voice sounds behind glass, wood, stone, wool and leaves;
@@ -26,7 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Per-material wall weights (stone, wood, wool, glass, doors, leaves, bars and fences, liquids), saved in the config.
 - The *Voice distance & walls…* button in Simple Voice Chat's settings now also exists on 26.x.
 - Sound Physics Remastered detection: our wall muffling stands down so voices are not muffled twice.
-- 54 unit tests: filter, occlusion model, config round-trips and migration, speaker registry, server walls with a fake Simple Voice Chat API, client–server protocol, server settings, translation consistency.
+- 61 unit tests: filter, occlusion model, config round-trips and migration, speaker registry, server walls with a fake Simple Voice Chat API, client–server protocol and its wire format, ray geometry, server settings, translation consistency.
 
 #### Changed
 - **Audible wall muffling.** The old 1-pole filter changed a voice by less than 1 dB behind a stone wall. It is replaced by a 4th-order TPT state-variable low-pass plus broadband transmission loss:
@@ -40,6 +41,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `Esc` on the settings screen now saves, like vanilla option screens; *Cancel* restores everything.
 - The config is written atomically, validated on load and migrated from 1.1.x automatically.
 - Versions are defined once in `gradle.properties`.
+- The server remembers that a player has the addon until they leave the game, not only until their voice connection drops. Otherwise, after reconnecting voice, such a player would be muffled twice: by the server and by their own client.
+- Release notes on GitHub are generated from this file, and a workflow keeps the notes of already published releases in sync with it.
 
 #### Fixed
 - **Simple Voice Chat dependency.** Simple Voice Chat versions look like `1.21.8-2.6.24` (`2.6.24+26.3` on 26.x), so the old `>=2.4.0` / `[2.6.0,)` constraints never matched on 1.20 and 1.21 and the game refused to start. Each branch now uses the correct format.
@@ -59,7 +62,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 #### Notes
 - The Forge / NeoForge jars are a lite build: distance curves configured through `config/vc-audio-distance.properties`. The settings screen, walls, monitor and server side are Fabric-only.
-- Paper / Bukkit servers are not supported yet.
+- The Paper / Purpur / Spigot / Bukkit plugin is the server side only: on those servers the client features come from the Fabric addon on the player's side.
 
 ### Русский
 
@@ -70,6 +73,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - *Точная дальность шёпота:* сервер передаёт настоящие дальности голоса и шёпота для кривой шёпота.
   - `config/vc-audio-distance-server.properties` перечитывается автоматически при изменении, а изменения отправляются подключённым игрокам.
   - Игроки с аддоном глушат стены у себя, поэтому сервер их пропускает.
+- **Плагин для Paper, Purpur, Spigot и Bukkit** (1.20.1 и новее): `voicechat-audio-distance-bukkit-1.2.0.jar`. Та же серверная часть, что на Fabric, с теми же настройками, которые хранятся в `plugins/VoicechatAudioDistance/`. Протокол тот же, поэтому клиент для Fabric работает с ним так же, как с сервером Fabric.
 - **Новый экран настроек** из четырёх вкладок:
   - *Дистанция* — живой график, кривая шёпота, значение при наведении в блоках / % / дБ, точки людей, которых вы слышите прямо сейчас;
   - *Стены* — как звучит голос за стеклом, деревом, камнем, шерстью и листвой;
@@ -79,7 +83,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Настройка поглощения по материалам (камень, дерево, шерсть, стекло, двери, листва, решётки и заборы, жидкости), сохраняется в конфиге.
 - Кнопка «Дальность голоса и стены…» в настройках Simple Voice Chat теперь есть и на 26.x.
 - Определение Sound Physics Remastered: наше приглушение стенами отключается, чтобы голос не глушился дважды.
-- 54 юнит-теста: фильтр, модель приглушения, сохранение и миграция конфига, реестр говорящих, стены на сервере с поддельным API Simple Voice Chat, протокол клиент–сервер, настройки сервера, согласованность переводов.
+- 61 юнит-тест: фильтр, модель приглушения, сохранение и миграция конфига, реестр говорящих, стены на сервере с поддельным API Simple Voice Chat, протокол клиент–сервер и его формат передачи, геометрия лучей, настройки сервера, согласованность переводов.
 
 #### Изменено
 - **Приглушение стенами стало слышно.** Старый однополюсный фильтр менял голос за каменной стеной меньше чем на 1 дБ. Теперь вместо него фильтр 4-го порядка (TPT SVF) плюс общее ослабление:
@@ -93,6 +97,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `Esc` на экране настроек сохраняет изменения, как в ванильных настройках; «Отмена» возвращает всё как было.
 - Конфиг записывается атомарно, проверяется при загрузке и автоматически переносится с 1.1.x.
 - Версии зависимостей задаются в одном месте — `gradle.properties`.
+- Сервер помнит, что у игрока есть аддон, пока тот не выйдет из игры, а не только пока не оборвётся голосовое соединение. Иначе после переподключения голоса такого игрока глушили бы дважды: сервер и его собственный клиент.
+- Описания релизов на GitHub берутся из этого файла, а отдельный workflow синхронизирует с ним описания уже опубликованных релизов.
 
 #### Исправлено
 - **Зависимость от Simple Voice Chat.** Версии Simple Voice Chat имеют вид `1.21.8-2.6.24` (`2.6.24+26.3` на 26.x), поэтому старые условия `>=2.4.0` / `[2.6.0,)` не выполнялись на 1.20 и 1.21, и игра не запускалась. Теперь в каждой ветке правильный формат.
@@ -112,7 +118,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 #### Примечания
 - JAR для Forge / NeoForge — облегчённая версия: кривые громкости с настройкой через `config/vc-audio-distance.properties`. Экран настроек, стены, монитор и серверная часть есть только в версии для Fabric.
-- Серверы Paper / Bukkit пока не поддерживаются.
+- Плагин для Paper / Purpur / Spigot / Bukkit — это только серверная часть: на таких серверах клиентские функции даёт аддон для Fabric у самого игрока.
 
 ## [1.1.0] - 2026-09-25
 
@@ -134,6 +140,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Settings screen:** a *Wall Occlusion: ON / OFF* toggle and a *Muffling: 0% – 100%* slider; presets with occlusion profiles (*Realistic* 65% on, *Stealth* 85% on, *Vanilla* / *Audible* off).
 - **Tests:** `OcclusionFilterTest` (11 tests) for frequency response, frame continuity, overflow safety and presets.
 
+#### Known issues (fixed in 1.2.0)
+- The 1.20.1 and 1.21.x files do not load: they require Simple Voice Chat `>=2.4.0`, but Simple Voice Chat versions look like `1.21.8-2.6.24`, which never matches.
+- The 1.21.x file crashes the settings screen on 1.21–1.21.5 and the game start-up on 1.21.9 and newer, and walls do not work on 1.21.11.
+- 26.x: 15 texts show up as raw translation keys; glass, leaves and doors are not counted as walls.
+- The wall filter barely changes a voice (less than 1 dB behind a stone wall) and does not switch off after the first wall.
+- The Forge and NeoForge files only load the distance curves.
+
 ### Русский
 
 #### Добавлено
@@ -151,6 +164,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Трассировка прямой видимости (`RaycastOcclusion`):** обход вокселей Minecraft (`BlockGetter.traverseBlocks`) с весами материалов (шерсть/ковры 0,45, камень 0,35, двери/дерево 0,25, стекло/железные решётки 0,15–0,18, листва 0,10, жидкости 0,20) и кэшем на 40 мс для каждой сущности.
 - **Экран настроек:** переключатель «Стены: ВКЛ / ВЫКЛ» и ползунок «Глубина: 0% – 100%»; пресеты с профилями приглушения (*Мягкий* — 65%, *Стелс* — 85%, *Ваниль* / *Чёткий* — выключено).
 - **Тесты:** `OcclusionFilterTest` (11 тестов) — частотная характеристика, непрерывность кадров, защита от переполнения и пресеты.
+
+#### Известные проблемы (исправлены в 1.2.0)
+- Файлы для 1.20.1 и 1.21.x не загружаются: они требуют Simple Voice Chat `>=2.4.0`, а версии Simple Voice Chat имеют вид `1.21.8-2.6.24` и этому условию не соответствуют.
+- Файл для 1.21.x роняет экран настроек на 1.21–1.21.5 и запуск игры на 1.21.9 и новее, а на 1.21.11 не работают стены.
+- 26.x: 15 текстов показываются как сырые ключи перевода; стекло, листва и двери не считаются стенами.
+- Фильтр стен почти не меняет голос (меньше 1 дБ за каменной стеной) и не выключается после первой стены.
+- Файлы для Forge и NeoForge загружают только кривые громкости.
 
 ## [1.0.0] - 2026-09-25
 
@@ -180,6 +200,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The graph readout overlapped the screen title.
 - The settings screen had a black background when opened from the main menu.
 
+#### Known issues (fixed in 1.2.0)
+- The mod does not load: it requires Simple Voice Chat `>=2.4.0`, but Simple Voice Chat versions look like `1.21.8-2.6.24`, which never matches.
+
 ### Русский
 
 #### Добавлено
@@ -205,3 +228,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Определение шёпота теперь зависит от дальности голоса на сервере.
 - Подсказка графика перекрывала заголовок экрана.
 - Экран настроек открывался с чёрным фоном из главного меню.
+
+#### Известные проблемы (исправлены в 1.2.0)
+- Мод не загружается: он требует Simple Voice Chat `>=2.4.0`, а версии Simple Voice Chat имеют вид `1.21.8-2.6.24` и этому условию не соответствуют.
