@@ -1,17 +1,28 @@
-name: "🐞 Ошибка / Bug report"
-description: "Что-то работает не так или игра падает / Something is broken or the game crashes"
+name: "🐞 Bug report / Ошибка"
+description: "Something is broken or the game crashes / Что-то работает не так или игра падает"
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Спасибо за отчёт! Чем точнее версии и шаги, тем быстрее получится исправить.
         Thanks for the report! Exact versions and steps make it much faster to fix.
+        Спасибо за отчёт! Чем точнее версии и шаги, тем быстрее получится исправить.
+
+  - type: dropdown
+    id: side
+    attributes:
+      label: "Where is the addon installed? / Где установлен аддон?"
+      options:
+        - "Client only / Только клиент"
+        - "Server only / Только сервер"
+        - "Client and server / Клиент и сервер"
+    validations:
+      required: true
 
   - type: dropdown
     id: loader
     attributes:
-      label: "Загрузчик / Loader"
+      label: "Loader / Загрузчик"
       options:
         - Fabric
         - Quilt
@@ -23,7 +34,7 @@ body:
   - type: input
     id: mc_version
     attributes:
-      label: "Версия Minecraft / Minecraft version"
+      label: "Minecraft version / Версия Minecraft"
       placeholder: "1.21.8"
     validations:
       required: true
@@ -31,8 +42,8 @@ body:
   - type: input
     id: addon_version
     attributes:
-      label: "Версия аддона / Addon version"
-      description: "Имя файла из папки mods / The file name from your mods folder"
+      label: "Addon version / Версия аддона"
+      description: "The file name from your mods folder / Имя файла из папки mods"
       placeholder: "voicechat-audio-distance-fabric-1.2.0+mc1.21.x.jar"
     validations:
       required: true
@@ -40,7 +51,7 @@ body:
   - type: input
     id: svc_version
     attributes:
-      label: "Версия Simple Voice Chat / Simple Voice Chat version"
+      label: "Simple Voice Chat version / Версия Simple Voice Chat"
       placeholder: "1.21.8-2.6.24"
     validations:
       required: true
@@ -48,47 +59,47 @@ body:
   - type: input
     id: fabric_version
     attributes:
-      label: "Fabric Loader и Fabric API / Fabric Loader and Fabric API"
-      description: "Только для Fabric/Quilt / Fabric/Quilt only"
+      label: "Fabric Loader and Fabric API / Fabric Loader и Fabric API"
+      description: "Fabric/Quilt only / Только для Fabric/Quilt"
       placeholder: "Loader 0.16.13, Fabric API 0.136.1+1.21.8"
 
   - type: checkboxes
     id: other_mods
     attributes:
-      label: "Другие моды на звук / Other audio mods"
+      label: "Other audio mods / Другие моды на звук"
       options:
         - label: "Sound Physics Remastered"
-        - label: "Другие аддоны Simple Voice Chat / Other Simple Voice Chat addons"
+        - label: "Other Simple Voice Chat addons / Другие аддоны Simple Voice Chat"
 
   - type: textarea
     id: description
     attributes:
-      label: "Что случилось / What happened"
-      description: "Что вы ожидали и что произошло на самом деле / What you expected and what actually happened"
+      label: "What happened / Что случилось"
+      description: "What you expected and what actually happened / Что вы ожидали и что произошло на самом деле"
     validations:
       required: true
 
   - type: textarea
     id: reproduction
     attributes:
-      label: "Как воспроизвести / Steps to reproduce"
+      label: "Steps to reproduce / Как воспроизвести"
       placeholder: |
-        1. Открыть настройки голосового чата (V) → «Дальность голоса и стены…» / Open voice chat settings (V) → "Voice distance & walls…"
-        2. Вкладка «Стены», сила 100% / Walls tab, strength 100%
-        3. Встать за каменной стеной от говорящего… / Stand behind a stone wall from the speaker…
+        1. Open the voice chat settings (V) → "Voice distance & walls…" / Открыть настройки голосового чата (V) → «Дальность голоса и стены…»
+        2. Walls tab, strength 100% / Вкладка «Стены», сила 100%
+        3. Stand behind a stone wall from the speaker… / Встать за каменной стеной от говорящего…
     validations:
       required: true
 
   - type: textarea
     id: config
     attributes:
-      label: "Конфиг / Config"
-      description: "Содержимое config/vc-audio-distance.properties / Contents of config/vc-audio-distance.properties"
+      label: "Config / Конфиг"
+      description: "Contents of config/vc-audio-distance.properties (and config/vc-audio-distance-server.properties on the server) / Содержимое config/vc-audio-distance.properties (и config/vc-audio-distance-server.properties на сервере)"
       render: properties
 
   - type: textarea
     id: logs
     attributes:
-      label: "Лог или краш-репорт / Log or crash report"
-      description: "logs/latest.log или crash-reports/…; можно ссылкой на mclo.gs / logs/latest.log or crash-reports/…; a mclo.gs link is fine"
+      label: "Log or crash report / Лог или краш-репорт"
+      description: "logs/latest.log or crash-reports/…; a mclo.gs link is fine / logs/latest.log или crash-reports/…; можно ссылкой на mclo.gs"
       render: text

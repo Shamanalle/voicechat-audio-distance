@@ -135,6 +135,10 @@ public final class ServerWalls {
     // Packet events (Simple Voice Chat server thread)
     // -------------------------------------------------------------------------
 
+    // The builders start as a copy of the original packet (channel, sender, sequence, category);
+    // the fields are still set explicitly so nothing depends on that. There is no sender(...)
+    // call: it is missing from the published 2.6.0 API.
+
     public void onEntitySound(EntitySoundPacketEvent event) {
         EntitySoundPacket p = event.getPacket();
         if (p == null) {
@@ -148,7 +152,6 @@ public final class ServerWalls {
         resend(event, () -> event.getVoicechat().sendEntitySoundPacketTo(event.getReceiverConnection(),
                 p.entitySoundPacketBuilder()
                         .channelId(p.getChannelId())
-                        .sender(p.getSender())
                         .opusEncodedData(processed)
                         .sequenceNumber(p.getSequenceNumber())
                         .category(p.getCategory())
@@ -171,7 +174,6 @@ public final class ServerWalls {
         resend(event, () -> event.getVoicechat().sendLocationalSoundPacketTo(event.getReceiverConnection(),
                 p.locationalSoundPacketBuilder()
                         .channelId(p.getChannelId())
-                        .sender(p.getSender())
                         .opusEncodedData(processed)
                         .sequenceNumber(p.getSequenceNumber())
                         .category(p.getCategory())

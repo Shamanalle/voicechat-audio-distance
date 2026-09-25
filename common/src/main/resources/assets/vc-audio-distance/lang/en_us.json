@@ -112,5 +112,7 @@
   "gui.vc-audio-distance.monitor.server.mode.suggest": "profile suggested",
   "gui.vc-audio-distance.monitor.server.mode.enforce": "profile enforced",
   "message.vc-audio-distance.server_profile.suggest": "[Voice Distance] This server suggests a sound profile. Open the voice chat settings (V) → \"Voice distance & walls…\" to apply it.",
-  "message.vc-audio-distance.server_profile.enforce": "[Voice Distance] This server uses its own sound profile while you play here. Your own settings return when you leave."
+  "message.vc-audio-distance.server_profile.enforce": "[Voice Distance] This server uses its own sound profile while you play here. Your own settings return when you leave.",
+  "modmenu.summaryTranslation.vc-audio-distance": "Voice distance curves and wall muffling for Simple Voice Chat.",
+  "modmenu.descriptionTranslation.vc-audio-distance": "Shapes how Simple Voice Chat voices fade with distance and muffles them through walls. Client: live curve, wall preview, monitor. Server (optional): walls for players without the addon and a shared sound profile."
 }
