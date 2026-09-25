@@ -29,12 +29,18 @@ jobs:
           curl -fsSL https://maven.maxhenkel.de/repository/public/de/maxhenkel/voicechat/voicechat-neoforge/maven-metadata.xml 2>/dev/null | grep -oP '<version>\K[^<]+' | tail -5 || true
       - name: NeoForge classes
         run: |
-          nf=$(curl -fsSL https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml | grep -oP '<version>\K26\.[^<]+' | grep -v beta | tail -1)
-          [ -n "$nf" ] || nf=$(curl -fsSL https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml | grep -oP '<version>\K26\.[^<]+' | tail -1)
-          echo "NeoForge ${nf}"
+          meta=$(curl -fsSL https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml)
+          echo "26.1 builds:"; grep -oP '<version>\K26\.1\.[^<]+' <<< "$meta" | tail -5
+          echo "26.3 builds:"; grep -oP '<version>\K26\.3\.[^<]+' <<< "$meta" | tail -3
+          nf=26.2.0.88
           curl -fsSL -o nf.jar "https://maven.neoforged.net/releases/net/neoforged/neoforge/${nf}/neoforge-${nf}-universal.jar"
-          unzip -l nf.jar | grep -oE "net/neoforged/neoforge/(client/event|event/tick|network/event|network/registration|event|client/gui|common|client)/[A-Za-z$]+\.class" \
-            | grep -E "RegisterGuiLayers|RegisterKeyMappings|ClientTickEvent|ServerTickEvent|RegisterPayloadHandlers|PayloadRegistrar|RegisterCommandsEvent|IConfigScreenFactory|ScreenEvent|PlayerEvent|GuiLayer|VanillaGuiLayers|ClientPlayerNetworkEvent|PacketDistributor|ModContainer|NeoForge\.class|IPayloadContext|IPayloadHandler|HandlerThread" | sort -u
-          for c in net.neoforged.neoforge.client.event.RegisterGuiLayersEvent net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent net.neoforged.neoforge.client.event.ClientTickEvent\$Post net.neoforged.neoforge.event.tick.ServerTickEvent\$Post net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent net.neoforged.neoforge.network.registration.PayloadRegistrar net.neoforged.neoforge.network.PacketDistributor net.neoforged.neoforge.client.network.ClientPacketDistributor net.neoforged.neoforge.event.RegisterCommandsEvent net.neoforged.neoforge.client.gui.IConfigScreenFactory net.neoforged.neoforge.client.event.ScreenEvent\$Init\$Post net.neoforged.neoforge.event.entity.player.PlayerEvent\$PlayerLoggedOutEvent net.neoforged.neoforge.client.gui.VanillaGuiLayers net.neoforged.neoforge.network.handling.IPayloadContext; do
-            echo "-- $c"; javap -cp nf.jar -public "$c" 2>&1 | grep -vE "^Compiled|^}" | head -14
+          echo "== fml jars in the NeoForge pom"
+          curl -fsSL "https://maven.neoforged.net/releases/net/neoforged/neoforge/${nf}/neoforge-${nf}.pom" | grep -A2 -E "fancymodloader|<artifactId>(loader|bus)" | grep -oP '<(artifactId|version)>\K[^<]+' | paste - - | head
+          fml=$(curl -fsSL "https://maven.neoforged.net/releases/net/neoforged/neoforge/${nf}/neoforge-${nf}.pom" | grep -B1 -A1 "<artifactId>loader</artifactId>" | grep -oP '<version>\K[^<]+' | head -1)
+          bus=$(curl -fsSL "https://maven.neoforged.net/releases/net/neoforged/neoforge/${nf}/neoforge-${nf}.pom" | grep -B1 -A1 "<artifactId>bus</artifactId>" | grep -oP '<version>\K[^<]+' | head -1)
+          echo "fml=$fml bus=$bus"
+          curl -fsSL -o fml.jar "https://maven.neoforged.net/releases/net/neoforged/fancymodloader/loader/${fml}/loader-${fml}.jar" || true
+          curl -fsSL -o bus.jar "https://maven.neoforged.net/releases/net/neoforged/bus/${bus}/bus-${bus}.jar" || true
+          for c in net.neoforged.neoforge.client.gui.GuiLayer net.neoforged.neoforge.common.NeoForge net.neoforged.neoforge.client.event.ScreenEvent\$Init\$Post net.neoforged.neoforge.client.event.ScreenEvent\$Init net.neoforged.fml.common.Mod net.neoforged.fml.ModContainer net.neoforged.fml.loading.FMLEnvironment net.neoforged.api.distmarker.Dist net.neoforged.bus.api.IEventBus net.neoforged.neoforge.network.handling.IPayloadHandler; do
+            echo "-- $c"; javap -cp nf.jar:fml.jar:bus.jar -public "$c" 2>&1 | grep -vE "^Compiled|^}" | head -16
           done
