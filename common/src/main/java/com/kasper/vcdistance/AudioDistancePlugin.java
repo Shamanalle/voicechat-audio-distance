@@ -4,10 +4,14 @@ import de.maxhenkel.voicechat.api.ForgeVoicechatPlugin;
 import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.ServerPlayer;
 import de.maxhenkel.voicechat.api.VoicechatApi;
+import de.maxhenkel.voicechat.api.VoicechatClientApi;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
+import de.maxhenkel.voicechat.api.events.ClientEvent;
 import de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent;
+import de.maxhenkel.voicechat.api.events.ClientSoundEvent;
+import de.maxhenkel.voicechat.api.events.ClientVoicechatConnectionEvent;
 import de.maxhenkel.voicechat.api.events.EntitySoundPacketEvent;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.LocationalSoundPacketEvent;
@@ -23,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 
 /**
@@ -55,6 +60,13 @@ public class AudioDistancePlugin implements VoicechatPlugin {
 
     private static volatile VoicechatApi api;
     private static volatile VoicechatServerApi serverApi;
+    private static volatile VoicechatClientApi clientApi;
+    /** Set when the installed Simple Voice Chat is too old to report other players' state (before 2.6.1). */
+    private static volatile boolean clientStatesUnsupported;
+    private static volatile long selfTalkNanos = Long.MIN_VALUE;
+    private static volatile boolean selfWhispering;
+    /** How long after the last microphone frame you still count as talking. */
+    private static final long SELF_TALK_HOLD_NANOS = TimeUnit.MILLISECONDS.toNanos(400);
     private static volatile boolean serverSettingsLoaded;
     private static volatile boolean occlusionProviderAvailable;
 
@@ -91,6 +103,8 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         registration.registerEvent(OpenALSoundEvent.class, AudioDistancePlugin::onOpenALSound);
         registration.registerEvent(ClientReceiveSoundEvent.EntitySound.class, AudioDistancePlugin::onEntitySound);
         registration.registerEvent(ClientReceiveSoundEvent.LocationalSound.class, AudioDistancePlugin::onLocationalSound);
+        registration.registerEvent(ClientSoundEvent.class, AudioDistancePlugin::onOwnVoice);
+        registration.registerEvent(ClientVoicechatConnectionEvent.class, AudioDistancePlugin::captureClientApi);
         registerServerEvents(registration);
     }
 
@@ -185,6 +199,84 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         double dy = pa.getY() - pb.getY();
         double dz = pa.getZ() - pb.getZ();
         return dx * dx + dy * dy + dz * dz;
+    }
+
+    // -------------------------------------------------------------------------
+    // Your own voice and other players' voice chat state (client)
+    // -------------------------------------------------------------------------
+
+    private static void captureClientApi(ClientEvent event) {
+        if (clientApi == null) {
+            try {
+                clientApi = event.getVoicechat();
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    /** Microphone frame being sent: you are talking. Never changes the audio. */
+    private static void onOwnVoice(ClientSoundEvent event) {
+        captureClientApi(event);
+        selfWhispering = event.isWhispering();
+        selfTalkNanos = System.nanoTime();
+    }
+
+    /** {@code true} while your microphone is sending. */
+    public static boolean isSelfTalking(long nowNanos) {
+        long t = selfTalkNanos;
+        return t != Long.MIN_VALUE && nowNanos - t <= SELF_TALK_HOLD_NANOS;
+    }
+
+    /** Whether your last microphone frame was a whisper. */
+    public static boolean isSelfWhispering() {
+        return selfWhispering;
+    }
+
+    /**
+     * Voice chat state of a player: from the server when it has the addon (it also knows who has no
+     * voice chat and who is in a group), otherwise from your own Simple Voice Chat (2.6.1+), which
+     * knows who is disconnected or has the sound off.
+     *
+     * @return the state, or {@code null} when neither knows
+     */
+    public static VoiceState voiceState(UUID player, long nowNanos) {
+        VoiceState fromServer = LINK.voiceState(player, nowNanos);
+        return fromServer != null ? fromServer : clientVoiceState(player);
+    }
+
+    /** {@code true} when {@link #voiceState} can answer for nearby players. */
+    public static boolean hasVoiceStates(long nowNanos) {
+        return LINK.hasVoiceStates(nowNanos) || clientStatesAvailable();
+    }
+
+    private static boolean clientStatesAvailable() {
+        VoicechatClientApi c = clientApi;
+        if (c == null || clientStatesUnsupported) {
+            return false;
+        }
+        try {
+            // Your own voice chat must be connected for the others' state to mean anything
+            return !c.isDisconnected();
+        } catch (Throwable t) {
+            clientStatesUnsupported = true;
+            return false;
+        }
+    }
+
+    private static VoiceState clientVoiceState(UUID player) {
+        if (player == null || !clientStatesAvailable()) {
+            return null;
+        }
+        VoicechatClientApi c = clientApi;
+        try {
+            if (c.isDisconnected(player)) {
+                return VoiceState.DISCONNECTED;
+            }
+            return c.isDisabled(player) ? VoiceState.SOUND_OFF : VoiceState.CONNECTED;
+        } catch (Throwable t) {
+            clientStatesUnsupported = true;
+            return null;
+        }
     }
 
     /** Called by the client glue once it feeds occlusion data from the world. */
@@ -317,6 +409,7 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     // -------------------------------------------------------------------------
 
     private static void onEntitySound(ClientReceiveSoundEvent.EntitySound event) {
+        captureClientApi(event);
         short[] raw = event.getRawAudio();
         if (raw == null || raw.length == 0 || event.getId() == null) {
             return;

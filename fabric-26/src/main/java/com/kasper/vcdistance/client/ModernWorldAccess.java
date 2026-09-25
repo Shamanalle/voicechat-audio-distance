@@ -1,6 +1,7 @@
 package com.kasper.vcdistance.client;
 
 import com.kasper.vcdistance.AudioDistancePlugin;
+import com.kasper.vcdistance.Bearing;
 import com.kasper.vcdistance.NearbyPlayers;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.client.Minecraft;
@@ -39,6 +40,12 @@ public final class ModernWorldAccess implements WorldAccess {
     }
 
     @Override
+    public double listenerYaw() {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.player != null ? mc.player.getYRot() : 0.0;
+    }
+
+    @Override
     public Vec3 entitySpeakerPosition(SpeakerRegistry.Speaker speaker, long nowNanos) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null || speaker.getEntityId() == null) {
@@ -70,13 +77,16 @@ public final class ModernWorldAccess implements WorldAccess {
             return List.of();
         }
         List<NearbyPlayers.Player> list = new ArrayList<>();
+        double yaw = self.getYRot();
         for (AbstractClientPlayer p : mc.level.players()) {
             if (p == self || (p.isSpectator() && !self.isSpectator()) || p.isInvisibleTo(self)) {
                 continue;
             }
-            double d = listener.distanceTo(p.getEyePosition());
+            Vec3 eye = p.getEyePosition();
+            double d = listener.distanceTo(eye);
             if (d <= range) {
-                list.add(new NearbyPlayers.Player(p.getUUID(), p.getName().getString(), d));
+                list.add(new NearbyPlayers.Player(p.getUUID(), p.getName().getString(), d,
+                        Bearing.relative(eye.x - listener.x, eye.z - listener.z, yaw)));
             }
         }
         return list;

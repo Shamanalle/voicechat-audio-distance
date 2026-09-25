@@ -1,5 +1,7 @@
 package com.kasper.vcdistance;
 
+import com.kasper.vcdistance.client.ClientHints;
+import com.kasper.vcdistance.client.HudHook;
 import com.kasper.vcdistance.client.KeyMappings;
 import com.kasper.vcdistance.client.MinecraftWorldAccess;
 import com.kasper.vcdistance.client.SpeakerTicker;
@@ -18,6 +20,7 @@ import net.minecraft.network.chat.Component;
 public class AudioDistanceClient implements ClientModInitializer {
 
     public static KeyMapping OPEN_SETTINGS_KEY;
+    public static KeyMapping TOGGLE_HUD_KEY;
     private static SpeakerTicker ticker;
     private static Object lastConnection;
     private static boolean helloSent;
@@ -33,9 +36,19 @@ public class AudioDistanceClient implements ClientModInitializer {
             if (OPEN_SETTINGS_KEY != null) {
                 KeyBindingHelper.registerKeyBinding(OPEN_SETTINGS_KEY);
             }
+            TOGGLE_HUD_KEY = KeyMappings.create("key.vc-audio-distance.toggle_hud", "key.categories.vc-audio-distance");
+            if (TOGGLE_HUD_KEY != null) {
+                KeyBindingHelper.registerKeyBinding(TOGGLE_HUD_KEY);
+            }
         } catch (Throwable t) {
             OPEN_SETTINGS_KEY = null;
-            DistanceConfig.LOGGER.warn("Could not register the settings key; use Mod Menu or the Voice Chat settings instead: {}", t.toString());
+            TOGGLE_HUD_KEY = null;
+            DistanceConfig.LOGGER.warn("Could not register the keys; use Mod Menu or the Voice Chat settings instead: {}", t.toString());
+        }
+        try {
+            HudHook.register();
+        } catch (Throwable t) {
+            DistanceConfig.LOGGER.warn("Could not add the voice HUD: {}", t.toString());
         }
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -46,6 +59,13 @@ public class AudioDistanceClient implements ClientModInitializer {
                     client.setScreen(new AudioDistanceScreen(client.screen));
                 }
             }
+            if (TOGGLE_HUD_KEY != null) {
+                while (TOGGLE_HUD_KEY.consumeClick()) {
+                    ClientHints.cycleHud();
+                }
+            }
+            ClientHints.tickWelcome(client.player != null && client.level != null, OPEN_SETTINGS_KEY,
+                    message -> client.player.displayClientMessage(message, false));
         });
         ScreenEvents.AFTER_INIT.register(AudioDistanceClient::onScreenInit);
     }
