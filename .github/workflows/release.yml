@@ -3,6 +3,7 @@ name: Publish Release
 # Publishes the release for mod_version from gradle.properties: builds every jar, takes the notes
 # from CHANGELOG.md and attaches the jars. Starts either from a pushed tag (vX.Y.Z) or by hand
 # (Actions -> Publish Release -> Run workflow on main), in which case the tag is created too.
+# Then the files go to Modrinth and CurseForge through publish.yml.
 
 on:
   push:
@@ -17,6 +18,8 @@ jobs:
   release:
     name: Build & publish
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
 
     steps:
       - name: Checkout
@@ -75,3 +78,12 @@ jobs:
           body_path: release_body.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Uploads the same files to Modrinth and CurseForge (skipped while their ids or tokens are not set)
+  stores:
+    name: Modrinth & CurseForge
+    needs: release
+    uses: ./.github/workflows/publish.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
+    secrets: inherit

@@ -61,6 +61,18 @@ The repository description and topics live in `.github/about.json`. The *Reposit
 1. Set `mod_version` in `gradle.properties` and add its section to `CHANGELOG.md` (English, then Russian).
 2. Merge into `main` and wait for the green build.
 3. *Actions → Publish Release → Run workflow* on `main`, or push the tag `vX.Y.Z`. The workflow builds every jar, creates the tag and the release, and takes the notes from `CHANGELOG.md`.
+4. The same run then uploads the files to Modrinth and CurseForge (see below). To upload an existing release again: *Actions → Publish to Modrinth & CurseForge → Run workflow* with its tag.
+
+### Modrinth and CurseForge
+
+The workflow *Publish to Modrinth & CurseForge* (`.github/workflows/publish.yml`) takes the files of a GitHub release and uploads them:
+- **Modrinth:** the mod (one file per Minecraft version, marked for Fabric, Quilt, Forge and NeoForge) and the Paper / Purpur / Spigot plugin.
+- **CurseForge:** the mod only. A Bukkit plugin needs a separate project in CurseForge's Bukkit section.
+
+A store is skipped with a warning while its project id or token is missing. Setup, once:
+1. Create the projects by hand: Modrinth → *Create a project* (type *Mod*); CurseForge → *Minecraft → Mods → Create project*. Both sites review new projects; the first upload can go into the project while it waits. The text for the project pages is in `docs/store-description.md`.
+2. Put the project ids into `.github/publish.json`: on Modrinth the *Project ID* from the project's menu, on CurseForge the *Project ID* number on the project page.
+3. Tokens: Modrinth → *Settings → Personal access tokens*, scopes *Create versions* and *Read projects*; CurseForge → *Account → API tokens*. Add them as repository secrets `MODRINTH_TOKEN` and `CURSEFORGE_TOKEN` (*Settings → Secrets and variables → Actions*). Tokens never go into files or chats.
 
 ### Pull requests
 
@@ -128,6 +140,18 @@ cd voicechat-audio-distance
 1. Укажите `mod_version` в `gradle.properties` и добавьте раздел этой версии в `CHANGELOG.md` (сначала английский, затем русский).
 2. Слейте изменения в `main` и дождитесь зелёной сборки.
 3. *Actions → Publish Release → Run workflow* на `main` или запушьте тег `vX.Y.Z`. Workflow соберёт все JAR, создаст тег и релиз, а описание возьмёт из `CHANGELOG.md`.
+4. Затем тот же запуск загрузит файлы на Modrinth и CurseForge (см. ниже). Чтобы загрузить уже вышедший релиз заново: *Actions → Publish to Modrinth & CurseForge → Run workflow* с его тегом.
+
+### Modrinth и CurseForge
+
+Workflow *Publish to Modrinth & CurseForge* (`.github/workflows/publish.yml`) берёт файлы релиза на GitHub и загружает их:
+- **Modrinth:** мод (один файл на версию Minecraft, отмеченный для Fabric, Quilt, Forge и NeoForge) и плагин для Paper / Purpur / Spigot.
+- **CurseForge:** только мод. Для плагина Bukkit нужен отдельный проект в разделе Bukkit на CurseForge.
+
+Площадка пропускается с предупреждением, пока для неё нет ID проекта или токена. Настраивается один раз:
+1. Создайте проекты вручную: Modrinth → *Create a project* (тип *Mod*); CurseForge → *Minecraft → Mods → Create project*. Оба сайта проверяют новые проекты; первую загрузку можно сделать, пока проект ждёт проверки. Текст для страниц проекта лежит в `docs/store-description.md`.
+2. Впишите ID проектов в `.github/publish.json`: на Modrinth — *Project ID* из меню проекта, на CurseForge — число *Project ID* на странице проекта.
+3. Токены: Modrinth → *Settings → Personal access tokens*, права *Create versions* и *Read projects*; CurseForge → *Account → API tokens*. Добавьте их как секреты репозитория `MODRINTH_TOKEN` и `CURSEFORGE_TOKEN` (*Settings → Secrets and variables → Actions*). Токены никогда не пишутся в файлы и чаты.
 
 ### Pull request
 
