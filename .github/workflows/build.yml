@@ -32,7 +32,7 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Unit tests (audio core, config, translations)
+      - name: Unit tests (audio core, server, config, translations)
         run: ./gradlew :common:test --no-daemon
 
       - name: Build every Minecraft target
