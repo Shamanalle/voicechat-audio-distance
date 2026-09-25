@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [Unreleased]
+
+### English
+
+#### Changed
+- **New icon**, pixel art drawn by `docs/make-icon.py`: a speaker, sound waves and a stone-brick wall. The old icon was a JPEG saved as `.png`, which Minecraft cannot read, so Mod Menu showed no icon.
+
+#### Added
+- Releases are also uploaded to Modrinth and CurseForge.
+
+### Русский
+
+#### Изменено
+- **Новая иконка** в пиксельном стиле, её рисует `docs/make-icon.py`: динамик, звуковые волны и стена из каменного кирпича. Старая иконка была JPEG-файлом с расширением `.png`, который Minecraft не читает, поэтому Mod Menu показывал мод без иконки.
+
+#### Добавлено
+- Релизы также загружаются на Modrinth и CurseForge.
+
 ## [1.2.1] - 2026-09-25
 
 ### English
