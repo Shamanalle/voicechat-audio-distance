@@ -15,15 +15,24 @@ import java.util.function.Function;
  */
 public final class NearbyPlayers {
 
-    /** A player the client can see within voice range. */
-    public record Player(UUID id, String name, double distance) {
+    /**
+     * A player the client can see within voice range.
+     *
+     * @param bearing degrees from where the listener looks, positive to the right ({@link Bearing})
+     */
+    public record Player(UUID id, String name, double distance, double bearing) {
+
+        public Player(UUID id, String name, double distance) {
+            this(id, name, distance, Double.NaN);
+        }
     }
 
     /**
      * One line of the monitor: a voice being heard ({@code speaker} set), or a nearby player who is
      * not talking. {@code state} is {@code null} when the server did not say.
      */
-    public record Row(SpeakerRegistry.Speaker speaker, UUID playerId, String name, double distance, VoiceState state) {
+    public record Row(SpeakerRegistry.Speaker speaker, UUID playerId, String name, double distance, double bearing,
+                      VoiceState state) {
 
         public boolean isTalking() {
             return speaker != null;
@@ -65,11 +74,12 @@ public final class NearbyPlayers {
             if (player != null) {
                 talking.add(player);
             }
-            rows.add(new Row(s, player, s.getDisplayName(), s.getDistance(), player != null ? states.apply(player) : null));
+            rows.add(new Row(s, player, s.getDisplayName(), s.getDistance(), s.getBearing(),
+                    player != null ? states.apply(player) : null));
         }
         for (Player p : nearby) {
             if (!talking.contains(p.id())) {
-                rows.add(new Row(null, p.id(), p.name(), p.distance(), states.apply(p.id())));
+                rows.add(new Row(null, p.id(), p.name(), p.distance(), p.bearing(), states.apply(p.id())));
             }
         }
         return rows;

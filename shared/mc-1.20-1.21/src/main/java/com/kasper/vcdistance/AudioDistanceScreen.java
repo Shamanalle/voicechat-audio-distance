@@ -4,7 +4,10 @@ import com.kasper.vcdistance.client.Compat;
 import com.kasper.vcdistance.client.GuiCanvas;
 import com.kasper.vcdistance.client.SettingsScreen;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 
 /**
  * Settings screen for Minecraft 1.20 - 1.21.x. All logic lives in {@link SettingsScreen}.
@@ -20,6 +23,11 @@ public class AudioDistanceScreen extends SettingsScreen {
         if (this.minecraft != null) {
             this.minecraft.setScreen(screen);
         }
+    }
+
+    @Override
+    protected void playPreview(float volume) {
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_AMBIENT, 1.0F, volume));
     }
 
     @Override
