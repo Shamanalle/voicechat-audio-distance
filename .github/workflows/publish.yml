@@ -4,7 +4,8 @@ name: Publish to Modrinth & CurseForge
 # release, so the stores get exactly what GitHub has. Runs after "Publish Release", or by hand
 # (Actions -> Publish to Modrinth & CurseForge -> Run workflow) for a tag that already has a release.
 #
-# Project ids live in .github/publish.json; the tokens are the MODRINTH_TOKEN and CURSEFORGE_TOKEN
+# Project ids live in .github/publish.json (read from the workflow's own commit, so a tag released
+# before the file existed can still be uploaded); the tokens are the MODRINTH_TOKEN and CURSEFORGE_TOKEN
 # secrets. A store whose id or token is missing is skipped with a warning.
 #
 # Modrinth gets the mod (one file per Minecraft version, for every loader) and the
@@ -38,7 +39,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
           sparse-checkout: .github
 
       - name: Read project ids and tokens
@@ -110,8 +110,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.tag }}
 
       - name: Download the release file and notes
         id: files
@@ -119,7 +117,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.tag }}
           PATTERN: ${{ matrix.file }}
+          LOADERS: ${{ matrix.loaders }}
+          GAME_VERSIONS: ${{ matrix.game-versions }}
+          DEPENDENCIES: ${{ matrix.dependencies }}
         run: |
+          # mc-publish takes lists one item per line
+          for name in LOADERS GAME_VERSIONS DEPENDENCIES; do
+            output=$(echo "${name}" | tr 'A-Z_' 'a-z-')
+            { echo "${output}<<EOF"; tr ' ' '\n' <<< "${!name}"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+          done
           version="${TAG#v}"
           file="voicechat-audio-distance-${PATTERN//\{v\}/${version}}"
           gh release download "${TAG}" --pattern "${file}" --dir dist
@@ -144,7 +150,7 @@ jobs:
           version: ${{ steps.files.outputs.version }}+${{ matrix.target }}
           version-type: release
           changelog-file: dist/notes.md
-          loaders: ${{ matrix.loaders }}
-          game-versions: ${{ matrix.game-versions }}
+          loaders: ${{ steps.files.outputs.loaders }}
+          game-versions: ${{ steps.files.outputs.game-versions }}
           java: ${{ matrix.java }}
-          dependencies: ${{ matrix.dependencies }}
+          dependencies: ${{ steps.files.outputs.dependencies }}
