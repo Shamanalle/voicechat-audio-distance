@@ -4,7 +4,7 @@ plugins {
 }
 
 base {
-    archivesName = "voicechat-audio-distance-addon-1.1.0+mc26.3"
+    archivesName = "voicechat-audio-distance-fabric-1.1.0+mc26.x"
 }
 
 repositories {

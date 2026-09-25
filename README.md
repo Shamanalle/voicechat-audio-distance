@@ -1,7 +1,9 @@
 # 🎙️ VoiceChat Audio Distance Addon
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21%2B-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.21%2B%20%7C%2026.x-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-lightgrey.svg?logo=fabric&logoColor=white)](https://fabricmc.net/)
+[![NeoForge](https://img.shields.io/badge/Loader-NeoForge-orange.svg)](https://neoforged.net/)
+[![Forge](https://img.shields.io/badge/Loader-Forge-red.svg)](https://files.minecraftforge.net/)
 [![Simple Voice Chat](https://img.shields.io/badge/Simple%20Voice%20Chat-2.4.0%2B-orange.svg)](https://modrinth.com/plugin/simple-voice-chat)
 [![Build Status](https://github.com/Shamanalle/voicechat-audio-distance/actions/workflows/build.yml/badge.svg)](https://github.com/Shamanalle/voicechat-audio-distance/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/Shamanalle/voicechat-audio-distance?logo=github&color=brightgreen)](https://github.com/Shamanalle/voicechat-audio-distance/releases)
@@ -85,19 +87,22 @@
 
 ---
 
-## 📦 Совместимость и установка / Versions & Installation
+## 📦 Совместимость и релизные файлы / Releases & Compatibility
 
-Аддон выпускается в виде отдельных оптимизированных сборок под каждое поколение Minecraft:
+Все файлы именуются строго по стандарту: `voicechat-audio-distance-[loader]-[версия]+mc[версия_игры].jar`
 
-| Версия Minecraft | Релизный файл аддона | Требуемая Java | Версия Simple Voice Chat |
-|---|---|---|---|
-| **Minecraft 1.21.x** (`1.21`, `1.21.1` ... `1.21.11`) | `voicechat-audio-distance-addon-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
-| **Minecraft 26.x** (`26.1`, `26.2`, `26.3`) | `voicechat-audio-distance-addon-1.1.0+mc26.3.jar` | Java 25+ | `>=2.6.0` (например, `2.6.24+26.3`) |
+| Загрузчик (Loader) | Версия игры | Файл аддона (Release JAR) | Java | Требуемый Simple Voice Chat |
+|---|---|---|---|---|
+| **Fabric / Quilt** | **1.21.x** (`1.21` – `1.21.8`) | `voicechat-audio-distance-fabric-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
+| **NeoForge** | **1.21.x** (`1.21` – `1.21.8`) | `voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
+| **Forge** | **1.21.x** (`1.21` – `1.21.8`) | `voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
+| **Fabric** | **26.x** (`26.1`, `26.2`, `26.3+`) | `voicechat-audio-distance-fabric-1.1.0+mc26.x.jar` | Java 25+ | `>=2.6.0` (например, `2.6.24+26.3`) |
 
 ### Инструкция по установке:
-1. Выберите подходящий файл аддона из таблицы выше под вашу версию Minecraft.
-2. Убедитесь, что у вас установлены **Fabric Loader**, **Fabric API** и мод **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)**.
-3. Поместите скачанный `.jar` файл в папку `.minecraft/mods/`.
+1. Выберите подходящий файл аддона из таблицы выше под ваш загрузчик (**Fabric**, **NeoForge** или **Forge**) и версию Minecraft.
+2. Убедитесь, что у вас установлен сам мод **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)**.
+3. Поместите `.jar` файл в папку `.minecraft/mods/`.
+4. Запустите игру. В меню настроек голосового чата (кнопка `V` по умолчанию) появится кнопка перехода в настройки физики звука!
 4. *(Опционально)* Установите **Mod Menu** для быстрого доступа к интерфейсу настроек.
 
 ---

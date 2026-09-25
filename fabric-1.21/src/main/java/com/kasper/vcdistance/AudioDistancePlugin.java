@@ -1,5 +1,6 @@
 package com.kasper.vcdistance;
 
+import de.maxhenkel.voicechat.api.ForgeVoicechatPlugin;
 import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.VoicechatApi;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
@@ -15,6 +16,7 @@ import org.lwjgl.openal.AL11;
  * Controls 3D audio attenuation curves, hardware volume floor, reference distances,
  * and physical obstacle sound occlusion through the Simple Voice Chat API and OpenAL 1.1.
  */
+@ForgeVoicechatPlugin
 public class AudioDistancePlugin implements VoicechatPlugin {
 
     public static final DistanceConfig CONFIG = new DistanceConfig();

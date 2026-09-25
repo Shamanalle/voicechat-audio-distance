@@ -8,9 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-09-25
 
 ### Added
-- **Multi-Version Dual-Target Support**:
-  - **Minecraft 1.21.x (`1.21` – `1.21.11`)**: Target file `voicechat-audio-distance-addon-1.1.0+mc1.21.x.jar` (Java 21).
-  - **Minecraft 26.x (`26.1` – `26.3`)**: Target file `voicechat-audio-distance-addon-1.1.0+mc26.3.jar` (Java 25, unobfuscated Loom, SDL3 input, and `GuiGraphicsExtractor` rendering).
+- **Multi-Loader & Multi-Version Standardized Release Architecture**:
+  - **Fabric / Quilt 1.21.x**: `voicechat-audio-distance-fabric-1.1.0+mc1.21.x.jar` (Minecraft 1.21 – 1.21.8).
+  - **NeoForge 1.21.x**: `voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar` (includes `META-INF/neoforge.mods.toml` and `@ForgeVoicechatPlugin`).
+  - **Forge 1.21.x**: `voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar` (includes `META-INF/mods.toml` and `@ForgeVoicechatPlugin`).
+  - **Fabric 26.x**: `voicechat-audio-distance-fabric-1.1.0+mc26.x.jar` (Minecraft 26.1 – 26.3+, Java 25, unobfuscated Loom, SDL3 input).
+  - Standardized all release artifact names to `[project]-[loader]-[version]+mc[target].jar`.
 - **Sound Occlusion & Acoustic Muffling**: Physical sound absorption through solid obstacles (walls, doors, floors, caves). Voices are muffled via real-time digital low-pass filtering when behind barriers.
 - **DSP Low-Pass Filter Engine (`OcclusionFilter`)**:
   - High-performance 1-pole IIR filter: `y[n] = y[n-1] + α · (x[n] - y[n-1])`.

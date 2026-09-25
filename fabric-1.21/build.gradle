@@ -4,7 +4,7 @@ plugins {
 }
 
 base {
-    archivesName = "voicechat-audio-distance-addon-1.1.0+mc1.21.x"
+    archivesName = "voicechat-audio-distance-fabric-1.1.0+mc1.21.x"
 }
 
 repositories {
@@ -44,6 +44,9 @@ processResources {
     inputs.property "version", project.version
 
     filesMatching("fabric.mod.json") {
+        expand "version": "1.1.0+mc1.21.x"
+    }
+    filesMatching("META-INF/*.toml") {
         expand "version": "1.1.0+mc1.21.x"
     }
 }
