@@ -3,6 +3,9 @@ plugins {
     id 'java'
 }
 
+// The NeoForge hooks are packed into this jar, so their module is configured first
+evaluationDependsOn(':neoforge-26')
+
 // Minecraft 26.3 (unobfuscated, no remapping)
 def target = "mc26.x"
 version = "${project.mod_version}+${target}"
