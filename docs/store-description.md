@@ -10,7 +10,7 @@ Text for the Modrinth and CurseForge project pages. Copy the English part, then 
 
 **Name:** Simple Voice Chat: Voice Physics
 
-**Summary:** Simple Voice Chat addon: realistic voice distance curves and wall muffling. Client, server, or both.
+**Summary:** Make voices feel real: they fade naturally with distance and sound muffled behind walls, doors and glass. Live distance graph, presets, and an optional server side for Fabric, Paper and Purpur that brings walls even to players without the addon.
 
 **Categories:** Utility, Social, Game Mechanics
 
@@ -44,7 +44,7 @@ Source code, full documentation and the changelog: https://github.com/Shamanalle
 
 **Название:** Simple Voice Chat: Voice Physics
 
-**Краткое описание:** Аддон Simple Voice Chat: реалистичное затухание голоса с расстоянием и приглушение стенами. Клиент, сервер или оба.
+**Краткое описание** (на площадках только на английском, как выше). Перевод: Голоса как в жизни: плавно затихают с расстоянием и звучат глухо за стенами, дверями и стеклом. Живой график дистанции, пресеты и серверная часть по желанию для Fabric, Paper и Purpur, которая приносит стены даже игрокам без аддона.
 
 **Категории:** Utility, Social, Game Mechanics
 
