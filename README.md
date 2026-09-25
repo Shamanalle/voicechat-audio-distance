@@ -1,4 +1,4 @@
-# 🎙️ VoiceChat Audio Distance
+# 🎙️ Voice Physics — Simple Voice Chat addon
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.x%20%7C%2026.x-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-lightgrey.svg?logo=fabric&logoColor=white)](https://fabricmc.net/)
@@ -136,7 +136,7 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 
 - **Fabric** is the full version, on the client and on the server. It needs [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 - **Paper / Purpur / Spigot / Bukkit** is the server side as a plugin: walls for players without the addon, and the server profile for players with it. Players can join with any client: with the Fabric addon, without it, or without mods at all. The plugin is compiled against the 1.20.1 API and checked in CI against every Paper release from 1.20.1 to 26.3: every class, method, field and override it uses resolves the same way (Paper 1.20.5 cannot be checked: its API snapshot is no longer downloadable).
-- **NeoForge for 26.x** is the full version, the same as Fabric: client and server, settings screen, walls, HUD, monitor, `/vcd`. The settings are also under *Mods → VoiceChat Audio Distance → Config*.
+- **NeoForge for 26.x** is the full version, the same as Fabric: client and server, settings screen, walls, HUD, monitor, `/vcd`. The settings are also under *Mods → Voice Physics → Config*.
 - **Forge, and NeoForge for 1.20.1 / 1.21.x,** are a lite version: distance curves only, configured in `config/vc-audio-distance.properties`. There is no settings screen, no walls, no monitor and no server side (those jars are built for Fabric's class names; 26.x has one set of names for every loader).
 - The 1.21.x jar was checked against the signatures of every Minecraft method it uses on each release from 1.21 to 1.21.11.
 - The 26.x jar is built for 26.3 and checked in CI on every 26.x release (26.1 – 26.3): every class, method, field and override the jar uses resolves on each one exactly as on 26.3. Where 26.x changed (screens moved to `Gui` in 26.2, SDL input in 26.3), the jar picks the right API at runtime.
@@ -146,7 +146,7 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 **Client**
 1. Install [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) and [Fabric API](https://modrinth.com/mod/fabric-api).
 2. Put the matching `.jar` into `.minecraft/mods/`.
-3. In game, open the voice chat settings (`V`) → **Voice distance & walls…**. The screen is also available from Mod Menu or with your own key (*Options → Controls*, unbound by default).
+3. In game, open the voice chat settings (`V`) → **Voice Physics…**. The screen is also available from Mod Menu or with your own key (*Options → Controls*, unbound by default).
 
 Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everything.
 
@@ -178,7 +178,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 | `weather_enabled` | true / false | true | Rain and thunder cover far voices |
 | `diffraction_enabled` | true / false | true | Voices come round walls through doorways |
 | `hud_mode` | `off` / `talking` / `always` | `talking` | Voice HUD |
-| `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_left` | Corner of the voice HUD |
+| `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_right` | Corner of the voice HUD |
 
 ### Server settings — `config/vc-audio-distance-server.properties`
 
@@ -369,7 +369,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - **Fabric** — полная версия, на клиенте и на сервере. Нужен [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
 - **Paper / Purpur / Spigot / Bukkit** — серверная часть в виде плагина: стены для игроков без аддона и профиль сервера для игроков с ним. Заходить можно с любым клиентом: с аддоном для Fabric, без него или совсем без модов. Плагин собран против API 1.20.1 и в CI проверяется на каждом релизе Paper от 1.20.1 до 26.3: каждый класс, метод, поле и переопределение, которые он использует, разрешаются одинаково (Paper 1.20.5 проверить нельзя: снимок его API больше не скачивается).
-- **NeoForge для 26.x** — полная версия, как на Fabric: клиент и сервер, экран настроек, стены, HUD, монитор, `/vcd`. Настройки есть и в «Моды → VoiceChat Audio Distance → Настроить».
+- **NeoForge для 26.x** — полная версия, как на Fabric: клиент и сервер, экран настроек, стены, HUD, монитор, `/vcd`. Настройки есть и в «Моды → Voice Physics → Настроить».
 - **Forge, а также NeoForge для 1.20.1 / 1.21.x,** — облегчённая версия: только кривые громкости, настройка в `config/vc-audio-distance.properties`. Нет экрана настроек, стен, монитора и серверной части (эти файлы собраны под имена классов Fabric; в 26.x имена одни для всех загрузчиков).
 - JAR для 1.21.x проверен по сигнатурам каждого используемого метода Minecraft на всех версиях с 1.21 по 1.21.11.
 - JAR для 26.x собран под 26.3 и в CI проверяется на каждом релизе 26.x (26.1 – 26.3): каждый класс, метод, поле и переопределение, которые использует JAR, разрешаются на каждой версии так же, как на 26.3. Там, где 26.x менялся (экраны переехали в `Gui` в 26.2, ввод через SDL в 26.3), JAR выбирает нужный API во время работы.
@@ -379,7 +379,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 **Клиент**
 1. Установите [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) и [Fabric API](https://modrinth.com/mod/fabric-api).
 2. Положите подходящий `.jar` в `.minecraft/mods/`.
-3. В игре откройте настройки голосового чата (`V`) → **«Дальность голоса и стены…»**. Экран также открывается через Mod Menu или своей клавишей (*Настройки → Управление*, по умолчанию не назначена).
+3. В игре откройте настройки голосового чата (`V`) → **«Voice Physics…»**. Экран также открывается через Mod Menu или своей клавишей (*Настройки → Управление*, по умолчанию не назначена).
 
 Изменения слышны сразу. «Готово» или `Esc` сохраняют, «Отмена» возвращает всё как было.
 
@@ -411,7 +411,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 | `weather_enabled` | true / false | true | Дождь и гроза заглушают дальние голоса |
 | `diffraction_enabled` | true / false | true | Голоса обходят стены через проёмы |
 | `hud_mode` | `off` / `talking` / `always` | `talking` | HUD голоса |
-| `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_left` | Угол экрана для HUD |
+| `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_right` | Угол экрана для HUD |
 
 ### Настройки сервера — `config/vc-audio-distance-server.properties`
 

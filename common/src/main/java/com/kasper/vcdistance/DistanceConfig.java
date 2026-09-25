@@ -19,8 +19,9 @@ public final class DistanceConfig {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("VC-AudioDistance");
 
-    /** 3: the file is written with a comment for every key; 4: interface section; 5: echo, water, weather; 6: sound around corners. */
-    private static final int CONFIG_VERSION = 6;
+    /** 3: the file is written with a comment for every key; 4: interface section; 5: echo, water, weather; 6: sound around corners;
+     * 7: the HUD moves from the top left (under Simple Voice Chat's group list) to the top right. */
+    private static final int CONFIG_VERSION = 7;
     private static final String FILE_NAME = "vc-audio-distance.properties";
 
     // -------------------------------------------------------------------------
@@ -72,7 +73,8 @@ public final class DistanceConfig {
 
     // Interface: only ever read from the player's own file, never part of a server profile
     public static final HudMode DEFAULT_HUD_MODE = HudMode.TALKING;
-    public static final HudCorner DEFAULT_HUD_CORNER = HudCorner.TOP_LEFT;
+    /** Top right: Simple Voice Chat's own group list sits in the top left. */
+    public static final HudCorner DEFAULT_HUD_CORNER = HudCorner.TOP_RIGHT;
     private volatile HudMode hudMode = DEFAULT_HUD_MODE;
     private volatile HudCorner hudCorner = DEFAULT_HUD_CORNER;
     private volatile boolean welcomeShown;
@@ -367,6 +369,9 @@ public final class DistanceConfig {
         hudMode = HudMode.fromId(props.getProperty("hud_mode"), DEFAULT_HUD_MODE);
         hudCorner = HudCorner.fromId(props.getProperty("hud_corner"), DEFAULT_HUD_CORNER);
         welcomeShown = parseBoolean(props, "welcome_shown", false);
+        if (parseDouble(props, "config_version", 1) < 7 && hudCorner == HudCorner.TOP_LEFT) {
+            hudCorner = HudCorner.TOP_RIGHT;
+        }
 
         LOGGER.info("Configuration loaded: model={}, rolloff={}, floor={}, reference={}, whisper={}, walls={} ({})",
                 model.getId(), attenuationFactor, minVolumeFraction, openalReferenceRatio, whisperMultiplier,
@@ -381,11 +386,11 @@ public final class DistanceConfig {
     public synchronized void save() {
         ConfigWriter w = new ConfigWriter()
                 .title("VoiceChat Audio Distance - client settings",
-                        "Easier to change in game: voice chat settings (V) -> \"Voice distance & walls...\".",
+                        "Easier to change in game: voice chat settings (V) -> \"Voice Physics...\".",
                         "The voice and whisper range itself is set by the server (Simple Voice Chat).",
                         "",
                         "VoiceChat Audio Distance - настройки клиента",
-                        "Удобнее менять в игре: настройки голосового чата (V) -> «Дальность голоса и стены…».",
+                        "Удобнее менять в игре: настройки голосового чата (V) -> «Voice Physics…».",
                         "Сама дальность голоса и шёпота задаётся на сервере (Simple Voice Chat).")
                 .comment("Format version, do not change. / Версия формата, не меняйте.")
                 .value("config_version", CONFIG_VERSION);
@@ -400,8 +405,8 @@ public final class DistanceConfig {
         w.comment("Voice HUD on screen: off, talking (while someone nearby or you talk), always. Default talking.",
                         "HUD голоса на экране: off (выкл.), talking (пока кто-то рядом или вы говорите), always (всегда). По умолчанию talking.")
                 .value("hud_mode", hudMode.getId())
-                .comment("Corner of the voice HUD: top_left, top_right, bottom_left, bottom_right. Default top_left.",
-                        "Угол экрана для HUD: top_left, top_right, bottom_left, bottom_right. По умолчанию top_left.")
+                .comment("Corner of the voice HUD: top_left, top_right, bottom_left, bottom_right. Default top_right.",
+                        "Угол экрана для HUD: top_left, top_right, bottom_left, bottom_right. По умолчанию top_right.")
                 .value("hud_corner", hudCorner.getId())
                 .comment("The first-join hint was shown. / Подсказка при первом входе уже показана.")
                 .value("welcome_shown", welcomeShown);
