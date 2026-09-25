@@ -1,0 +1,55 @@
+name: Probe (temporary)
+
+# Temporary: prints the signatures the next features depend on, for every Minecraft line. Removed
+# before merging.
+
+on:
+  push:
+    branches: [ "claude/addon-analysis-improvement-4olq7u" ]
+    paths: [ '.github/probe/**', '.github/workflows/probe.yml' ]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { project: fabric-1.20, props: "" }
+          - { project: fabric-1.21, props: "" }
+          - { project: fabric-1.21, props: "-Pmc121_minecraft=1.21.1 -Pmc121_fabric_api=@1.21.1" }
+          - { project: fabric-1.21, props: "-Pmc121_minecraft=1.21.11 -Pmc121_fabric_api=@1.21.11" }
+          - { project: fabric-26, props: "" }
+          - { project: fabric-26, props: "-Pmc26_minecraft=26.1 -Pmc26_fabric_api=@26.1" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '25' }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Probe
+        env:
+          PROPS: ${{ matrix.props }}
+          PROJECT: ${{ matrix.project }}
+        run: |
+          chmod +x gradlew
+          if [[ "${PROPS}" == *@* ]]; then
+            mc=${PROPS##*@}
+            meta=$(curl -fsSL https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml)
+            api=$(grep -oP "<version>\K[^<]*\+${mc//./\\.}(?=</version>)" <<< "${meta}" | sort -V | tail -1)
+            PROPS="${PROPS/@${mc}/${api}}"
+          fi
+          echo "PROPS=${PROPS}"
+          ./gradlew -q -I .github/probe/init.gradle ":${PROJECT}:probeClasspath" ${PROPS} --no-daemon
+          CP=$(paste -sd: "${PROJECT}/build/probe-classpath.txt")
+          echo "===== ${PROJECT} ${PROPS}"
+          while read -r cls; do
+            echo "----- ${cls}"
+            javap -cp "${CP}" -public "${cls}" 2>&1 | head -80 || true
+          done < .github/probe/classes.txt
+          while read -r cls pattern; do
+            echo "----- ${cls} /${pattern}/"
+            javap -cp "${CP}" -public "${cls}" 2>&1 | grep -E "${pattern}|error" | head -40 || true
+          done < .github/probe/grep.txt
