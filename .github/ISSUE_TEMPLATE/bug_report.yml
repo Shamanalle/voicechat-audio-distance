@@ -28,6 +28,7 @@ body:
         - Quilt
         - NeoForge (lite)
         - Forge (lite)
+        - Paper / Purpur / Spigot / Bukkit (server plugin / серверный плагин)
     validations:
       required: true
 
@@ -43,7 +44,7 @@ body:
     id: addon_version
     attributes:
       label: "Addon version / Версия аддона"
-      description: "The file name from your mods folder / Имя файла из папки mods"
+      description: "The file name from your mods or plugins folder / Имя файла из папки mods или plugins"
       placeholder: "voicechat-audio-distance-fabric-1.2.0+mc1.21.x.jar"
     validations:
       required: true
@@ -62,6 +63,13 @@ body:
       label: "Fabric Loader and Fabric API / Fabric Loader и Fabric API"
       description: "Fabric/Quilt only / Только для Fabric/Quilt"
       placeholder: "Loader 0.16.13, Fabric API 0.136.1+1.21.8"
+
+  - type: input
+    id: server_software
+    attributes:
+      label: "Server software / Серверное ядро"
+      description: "Paper, Purpur, Spigot or Bukkit only / Только для Paper, Purpur, Spigot или Bukkit"
+      placeholder: "Paper 1.21.8 build 60"
 
   - type: checkboxes
     id: other_mods

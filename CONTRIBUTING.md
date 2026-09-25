@@ -17,6 +17,7 @@ cd voicechat-audio-distance
 ./gradlew :common:test             # fast: audio, server, config, translations
 ./gradlew build                    # every target, jars in build/libs/
 ./gradlew :fabric-1.21:runClient   # or :fabric-1.20 / :fabric-26; runServer for the server side
+./gradlew :bukkit:build            # Paper / Purpur / Spigot / Bukkit plugin only
 ```
 
 ### Where code lives
@@ -28,6 +29,7 @@ cd voicechat-audio-distance
 | `shared/mc-1.20-1.21/` | `fabric-1.20`, `fabric-1.21` | client and common entrypoints, screen and canvas adapters, block acoustics, client world access, server wall measuring, key mapping |
 | `fabric-1.20/`, `fabric-1.21/` | own module | `Compat` (the only screen difference between 1.20 and 1.21), networking (channels on 1.20.1, payloads on 1.21), `fabric.mod.json`, `mods.toml` |
 | `fabric-26/` | own module | 26.x adapters (render-state API, SDL input, payload names), block acoustics, server wall measuring, metadata |
+| `bukkit/` | own jar (Java 17) | Paper / Purpur / Spigot / Bukkit plugin: server side only. Plugin messaging on the same channels as Fabric, block acoustics through the Bukkit API, `plugin.yml` |
 
 Rules of thumb:
 - Logic that does not need Minecraft goes into `common` and gets a unit test. `ServerWallsTest` shows how to drive Simple Voice Chat events with fake objects.
@@ -35,6 +37,8 @@ Rules of thumb:
 - The 1.21 module is compiled against 1.21.8 but runs on 1.21–1.21.11. Before using a new Minecraft method there, check that its signature is the same on every 1.21.x release (for example with the Yarn mappings of each version). Otherwise use one that is, or reflection as in `KeyMappings`. Examples that are **not** stable: `Entity.level()`, `Entity.position()`, `Camera.getPosition()`, `ServerLevel.getEntity(UUID)`.
 - Never touch the world from audio threads. On the client the tick fills `SpeakerRegistry`; on the server the tick measures walls for `ServerWalls`. The audio side only reads.
 - The server side must never break voice chat: every failure in `ServerWalls` falls back to the original packet.
+- The Bukkit plugin uses only the Bukkit API (no Paper-only or NMS classes), so it runs on Paper, Purpur, Spigot and Bukkit. Ray geometry that has no Bukkit equivalent lives in `common` (`VoxelRay`, `RayBundle`) and is unit-tested.
+- Client and server exchange `LinkProtocol` messages as one Minecraft string (VarInt byte length, then UTF-8). Fabric writes that with its own buffers; Bukkit uses `LinkProtocol.encode` / `decode`.
 
 ### Translations
 
@@ -43,6 +47,8 @@ Language files are in `common/src/main/resources/assets/vc-audio-distance/lang/`
 ### Documentation
 
 All documentation (README, CHANGELOG, this file, issue and pull request templates) is written in English first, followed by a complete Russian translation.
+
+GitHub release notes are generated from `CHANGELOG.md` by `.github/scripts/release-notes.sh`. When the changelog changes on `main`, the *Sync release notes* workflow updates the notes of already published releases.
 
 ### Pull requests
 
@@ -66,6 +72,7 @@ cd voicechat-audio-distance
 ./gradlew :common:test             # быстро: звук, сервер, конфиг, переводы
 ./gradlew build                    # все версии, JAR в build/libs/
 ./gradlew :fabric-1.21:runClient   # или :fabric-1.20 / :fabric-26; runServer для серверной части
+./gradlew :bukkit:build            # только плагин для Paper / Purpur / Spigot / Bukkit
 ```
 
 ### Где какой код
@@ -77,6 +84,7 @@ cd voicechat-audio-distance
 | `shared/mc-1.20-1.21/` | `fabric-1.20`, `fabric-1.21` | точки входа клиента и общая, адаптеры экрана и отрисовки, акустика блоков, доступ к миру на клиенте, измерение стен на сервере, регистрация клавиши |
 | `fabric-1.20/`, `fabric-1.21/` | свой модуль | `Compat` (единственное отличие экрана 1.20 от 1.21), сеть (каналы в 1.20.1, payload в 1.21), `fabric.mod.json`, `mods.toml` |
 | `fabric-26/` | свой модуль | адаптеры 26.x (API отрисовки через render state, ввод SDL, имена payload), акустика блоков, измерение стен на сервере, метаданные |
+| `bukkit/` | свой JAR (Java 17) | плагин для Paper / Purpur / Spigot / Bukkit: только серверная часть. Сообщения плагина на тех же каналах, что у Fabric, акустика блоков через API Bukkit, `plugin.yml` |
 
 Правила:
 - Логика, которой не нужен Minecraft, живёт в `common` и покрывается юнит-тестом. `ServerWallsTest` показывает, как проверять события Simple Voice Chat на поддельных объектах.
@@ -84,6 +92,8 @@ cd voicechat-audio-distance
 - Модуль 1.21 собирается против 1.21.8, но работает на 1.21–1.21.11. Прежде чем использовать там новый метод Minecraft, проверьте, что его сигнатура одинакова во всех 1.21.x (например, по маппингам Yarn каждой версии). Если нет — возьмите стабильный метод или рефлексию, как в `KeyMappings`. Примеры **нестабильных** методов: `Entity.level()`, `Entity.position()`, `Camera.getPosition()`, `ServerLevel.getEntity(UUID)`.
 - Из аудиопотоков мир не трогаем. На клиенте тик заполняет `SpeakerRegistry`, на сервере тик измеряет стены для `ServerWalls`. Аудиочасть только читает.
 - Серверная часть не должна ломать голосовой чат: при любой ошибке в `ServerWalls` уходит исходный пакет.
+- Плагин для Bukkit использует только API Bukkit (без классов, которые есть только в Paper, и без NMS), поэтому работает на Paper, Purpur, Spigot и Bukkit. Геометрия лучей, которой нет в Bukkit, живёт в `common` (`VoxelRay`, `RayBundle`) и покрыта тестами.
+- Клиент и сервер обмениваются сообщениями `LinkProtocol` в виде одной строки Minecraft (длина в байтах как VarInt, затем UTF-8). Fabric пишет её своими буферами, Bukkit — через `LinkProtocol.encode` / `decode`.
 
 ### Переводы
 
@@ -92,6 +102,8 @@ cd voicechat-audio-distance
 ### Документация
 
 Вся документация (README, CHANGELOG, этот файл, шаблоны issue и pull request) пишется сначала на английском, затем идёт полный перевод на русский.
+
+Описания релизов на GitHub собираются из `CHANGELOG.md` скриптом `.github/scripts/release-notes.sh`. Когда журнал изменений меняется в `main`, workflow *Sync release notes* обновляет описания уже опубликованных релизов.
 
 ### Pull request
 

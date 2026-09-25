@@ -41,21 +41,13 @@ jobs:
       - name: Test & build
         run: ./gradlew build --no-daemon
 
-      - name: Extract changelog for this version
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          awk -v v="$version" '
-            $0 ~ "^## \\[" v "\\]" { found = 1; next }
-            found && /^## \[/ { exit }
-            found { print }
-          ' CHANGELOG.md > release_body.md
-          if [ ! -s release_body.md ]; then
-            echo "See CHANGELOG.md" > release_body.md
-          fi
+      - name: Release notes from CHANGELOG.md
+        run: bash .github/scripts/release-notes.sh "${GITHUB_REF_NAME}" > release_body.md
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
+          name: ${{ github.ref_name }}
           files: build/libs/*.jar
           body_path: release_body.md
         env:
