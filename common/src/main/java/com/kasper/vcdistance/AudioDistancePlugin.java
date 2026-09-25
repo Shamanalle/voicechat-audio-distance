@@ -190,6 +190,16 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     // OpenAL distance curve
     // -------------------------------------------------------------------------
 
+    /**
+     * Sets the voice's volume from {@link AudioPhysics}, the same curve the graph draws.
+     * <p>
+     * OpenAL's own distance models cannot draw these curves (its "exponent" model is a power law
+     * that never reaches silence), so the source's distance attenuation is turned off (rolloff 0)
+     * and the curve is applied through AL_MAX_GAIN, which OpenAL applies after attenuation.
+     * AL_GAIN, which Simple Voice Chat sets every frame to the speaker's volume, is only read:
+     * per-player volume and muting keep working, and nothing compounds from frame to frame.
+     * Only this source is touched; the context-wide distance model is left alone.
+     */
     private static void onOpenALSound(OpenALSoundEvent event) {
         if (event.getPosition() == null) {
             return; // group / static audio has no distance
@@ -198,27 +208,42 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         int source = event.getSource();
         DistanceConfig c = config();
         try {
-            // SVC resets the (context-wide) model to AL_LINEAR_DISTANCE on every frame
-            AL11.alDistanceModel(c.getModel().getOpenAlConstant());
-
             float maxDist = AL11.alGetSourcef(source, AL11.AL_MAX_DISTANCE);
             boolean whispering = isWhispering(event, maxDist);
+            double range = maxDist > 0F ? maxDist : getServerMaxDistance();
 
-            AL11.alSourcef(source, AL11.AL_ROLLOFF_FACTOR, (float) Math.max(0.0, effectiveRolloff(c, whispering)));
+            double curve = AudioPhysics.calculateGain(sourceDistance(source) / range, c.getModel(),
+                    effectiveRolloff(c, whispering), c.getMinVolumeFraction(), c.getOpenalReferenceRatio());
 
-            if (maxDist > 0F) {
-                float ref = maxDist * (float) c.getOpenalReferenceRatio();
-                AL11.alSourcef(source, AL11.AL_REFERENCE_DISTANCE, Math.max(0.01F, ref));
-            }
-
-            // AL_MIN_GAIN is an absolute clamp, so scale it by the speaker's own volume:
-            // muted or turned-down players stay muted / quiet.
-            float sourceGain = AL11.alGetSourcef(source, AL11.AL_GAIN);
-            float floor = sourceGain <= 0.0001F ? 0.0F : (float) (c.getMinVolumeFraction() * sourceGain);
-            AL11.alSourcef(source, AL11.AL_MIN_GAIN, floor);
+            float sourceGain = Math.max(0.0F, AL11.alGetSourcef(source, AL11.AL_GAIN));
+            AL11.alSourcef(source, AL11.AL_ROLLOFF_FACTOR, 0.0F);
+            AL11.alSourcef(source, AL11.AL_MAX_GAIN, (float) (curve * sourceGain));
+            // The edge-volume floor scales with the speaker's own volume: muted players stay muted
+            AL11.alSourcef(source, AL11.AL_MIN_GAIN, (float) (c.getMinVolumeFraction() * sourceGain));
         } catch (Throwable t) {
             DistanceConfig.LOGGER.debug("Failed to apply OpenAL parameters to source {}: {}", source, t.toString());
         }
+    }
+
+    /** Distance between the source and the listener, the way OpenAL measures it. */
+    private static double sourceDistance(int source) {
+        float[] sx = new float[1];
+        float[] sy = new float[1];
+        float[] sz = new float[1];
+        AL11.alGetSource3f(source, AL11.AL_POSITION, sx, sy, sz);
+        double dx = sx[0];
+        double dy = sy[0];
+        double dz = sz[0];
+        if (AL11.alGetSourcei(source, AL11.AL_SOURCE_RELATIVE) == AL11.AL_FALSE) {
+            float[] lx = new float[1];
+            float[] ly = new float[1];
+            float[] lz = new float[1];
+            AL11.alGetListener3f(AL11.AL_POSITION, lx, ly, lz);
+            dx -= lx[0];
+            dy -= ly[0];
+            dz -= lz[0];
+        }
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     private static boolean isWhispering(OpenALSoundEvent event, float maxDist) {
