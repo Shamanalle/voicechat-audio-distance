@@ -51,6 +51,8 @@
   "gui.vc-audio-distance.hud.nobody_whisper": "Niemand ist nah genug zum Flüstern",
   "gui.vc-audio-distance.hud.of": "%s von %s",
   "gui.vc-audio-distance.hud.walls": "hinter einer Wand",
+  "gui.vc-audio-distance.hud.zone": "Klangzone: %s",
+  "gui.vc-audio-distance.hud.zone_left": "Klangzone verlassen",
   "gui.vc-audio-distance.hz": "%s Hz",
   "gui.vc-audio-distance.inspect": "%s Bl. · %s · %s",
   "gui.vc-audio-distance.inspect.speaker": "%s · %s Bl. · %s",

@@ -161,4 +161,22 @@ public class ServerToolsTest {
         assertEquals(0.6, AdminCommands.parsePercent("0.6"), 1e-9);
         assertNull(AdminCommands.parsePercent("-5"));
     }
+
+    @Test
+    @DisplayName("ops.json levels are read and re-read when the file changes")
+    void ops() throws IOException, InterruptedException {
+        UUID admin = UUID.randomUUID();
+        UUID mod = UUID.randomUUID();
+        Path file = dir.resolve("ops.json");
+        Files.writeString(file, "[\n  {\n    \"uuid\": \"" + admin + "\",\n    \"name\": \"A\",\n    \"level\": 4,\n"
+                + "    \"bypassesPlayerLimit\": false\n  },\n  {\"uuid\":\"" + mod + "\",\"name\":\"M\",\"level\":1}\n]");
+        OpsFile ops = new OpsFile(file);
+        assertEquals(4, ops.level(admin));
+        assertEquals(1, ops.level(mod));
+        assertEquals(0, ops.level(UUID.randomUUID()));
+        Files.writeString(file, "[]");
+        Files.setLastModifiedTime(file, java.nio.file.attribute.FileTime.fromMillis(System.currentTimeMillis() + 5000));
+        assertEquals(0, ops.level(admin));
+        assertEquals(0, new OpsFile(dir.resolve("missing.json")).level(admin));
+    }
 }
