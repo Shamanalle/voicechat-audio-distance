@@ -6,12 +6,14 @@ issueTrackerURL = "https://github.com/Shamanalle/voicechat-audio-distance/issues
 [[mods]]
 modId = "vc_audio_distance"
 version = "${version}"
-displayName = "Simple Voice Chat - Audio Distance Addon"
+displayName = "VoiceChat Audio Distance (lite)"
 displayURL = "https://github.com/Shamanalle/voicechat-audio-distance"
 logoFile = "assets/vc-audio-distance/icon.png"
 authors = "Kasper"
+displayTest = "IGNORE_ALL_VERSION"
 description = '''
-Realistic 3D audio physics, distance falloff curves, and physical obstacle sound occlusion addon for Simple Voice Chat.
+Distance curves for Simple Voice Chat, configured in config/vc-audio-distance.properties.
+The settings screen, wall muffling and the live monitor are available in the Fabric version.
 '''
 
 [[dependencies.vc_audio_distance]]
@@ -19,18 +21,18 @@ modId = "neoforge"
 type = "required"
 versionRange = "[21.0,)"
 ordering = "NONE"
-side = "BOTH"
+side = "CLIENT"
 
 [[dependencies.vc_audio_distance]]
 modId = "minecraft"
 type = "required"
 versionRange = "[1.21,1.21.11]"
 ordering = "NONE"
-side = "BOTH"
+side = "CLIENT"
 
 [[dependencies.vc_audio_distance]]
 modId = "voicechat"
 type = "required"
-versionRange = "[2.6.0,)"
+versionRange = "[1.21-2.5.0,)"
 ordering = "AFTER"
 side = "CLIENT"

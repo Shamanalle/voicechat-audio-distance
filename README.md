@@ -1,142 +1,122 @@
-# 🎙️ VoiceChat Audio Distance Addon
+# 🎙️ VoiceChat Audio Distance
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.x%20%7C%2026.x-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.x%20%7C%2026.3-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-lightgrey.svg?logo=fabric&logoColor=white)](https://fabricmc.net/)
-[![NeoForge](https://img.shields.io/badge/Loader-NeoForge-orange.svg)](https://neoforged.net/)
-[![Forge](https://img.shields.io/badge/Loader-Forge-red.svg)](https://files.minecraftforge.net/)
-[![Simple Voice Chat](https://img.shields.io/badge/Simple%20Voice%20Chat-2.4.0%2B-orange.svg)](https://modrinth.com/plugin/simple-voice-chat)
+[![Simple Voice Chat](https://img.shields.io/badge/Simple%20Voice%20Chat-2.4%2B-orange.svg)](https://modrinth.com/plugin/simple-voice-chat)
 [![Build Status](https://github.com/Shamanalle/voicechat-audio-distance/actions/workflows/build.yml/badge.svg)](https://github.com/Shamanalle/voicechat-audio-distance/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/Shamanalle/voicechat-audio-distance?logo=github&color=brightgreen)](https://github.com/Shamanalle/voicechat-audio-distance/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Продвинутый клиентский аддон для **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)**, предоставляющий полный контроль над физикой затухания 3D-звука в пространстве, аппаратным порогом громкости через OpenAL, настраиваемым спадом шёпота и наглядным интерактивным графиком слышимости в реальном времени.
+Клиентский аддон для **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)**: сам решаете, как голоса затихают с расстоянием, и слышите, как стены их глушат. Меняет только то, что слышите **вы** — на сервер ставить не нужно.
 
----
+*[English below](#-english)*
 
-## 🇷🇺 Описание возможностей
-
-### 1. Физические модели распространения звука (OpenAL Distance Models)
-* **Линейная (Linear / Vanilla SVC)**: Стандартная модель Simple Voice Chat. Громкость держится на 100% до заданной дистанции, затем линейно спадает.
-* **Реалистичная акустическая (Realistic Inverse 1/r)**: Реальное физическое затухание звуковых волн в воздухе по закону обратных квадратов. Голос вблизи звучит естественно и объемно, плавно растворяясь на расстоянии.
-* **Экспоненциальная (Exponential)**: Быстрый спад звука, создающий напряженную атмосферу. Идеально для хоррор-карт, стелс-миссий и приключений.
-* **Безопасность слуха (Clamped Bounds)**: Использование нативных Clamped-моделей OpenAL 1.1 предотвращает акустические удары в упор.
-
-### 2. Физическое приглушение через стены (Sound Occlusion & Muffling)
-* **Акустическое поглощение препятствиями**: Когда между говорящим и слушателем находятся твердые блоки (стены домов, двери, полы, своды пещер), звук динамически фильтруется низкочастотным фильтром (Low-Pass Filter) прямо на уровне PCM-фреймов.
-* **DSP 1-pole IIR Фильтр**: Срезает звонкие высокочастотные согласные по формуле `y[n] = y[n-1] + α · (x[n] - y[n-1])`, оставляя мягкие басовые гармоники (эффект «голоса из соседней комнаты»). Сохраняет непрерывность фазы между фреймами (без щелчков и артефактов).
-* **3D Воксельный Raycast (`BlockGetter.traverseBlocks`)**: Мгновенно трассирует луч через блоки с учетом физики материалов:
-  - Шерсть и ковры — сильная звукоизоляция (0.45).
-  - Сплошной камень, кирпич, обсидиан — полное перекрытие (0.35).
-  - Двери и люки — умеренное глушение (0.25).
-  - Стекло, решетки, заборы — частичное пропускание звука (0.15 - 0.18).
-  - Листва и вода — естественное рассеивание звука.
-* **Настройки в меню**: Переключатель «Стены: ВКЛ / ВЫКЛ» и слайдер глубины приглушения («Глубина: 0% – 100%»).
-
-### 3. Аппаратный порог слышимости (`AL_MIN_GAIN`)
-* Никаких цифровых искажений и перегрузок PCM (`Math.tanh`).
-* Порог громкости задается напрямую в аудиочип через нативный параметр OpenAL `AL_MIN_GAIN`.
-* Автоматически учитывает индивидуальный мут и громкость игроков (замьюченный игрок остаётся неслышимым).
-* На предельной дистанции голос собеседника не затихает в абсолютный ноль, если вам нужно слышать радиопереговоры на краю зоны.
-
-### 4. Интерактивный предпросмотр затухания (Live Audio Curve)
-* В меню настроек отображается динамическая шкала (от 0 блоков до максимального радиуса), которая в реальном времени отрисовывает точную математическую кривую громкости звука при смене моделей или перемещении ползунков.
-* Встроенный инспектор курсора показывает точную дистанцию в блоках и итоговый процент громкости в любой точке кривой.
-
-### 5. Множитель спада шёпота (Whisper Falloff)
-* Отдельный ползунок в интерфейсе (`0.50x – 2.00x`) для регулировки разборчивости и затухания шёпота на дистанции.
-
-### 6. Быстрые пресеты в 1 клик
-* **Ваниль (Vanilla)**: Сброс к поведению чистого Simple Voice Chat (100% спад, 0% мин. громкость, 50% старт, приглушение стен выкл).
-* **Мягкий (Realistic)**: Акустическая модель 1/r, комфортный естественный баланс для выживания, мягкое приглушение за стенами (65%).
-* **Чёткий (Audible)**: Повышенная слышимость на дальних расстояниях для серверов, стримов и мини-игр.
-* **Стелс (Stealth)**: Резкое затухание и глубокое глушение за препятствиями (85%) для игр в прятки и хорроров.
-
-### 7. Удобство и интеграция
-* **Горячая клавиша**: Назначается в стандартном меню Minecraft «Управление» -> «Назначение клавиш».
-* **Интеграция с Mod Menu**: Настройки открываются прямо из списка модов Fabric.
-* **Кнопка в меню голосового чата**: Добавляется в стандартное окно настроек Simple Voice Chat с умным позиционированием.
-* **Полная локализация**: Поддержка русского (`ru_ru`) и английского (`en_us`) языков.
-
----
-
-## 🇬🇧 Features Overview
-
-* **Physical Sound Occlusion & Muffling**: Real-time DSP low-pass filter (IIR 1-pole `y[n] = y[n-1] + α · (x[n] - y[n-1])`) dynamically muffles voice through walls, doors, and caves.
-* **3D Voxel Raycasting**: Fast traversal via Minecraft's internal DDA engine with material-based absorption (wool = soundproofing, stone, wood, glass, water).
-* **Physical Acoustic Attenuation**: Switch between *Linear (Vanilla)*, *Realistic Inverse (1/r)*, and *Exponential* falloff curves with OpenAL 1.1 clamped bounds.
-* **Native OpenAL Hardware Floor**: Uses `AL_MIN_GAIN` hardware clamping — zero clipping, zero latency, pure audio quality, fully respecting mute & volume levels.
-* **Whisper Falloff Multiplier**: Dedicated in-GUI slider (`0.50x – 2.00x`) to control whisper decay distance.
-* **Live Curve Visualizer**: Real-time acoustic audibility graph with built-in block & volume inspector.
-* **Instant Presets**: 1-click presets for Vanilla, Realistic, High Audibility, and Stealth modes.
-* **Keybinding & Mod Menu**: Fully configurable hotkey, Mod Menu integration, and SVC screen hook with responsive layout.
-* **Bilingual Localization**: English (`en_us`) and Russian (`ru_ru`).
-* **Automated Unit Tests**: Suite of 28 JUnit 5 tests verifying audio physics, DSP frequency response, continuity, and preset math.
-
----
-
-## ⚙️ Сравнение / Comparison
-
-| Возможность | Обычный Simple Voice Chat | VoiceChat Audio Distance Addon |
+| Дистанция | Стены | Монитор |
 |---|---|---|
-| **Модель затухания** | Только линейная (Linear) | **Linear, Realistic Inverse (1/r), Exponential** |
-| **Кривая слышимости** | Нельзя изменить | **Настраиваемый спад и старт затухания (10% - 100%)** |
-| **Минимальная громкость на максимуме** | Всегда 0% (полная тишина) | **Настраиваемый аппаратный порог (0% - 100%)** |
-| **Визуализация кривой** | Отсутствует | **Интерактивный рендерер кривой громкости в GUI** |
-| **Быстрые профили** | Нет | **4 готовых пресета в 1 клик** |
-| **Множитель затухания шёпота** | Фиксированный (50%) | **Настраиваемый коэффициент** |
+| ![Дистанция](docs/images/ui-distance.png) | ![Стены](docs/images/ui-walls.png) | ![Monitor](docs/images/ui-monitor.png) |
+
+<sub>Рендеры экрана настроек вне игры (тот же код раскладки и отрисовки, что в моде).</sub>
 
 ---
 
-## 📦 Совместимость и релизные файлы / Releases & Compatibility
+## Возможности
 
-Все файлы именуются строго по стандарту: `voicechat-audio-distance-[loader]-[версия]+mc[версия_игры].jar`
+### Кривая громкости
+- **Три кривые:** линейная (как в Simple Voice Chat), реалистичная 1/r и экспоненциальная.
+- **Спад, зона полной громкости, громкость на краю** — всё настраивается, а на живом графике сразу видно, сколько процентов громкости будет на каждой дистанции. Наведите курсор — покажется точное значение в блоках, процентах и децибелах.
+- **Шёпот** затухает по отдельной кривой (пунктир на графике).
+- **Громкость на краю** выставляется через OpenAL `AL_MIN_GAIN` и учитывает громкость каждого игрока: замьюченные остаются замьюченными.
+- **Люди, которых вы слышите прямо сейчас**, отмечены точками на графике.
 
-| Загрузчик (Loader) | Версия игры | Файл аддона (Release JAR) | Java | Требуемый Simple Voice Chat |
+### Стены
+- Голос за стеной становится **тише и глуше**: срез высоких частот (фильтр 24 дБ/окт) плюс общее ослабление. Одна каменная стена при силе по умолчанию — около −8 дБ и глухо выше ~2,5 кГц, три стены — около −18 дБ и ~600 Гц.
+- **Считается реальная геометрия блока:** полублоки, открытые двери, заборы и ковры не глушат как целый куб.
+- **Мягкие края:** 5 параллельных лучей вместо одного, поэтому голос из-за угла или дверного проёма глохнет плавно, а не щелчком.
+- **Материалы:** шерсть глушит сильнее камня, стекло и листва — слабее. Вес каждого материала можно поменять на вкладке «Материалы».
+- **Плавные переходы:** параметры фильтра меняются за ~90 мс, без щелчков. Когда стены нет, звук проходит без изменений, бит в бит.
+- **Совместимость с Sound Physics Remastered:** если он установлен, наше приглушение выключается само, чтобы голос не глушился дважды.
+
+### Монитор
+Кто говорит рядом, на каком расстоянии, с какой громкостью до вас доходит голос и сколько отнимают стены — в реальном времени.
+
+### Пресеты
+**Ваниль** (ровно как SVC), **Реализм**, **Чётко** (для ивентов — всех хорошо слышно), **Стелс** (прятки, хорроры). Активный пресет подсвечивается.
+
+### Где найти настройки
+- Кнопка **«Дальность голоса и стены…»** в настройках Simple Voice Chat (клавиша `V`).
+- Через **Mod Menu**.
+- Своя клавиша: *Настройки → Управление*, не назначена по умолчанию.
+
+Изменения слышны сразу. «Готово» или `Esc` сохраняют, «Отмена» возвращает всё как было.
+
+---
+
+## Версии и файлы
+
+| Загрузчик | Minecraft | Файл | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | **1.20.1** | `voicechat-audio-distance-fabric-1.1.0+mc1.20.1.jar` | Java 17+ | `>=2.4.0` |
-| **Forge** | **1.20.1** | `voicechat-audio-distance-forge-1.1.0+mc1.20.1.jar` | Java 17+ | `>=2.4.0` |
-| **Fabric / Quilt** | **1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-fabric-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
-| **NeoForge** | **1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
-| **Forge** | **1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
-| **Fabric** | **26.x** (`26.1`, `26.2`, `26.3+`) | `voicechat-audio-distance-fabric-1.1.0+mc26.x.jar` | Java 25+ | `>=2.6.0` |
-| **NeoForge** | **26.x** (`26.1`, `26.2`, `26.3+`) | `voicechat-audio-distance-neoforge-1.1.0+mc26.x.jar` | Java 25+ | `>=2.6.0` |
-| **Forge** | **26.x** (`26.1`, `26.2`, `26.3+`) | `voicechat-audio-distance-forge-1.1.0+mc26.x.jar` | Java 25+ | `>=2.6.0` |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.2.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.2.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.3 | `voicechat-audio-distance-fabric-1.2.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 1.20.1 | `voicechat-audio-distance-forge-1.2.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.2.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| NeoForge / Forge | 26.3 | `voicechat-audio-distance-{neoforge,forge}-1.2.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
-### Инструкция по установке:
-1. Выберите подходящий файл аддона из таблицы выше под ваш загрузчик (**Fabric**, **NeoForge** или **Forge**) и версию Minecraft.
-2. Убедитесь, что у вас установлен сам мод **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)**.
-3. Поместите `.jar` файл в папку `.minecraft/mods/`.
-4. Запустите игру. В меню настроек голосового чата (кнопка `V` по умолчанию) появится кнопка перехода в настройки физики звука!
-4. *(Опционально)* Установите **Mod Menu** для быстрого доступа к интерфейсу настроек.
+**Fabric** — полная версия. Для Fabric нужен [Fabric API](https://modrinth.com/mod/fabric-api), [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
+
+**Forge / NeoForge — облегчённая версия:** работают кривые громкости, настройка — в файле `config/vc-audio-distance.properties`. Экрана настроек, стен и монитора там нет.
+
+Совместимость JAR для 1.21.x проверена по сигнатурам всех используемых методов Minecraft для каждой версии с 1.21 по 1.21.11.
+
+### Установка
+1. Установите [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) (и Fabric API для Fabric).
+2. Положите подходящий `.jar` в `.minecraft/mods/`.
+3. Зайдите в игру и откройте настройки голосового чата (`V`) → **«Дальность голоса и стены…»**.
 
 ---
 
-## 🛠️ Сборка из исходников / Building from Source
+## Файл настроек
 
-Требуется **JDK 25** (поддерживает сборку всех модулей под Java 17, 21 и 25):
+`config/vc-audio-distance.properties` — всё то же, что на экране:
+
+| Ключ | Диапазон | По умолчанию | Что делает |
+|---|---|---|---|
+| `distance_model` | `linear` / `realistic_inverse` / `exponential` | `linear` | Форма кривой |
+| `attenuation_factor` | 0.0 – 1.0 | 1.0 | Сила спада |
+| `openal_reference_ratio` | 0.05 – 1.0 | 0.5 | Доля дистанции с полной громкостью |
+| `min_volume_fraction` | 0.0 – 0.5 | 0.0 | Громкость на краю |
+| `whisper_multiplier` | 0.5 – 2.0 | 1.0 | Множитель спада шёпота |
+| `occlusion_enabled` | true / false | true | Приглушение стенами |
+| `occlusion_strength` | 0.0 – 1.0 | 0.6 | Сила приглушения |
+| `material.<id>` | 0.0 – 3.0 | см. вкладку «Материалы» | «Толщина» блока, камень = 1.0 |
+
+---
+
+## Сборка
+
+Нужен **JDK 25** (модули 1.20 и 1.21 собираются с `--release 17` / `21`).
 
 ```bash
-# Клонируйте репозиторий
 git clone https://github.com/Shamanalle/voicechat-audio-distance.git
 cd voicechat-audio-distance
-
-# Полная сборка всех поддерживаемых версий (1.20.1, 1.21.x и 26.x)
-./gradlew build
+./gradlew :common:test   # тесты звука, конфига и переводов
+./gradlew build          # все JAR в build/libs/
 ```
 
-Собранные JAR-архивы для всех версий появятся в `build/libs/`:
-- `voicechat-audio-distance-fabric-1.1.0+mc1.20.1.jar`
-- `voicechat-audio-distance-forge-1.1.0+mc1.20.1.jar`
-- `voicechat-audio-distance-fabric-1.1.0+mc1.21.x.jar`
-- `voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar`
-- `voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar`
-- `voicechat-audio-distance-fabric-1.1.0+mc26.x.jar`
-- `voicechat-audio-distance-neoforge-1.1.0+mc26.x.jar`
-- `voicechat-audio-distance-forge-1.1.0+mc26.x.jar`
+Устройство проекта описано в [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## 📄 Лицензия / License
+## 🇬🇧 English
 
-Проект распространяется под свободной лицензией [MIT](LICENSE).
-Автор: **Kasper / Shamanalle**.
+A client-side addon for **Simple Voice Chat** that lets you shape how voices fade with distance and muffles them through walls. It only changes what **you** hear; nothing is needed on the server.
+
+- **Distance curve:** linear (SVC's own), realistic 1/r or exponential. Falloff, full-volume distance, edge volume and whisper falloff are adjustable, with a live graph. Hover it to read exact blocks, % and dB. Voices you hear right now appear as dots on the graph.
+- **Walls:** voices behind walls get quieter and duller (24 dB/oct low-pass plus broadband loss). One stone wall at default strength is about −8 dB and muffled above ~2.5 kHz. Rays respect real block shapes (slabs, open doors, fences). Five parallel rays soften corners and doorways. Per-material weights are adjustable, and filter changes glide smoothly without clicks. Stands down automatically when Sound Physics Remastered is installed.
+- **Monitor:** who is talking, how far away, how loud they reach you, and how much the walls take off.
+- **Presets:** Vanilla, Realistic, Clear, Stealth.
+- **Open it** from Simple Voice Chat's settings (`V`), from Mod Menu, or with a key you bind yourself.
+
+Fabric is the full version. The Forge / NeoForge jars are a lite build: distance curves only, configured in `config/vc-audio-distance.properties`.
+
+Build with JDK 25: `./gradlew build`. License: [MIT](LICENSE). Author: **Kasper / Shamanalle**.
