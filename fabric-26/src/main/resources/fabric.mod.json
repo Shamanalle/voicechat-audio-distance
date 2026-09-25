@@ -6,7 +6,7 @@
   "icon": "assets/vc-audio-distance/icon.png",
   "description": "Shapes how Simple Voice Chat voices fade with distance and muffles them through walls. Client: live curve, wall preview, monitor. Server (optional): walls for players without the addon and a shared sound profile.",
   "authors": [
-    "Kasper"
+    "Shamanalle"
   ],
   "contact": {
     "homepage": "https://github.com/Shamanalle/voicechat-audio-distance",
