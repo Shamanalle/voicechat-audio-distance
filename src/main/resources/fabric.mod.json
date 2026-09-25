@@ -3,6 +3,7 @@
   "id": "vc-audio-distance",
   "version": "${version}",
   "name": "VoiceChat Audio Distance Addon",
+  "icon": "assets/vc-audio-distance/icon.png",
   "description": "Advanced 3D audio distance attenuation models, hardware OpenAL volume floor, and real-time audibility curves for Simple Voice Chat.",
   "authors": ["Kasper"],
   "contact": {
