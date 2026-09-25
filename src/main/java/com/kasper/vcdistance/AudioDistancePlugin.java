@@ -1,16 +1,19 @@
 package com.kasper.vcdistance;
 
+import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.VoicechatApi;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
+import de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.OpenALSoundEvent;
+import net.minecraft.world.phys.Vec3;
 import org.lwjgl.openal.AL11;
 
 /**
  * VoiceChat Audio Distance Addon - Core OpenAL Plugin.
  * <p>
- * Controls 3D audio attenuation curves, hardware volume floor, and reference distances
- * through the Simple Voice Chat API and OpenAL 1.1.
+ * Controls 3D audio attenuation curves, hardware volume floor, reference distances,
+ * and physical obstacle sound occlusion through the Simple Voice Chat API and OpenAL 1.1.
  */
 public class AudioDistancePlugin implements VoicechatPlugin {
 
@@ -32,6 +35,8 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     @Override
     public void registerEvents(EventRegistration registration) {
         registration.registerEvent(OpenALSoundEvent.class, this::onOpenALSound);
+        registration.registerEvent(ClientReceiveSoundEvent.EntitySound.class, this::onReceiveEntitySound);
+        registration.registerEvent(ClientReceiveSoundEvent.LocationalSound.class, this::onReceiveLocationalSound);
     }
 
     /**
@@ -95,6 +100,55 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             }
         } catch (Throwable t) {
             DistanceConfig.LOGGER.debug("Failed to apply OpenAL parameters on source {}: {}", source, t.getMessage());
+        }
+    }
+
+    /**
+     * Intercepts voice audio frames for entities (players) and applies physical obstacle muffling.
+     */
+    private void onReceiveEntitySound(ClientReceiveSoundEvent.EntitySound event) {
+        if (!CONFIG.occlusionEnabled || CONFIG.occlusionStrength <= 0.001) {
+            return;
+        }
+        short[] raw = event.getRawAudio();
+        if (raw == null || raw.length == 0) {
+            OcclusionFilter.reset(event.getId());
+            return;
+        }
+
+        try {
+            double occlusion = RaycastOcclusion.getEntityOcclusion(event.getEntityId(), event.getDistance());
+            short[] processed = OcclusionFilter.processPcm(event.getId(), raw, occlusion, CONFIG.occlusionStrength);
+            event.setRawAudio(processed);
+        } catch (Throwable t) {
+            DistanceConfig.LOGGER.debug("Error during entity sound occlusion processing: {}", t.getMessage());
+        }
+    }
+
+    /**
+     * Intercepts locational voice audio frames and applies physical obstacle muffling.
+     */
+    private void onReceiveLocationalSound(ClientReceiveSoundEvent.LocationalSound event) {
+        if (!CONFIG.occlusionEnabled || CONFIG.occlusionStrength <= 0.001) {
+            return;
+        }
+        short[] raw = event.getRawAudio();
+        if (raw == null || raw.length == 0) {
+            OcclusionFilter.reset(event.getId());
+            return;
+        }
+
+        try {
+            Position pos = event.getPosition();
+            if (pos == null) {
+                return;
+            }
+            Vec3 soundVec = new Vec3(pos.getX(), pos.getY(), pos.getZ());
+            double occlusion = RaycastOcclusion.getLocationalOcclusion(event.getId(), soundVec);
+            short[] processed = OcclusionFilter.processPcm(event.getId(), raw, occlusion, CONFIG.occlusionStrength);
+            event.setRawAudio(processed);
+        } catch (Throwable t) {
+            DistanceConfig.LOGGER.debug("Error during locational sound occlusion processing: {}", t.getMessage());
         }
     }
 }

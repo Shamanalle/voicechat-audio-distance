@@ -23,6 +23,8 @@ public class AudioDistanceScreen extends Screen {
     private final double initialMinVolume;
     private final double initialRefRatio;
     private final double initialWhisperMult;
+    private final boolean initialOcclusionEnabled;
+    private final double initialOcclusionStrength;
 
     // Track mouse coordinates for the live curve hover inspector
     private int lastMouseX = -1;
@@ -30,13 +32,15 @@ public class AudioDistanceScreen extends Screen {
 
     public AudioDistanceScreen(Screen parent) {
         super(TITLE);
-        this.parent             = parent;
-        this.maxDistance        = AudioDistancePlugin.getServerMaxDistance();
-        this.initialModel       = AudioDistancePlugin.CONFIG.model;
-        this.initialAttenuation = AudioDistancePlugin.CONFIG.attenuationFactor;
-        this.initialMinVolume   = AudioDistancePlugin.CONFIG.minVolumeFraction;
-        this.initialRefRatio    = AudioDistancePlugin.CONFIG.openalReferenceRatio;
-        this.initialWhisperMult = AudioDistancePlugin.CONFIG.whisperMultiplier;
+        this.parent                   = parent;
+        this.maxDistance              = AudioDistancePlugin.getServerMaxDistance();
+        this.initialModel             = AudioDistancePlugin.CONFIG.model;
+        this.initialAttenuation       = AudioDistancePlugin.CONFIG.attenuationFactor;
+        this.initialMinVolume         = AudioDistancePlugin.CONFIG.minVolumeFraction;
+        this.initialRefRatio          = AudioDistancePlugin.CONFIG.openalReferenceRatio;
+        this.initialWhisperMult       = AudioDistancePlugin.CONFIG.whisperMultiplier;
+        this.initialOcclusionEnabled  = AudioDistancePlugin.CONFIG.occlusionEnabled;
+        this.initialOcclusionStrength = AudioDistancePlugin.CONFIG.occlusionStrength;
     }
 
     @Override
@@ -47,8 +51,8 @@ public class AudioDistanceScreen extends Screen {
         int totalWidth = 230;
         int startX = centerX - totalWidth / 2;
 
-        int totalContentHeight = 224;
-        int startY = Math.max(8, (this.height - totalContentHeight) / 2);
+        int totalContentHeight = 246;
+        int startY = Math.max(6, (this.height - totalContentHeight) / 2);
 
         // ── 1. Model Selector Button ─────────────────────────────────────────
         int y = startY + 68;
@@ -168,9 +172,54 @@ public class AudioDistanceScreen extends Screen {
             }
         };
         addRenderableWidget(whisperSlider);
+        y += 22;
+
+        // ── 6. Sound Occlusion Row (Toggle + Strength Slider) ────────────────
+        int halfGap = 2;
+        int halfWidth = (totalWidth - halfGap) / 2;
+
+        boolean occEnabled = AudioDistancePlugin.CONFIG.occlusionEnabled;
+        Component toggleText = Component.translatable(
+                occEnabled ? "gui.vc-audio-distance.occlusion.enabled" : "gui.vc-audio-distance.occlusion.disabled"
+        );
+        Button occlusionToggle = Button.builder(
+                toggleText,
+                btn -> {
+                    AudioDistancePlugin.CONFIG.occlusionEnabled = !AudioDistancePlugin.CONFIG.occlusionEnabled;
+                    refreshScreen();
+                }
+        )
+        .bounds(startX, y, halfWidth, 20)
+        .tooltip(Tooltip.create(Component.translatable("gui.vc-audio-distance.occlusion.toggle.tooltip")))
+        .build();
+        addRenderableWidget(occlusionToggle);
+
+        AbstractSliderButton occlusionSlider = new AbstractSliderButton(
+                startX + halfWidth + halfGap, y, halfWidth, 20,
+                Component.empty(),
+                AudioDistancePlugin.CONFIG.occlusionStrength
+        ) {
+            {
+                active = AudioDistancePlugin.CONFIG.occlusionEnabled;
+                setTooltip(Tooltip.create(Component.translatable("gui.vc-audio-distance.occlusion.strength.tooltip")));
+                updateMessage();
+            }
+
+            @Override
+            protected void updateMessage() {
+                int pct = (int) Math.round(value * 100);
+                setMessage(Component.translatable("gui.vc-audio-distance.occlusion.strength", pct));
+            }
+
+            @Override
+            protected void applyValue() {
+                AudioDistancePlugin.CONFIG.occlusionStrength = value;
+            }
+        };
+        addRenderableWidget(occlusionSlider);
         y += 23;
 
-        // ── 6. Presets Row (4 buttons) ───────────────────────────────────────
+        // ── 7. Presets Row (4 buttons) ───────────────────────────────────────
         int gap = 2;
         int presetBtnWidth = (totalWidth - gap * 3) / 4;
 
@@ -212,7 +261,7 @@ public class AudioDistanceScreen extends Screen {
 
         y += 24;
 
-        // ── 6. Bottom Actions: Reset, Cancel, Save ───────────────────────────
+        // ── 8. Bottom Actions: Reset, Cancel, Save ───────────────────────────
         int actionBtnWidth = (totalWidth - gap * 2) / 3;
 
         addRenderableWidget(Button.builder(
@@ -254,6 +303,8 @@ public class AudioDistanceScreen extends Screen {
         AudioDistancePlugin.CONFIG.minVolumeFraction    = initialMinVolume;
         AudioDistancePlugin.CONFIG.openalReferenceRatio = initialRefRatio;
         AudioDistancePlugin.CONFIG.whisperMultiplier    = initialWhisperMult;
+        AudioDistancePlugin.CONFIG.occlusionEnabled     = initialOcclusionEnabled;
+        AudioDistancePlugin.CONFIG.occlusionStrength    = initialOcclusionStrength;
         if (this.minecraft != null) {
             this.minecraft.setScreen(parent);
         }
@@ -292,8 +343,8 @@ public class AudioDistanceScreen extends Screen {
         int totalWidth = 230;
         int startX = centerX - totalWidth / 2;
 
-        int totalContentHeight = 224;
-        int startY = Math.max(8, (this.height - totalContentHeight) / 2);
+        int totalContentHeight = 246;
+        int startY = Math.max(6, (this.height - totalContentHeight) / 2);
 
         // Title
         guiGraphics.drawCenteredString(this.font, this.title, centerX, startY, 0xFFFFFF);

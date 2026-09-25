@@ -38,6 +38,8 @@ public class DistanceConfig {
     public static final double DEFAULT_MIN_VOLUME_FRACTION           = 0.0;
     public static final double DEFAULT_OPENAL_REFERENCE_RATIO        = 0.5;
     public static final double DEFAULT_WHISPER_MULTIPLIER            = 1.0;
+    public static final boolean DEFAULT_OCCLUSION_ENABLED            = true;
+    public static final double DEFAULT_OCCLUSION_STRENGTH            = 0.60;
 
     // -------------------------------------------------------------------------
     // Configuration Fields (volatile for thread safety between GUI & OpenAL)
@@ -70,6 +72,18 @@ public class DistanceConfig {
      */
     public volatile double whisperMultiplier = DEFAULT_WHISPER_MULTIPLIER;
 
+    /**
+     * Physical sound occlusion through walls/obstacles.
+     * Muffles sound when solid blocks are between speaker and listener.
+     */
+    public volatile boolean occlusionEnabled = DEFAULT_OCCLUSION_ENABLED;
+
+    /**
+     * Muffling strength through solid obstacles (0.0 - 1.0).
+     * 0.0 = minimal muffling, 1.0 = deep acoustic absorption.
+     */
+    public volatile double occlusionStrength = DEFAULT_OCCLUSION_STRENGTH;
+
     public void load() {
         if (!Files.exists(CONFIG_PATH)) {
             save();
@@ -83,9 +97,11 @@ public class DistanceConfig {
             minVolumeFraction    = clamp(parseDouble(props, "min_volume_fraction", minVolumeFraction), 0.0, 1.0);
             openalReferenceRatio = clamp(parseDouble(props, "openal_reference_ratio", openalReferenceRatio), 0.1, 1.0);
             whisperMultiplier    = clamp(parseDouble(props, "whisper_multiplier", whisperMultiplier), 0.5, 2.0);
+            occlusionEnabled     = parseBoolean(props, "occlusion_enabled", occlusionEnabled);
+            occlusionStrength    = clamp(parseDouble(props, "occlusion_strength", occlusionStrength), 0.0, 1.0);
 
-            LOGGER.info("Configuration loaded: model={}, attenuation={}, minVolume={}, refRatio={}, whisperMult={}",
-                    model.getId(), attenuationFactor, minVolumeFraction, openalReferenceRatio, whisperMultiplier);
+            LOGGER.info("Configuration loaded: model={}, attenuation={}, minVolume={}, refRatio={}, whisperMult={}, occlusion={}, occlusionStrength={}",
+                    model.getId(), attenuationFactor, minVolumeFraction, openalReferenceRatio, whisperMultiplier, occlusionEnabled, occlusionStrength);
         } catch (IOException e) {
             LOGGER.error("Failed to load configuration file: {}", e.getMessage(), e);
         }
@@ -100,6 +116,8 @@ public class DistanceConfig {
             props.setProperty("min_volume_fraction", String.format(Locale.ROOT, "%.4f", minVolumeFraction));
             props.setProperty("openal_reference_ratio", String.format(Locale.ROOT, "%.4f", openalReferenceRatio));
             props.setProperty("whisper_multiplier", String.format(Locale.ROOT, "%.4f", whisperMultiplier));
+            props.setProperty("occlusion_enabled", String.valueOf(occlusionEnabled));
+            props.setProperty("occlusion_strength", String.format(Locale.ROOT, "%.4f", occlusionStrength));
 
             try (OutputStream out = Files.newOutputStream(CONFIG_PATH)) {
                 props.store(out, "VoiceChat Audio Distance Addon Configuration\n"
@@ -107,7 +125,9 @@ public class DistanceConfig {
                         + "attenuation_factor: OpenAL rolloff (0.0=none, 1.0=vanilla)\n"
                         + "min_volume_fraction: Hardware volume floor (0.0-1.0)\n"
                         + "openal_reference_ratio: Distance fraction where drop begins (0.1-1.0, default 0.5)\n"
-                        + "whisper_multiplier: Decay rate multiplier for whispers (0.5-2.0, default 1.0)");
+                        + "whisper_multiplier: Decay rate multiplier for whispers (0.5-2.0, default 1.0)\n"
+                        + "occlusion_enabled: Sound muffling through walls and solid blocks (true/false)\n"
+                        + "occlusion_strength: Wall muffling intensity (0.0-1.0, default 0.60)");
             }
             LOGGER.info("Configuration saved successfully.");
         } catch (IOException e) {
@@ -126,6 +146,8 @@ public class DistanceConfig {
         minVolumeFraction    = DEFAULT_MIN_VOLUME_FRACTION;
         openalReferenceRatio = DEFAULT_OPENAL_REFERENCE_RATIO;
         whisperMultiplier    = DEFAULT_WHISPER_MULTIPLIER;
+        occlusionEnabled     = false;
+        occlusionStrength    = DEFAULT_OCCLUSION_STRENGTH;
     }
 
     /** Realistic acoustic propagation based on inverse distance */
@@ -135,6 +157,8 @@ public class DistanceConfig {
         minVolumeFraction    = 0.05;
         openalReferenceRatio = 0.60;
         whisperMultiplier    = 1.10;
+        occlusionEnabled     = true;
+        occlusionStrength    = 0.65;
     }
 
     /** Competitive / High audibility for large servers and events */
@@ -144,6 +168,8 @@ public class DistanceConfig {
         minVolumeFraction    = 0.25;
         openalReferenceRatio = 0.80;
         whisperMultiplier    = 0.90;
+        occlusionEnabled     = false;
+        occlusionStrength    = 0.30;
     }
 
     /** Atmospheric / Stealth decay */
@@ -153,6 +179,8 @@ public class DistanceConfig {
         minVolumeFraction    = 0.00;
         openalReferenceRatio = 0.35;
         whisperMultiplier    = 1.40;
+        occlusionEnabled     = true;
+        occlusionStrength    = 0.85;
     }
 
     private static double parseDouble(Properties props, String key, double defaultValue) {
@@ -163,6 +191,12 @@ public class DistanceConfig {
         } catch (NumberFormatException e) {
             return defaultValue;
         }
+    }
+
+    private static boolean parseBoolean(Properties props, String key, boolean defaultValue) {
+        String val = props.getProperty(key);
+        if (val == null) return defaultValue;
+        return Boolean.parseBoolean(val.trim());
     }
 
     private static double clamp(double val, double min, double max) {
