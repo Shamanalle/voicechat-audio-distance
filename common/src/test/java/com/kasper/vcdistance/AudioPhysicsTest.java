@@ -107,29 +107,21 @@ public class AudioPhysicsTest {
     }
 
     @Test
-    @DisplayName("Presets configure valid parameters within bounds")
+    @DisplayName("Every preset stays within the configurable ranges and is recognised after applying")
     void testPresets() {
-        DistanceConfig config = new DistanceConfig();
-
-        config.applyDefault();
-        assertEquals(AttenuationModel.LINEAR, config.model);
-        assertEquals(1.0, config.attenuationFactor, EPSILON);
-        assertEquals(0.0, config.minVolumeFraction, EPSILON);
-        assertEquals(0.5, config.openalReferenceRatio, EPSILON);
-        assertEquals(1.0, config.whisperMultiplier, EPSILON);
-
-        config.applyRealistic();
-        assertEquals(AttenuationModel.REALISTIC_INVERSE, config.model);
-        assertTrue(config.attenuationFactor > 0.0 && config.attenuationFactor <= 1.0);
-        assertTrue(config.openalReferenceRatio >= 0.1 && config.openalReferenceRatio <= 1.0);
-        assertTrue(config.whisperMultiplier >= 0.5 && config.whisperMultiplier <= 2.0);
-
-        config.applyHighAudibility();
-        assertEquals(AttenuationModel.LINEAR, config.model);
-        assertTrue(config.minVolumeFraction > 0.0);
-
-        config.applyAtmospheric();
-        assertEquals(AttenuationModel.EXPONENTIAL, config.model);
-        assertTrue(config.whisperMultiplier > 1.0);
+        DistanceConfig config = new DistanceConfig(java.nio.file.Path.of("unused.properties"));
+        for (Preset preset : Preset.values()) {
+            preset.apply(config);
+            assertEquals(preset, Preset.find(config), "Preset should be detected after applying: " + preset);
+            assertTrue(config.getAttenuationFactor() >= DistanceConfig.ROLLOFF_MIN && config.getAttenuationFactor() <= DistanceConfig.ROLLOFF_MAX);
+            assertTrue(config.getMinVolumeFraction() >= DistanceConfig.MIN_VOLUME_MIN && config.getMinVolumeFraction() <= DistanceConfig.MIN_VOLUME_MAX);
+            assertTrue(config.getOpenalReferenceRatio() >= DistanceConfig.REFERENCE_MIN && config.getOpenalReferenceRatio() <= DistanceConfig.REFERENCE_MAX);
+            assertTrue(config.getWhisperMultiplier() >= DistanceConfig.WHISPER_MIN && config.getWhisperMultiplier() <= DistanceConfig.WHISPER_MAX);
+        }
+        Preset.VANILLA.apply(config);
+        assertEquals(AttenuationModel.LINEAR, config.getModel());
+        assertEquals(1.0, config.getAttenuationFactor(), EPSILON);
+        assertEquals(0.5, config.getOpenalReferenceRatio(), EPSILON);
+        assertFalse(config.isOcclusionEnabled(), "Vanilla preset must sound exactly like Simple Voice Chat");
     }
 }

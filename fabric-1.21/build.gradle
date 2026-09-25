@@ -3,8 +3,12 @@ plugins {
     id 'java'
 }
 
+// Minecraft 1.21 - 1.21.11 (compiled against 1.21.8, see gradle.properties)
+def target = "mc1.21.x"
+version = "${project.mod_version}+${target}"
+
 base {
-    archivesName = "voicechat-audio-distance-fabric-1.1.0+mc1.21.x"
+    archivesName = "voicechat-audio-distance-fabric"
 }
 
 repositories {
@@ -19,20 +23,30 @@ repositories {
     }
 }
 
+sourceSets {
+    main {
+        java {
+            srcDir "${rootDir}/shared/client-all/src/main/java"
+            srcDir "${rootDir}/shared/client-1.20-1.21/src/main/java"
+        }
+    }
+}
+
 dependencies {
     implementation project(':common')
 
-    minecraft "com.mojang:minecraft:1.21.8"
+    minecraft "com.mojang:minecraft:${project.mc121_minecraft}"
     mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:0.16.13"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:0.136.1+1.21.8"
+    modImplementation "net.fabricmc:fabric-loader:${project.mc121_fabric_loader}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.mc121_fabric_api}"
 
-    compileOnly "de.maxhenkel.voicechat:voicechat-api:2.6.0"
-    modCompileOnly "com.terraformersmc:modmenu:15.0.0"
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:${project.voicechat_api_version}"
+    modCompileOnly "com.terraformersmc:modmenu:${project.mc121_modmenu}"
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.release = 21
+    options.encoding = 'UTF-8'
 }
 
 java {
@@ -43,11 +57,8 @@ java {
 processResources {
     inputs.property "version", project.version
 
-    filesMatching("fabric.mod.json") {
-        expand "version": "1.1.0+mc1.21.x"
-    }
-    filesMatching("META-INF/*.toml") {
-        expand "version": "1.1.0+mc1.21.x"
+    filesMatching(["fabric.mod.json", "META-INF/*.toml"]) {
+        expand "version": project.version
     }
 }
 

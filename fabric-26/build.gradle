@@ -3,8 +3,12 @@ plugins {
     id 'java'
 }
 
+// Minecraft 26.3 (unobfuscated, no remapping)
+def target = "mc26.x"
+version = "${project.mod_version}+${target}"
+
 base {
-    archivesName = "voicechat-audio-distance-fabric-1.1.0+mc26.x"
+    archivesName = "voicechat-audio-distance-fabric"
 }
 
 repositories {
@@ -19,19 +23,28 @@ repositories {
     }
 }
 
+sourceSets {
+    main {
+        java {
+            srcDir "${rootDir}/shared/client-all/src/main/java"
+        }
+    }
+}
+
 dependencies {
     implementation project(':common')
 
-    minecraft "com.mojang:minecraft:26.3"
-    implementation "net.fabricmc:fabric-loader:0.19.5"
-    implementation "net.fabricmc.fabric-api:fabric-api:0.161.0+26.3"
+    minecraft "com.mojang:minecraft:${project.mc26_minecraft}"
+    implementation "net.fabricmc:fabric-loader:${project.mc26_fabric_loader}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.mc26_fabric_api}"
 
-    compileOnly "de.maxhenkel.voicechat:voicechat-api:2.6.0"
-    compileOnly "com.terraformersmc:modmenu:21.0.0-beta.1"
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:${project.voicechat_api_version}"
+    compileOnly "com.terraformersmc:modmenu:${project.mc26_modmenu}"
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.release = 25
+    options.encoding = 'UTF-8'
 }
 
 java {
@@ -42,11 +55,8 @@ java {
 processResources {
     inputs.property "version", project.version
 
-    filesMatching("fabric.mod.json") {
-        expand "version": "1.1.0+mc26.x"
-    }
-    filesMatching("META-INF/*.toml") {
-        expand "version": "1.1.0+mc26.x"
+    filesMatching(["fabric.mod.json", "META-INF/*.toml"]) {
+        expand "version": project.version
     }
 }
 

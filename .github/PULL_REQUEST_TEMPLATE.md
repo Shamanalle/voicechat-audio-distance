@@ -15,4 +15,4 @@ Please describe the changes proposed in this pull request and the rationale behi
 - [ ] I have tested these changes in a local development environment.
 - [ ] All unit tests pass (`./gradlew test`).
 - [ ] The mod compiles cleanly (`./gradlew build`).
-- [ ] Translations have been updated (if applicable: `en_us.json`, `ru_ru.json`).
+- [ ] Translations have been updated in `common/src/main/resources/assets/vc-audio-distance/lang/` (all languages).

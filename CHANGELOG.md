@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-09-25
+
+### Added
+- **New settings screen** with four tabs: *Distance* (live curve, whisper curve, hover readout in blocks / % / dB, dots for the people you hear right now), *Walls* (preview of how a voice sounds behind glass, wood, stone, wool and leaves), *Materials* (per-material absorption) and *Monitor* (live distance, loudness and wall loss of every voice you hear).
+- Active tab and matching preset are highlighted; long texts are shortened to fit; the layout works down to the smallest GUI size (320×240).
+- Per-material wall weights (stone, wood, wool, glass, doors, leaves, bars & fences, liquids), saved in the config.
+- The "Voice distance & walls…" button in Simple Voice Chat's settings now also exists on 26.x.
+- Sound Physics Remastered detection: our wall muffling stands down so voices are not muffled twice.
+- Tests for the filter, the occlusion model, config round-trips/migration, the speaker registry and translation consistency (40 tests).
+
+### Changed
+- **Audible wall muffling.** The old 1-pole filter changed a voice by less than 1 dB behind a stone wall. It is replaced by a 4th-order TPT state-variable low-pass plus broadband transmission loss: about −8 dB and ~2.5 kHz for one stone wall at default strength, about −18 dB and ~600 Hz for three.
+- Parameters glide with a ~90 ms time constant, and entering or leaving the bypass is crossfaded, so walls no longer cause clicks.
+- Rays only count blocks whose real collision shape they cross (slabs, open doors, fences, carpets), and 5 parallel rays give soft edges at corners and doorways.
+- Occlusion is computed on the client thread each tick; audio threads only read the result, so the world is never touched off-thread.
+- Whisper detection uses Simple Voice Chat's own whisper flag instead of guessing from the distance.
+- The plugin, config, DSP and occlusion model now live in `common`, shared by every version. The client code is shared across all versions except a small per-version adapter.
+- Esc on the settings screen now saves, like vanilla option screens; *Cancel* restores everything.
+- Config is written atomically, validated on load and migrated from 1.1.x automatically.
+- Versions are defined once in `gradle.properties`.
+
+### Fixed
+- **Simple Voice Chat dependency.** SVC versions look like `1.21.8-2.6.24` (and `2.6.24+26.3` on 26.x), so the old `>=2.4.0` / `[2.6.0,)` constraints could not match on 1.20/1.21. Constraints now use the correct format per branch.
+- **1.21.x jar on other 1.21 releases:**
+  - `GuiGraphics.drawString` changed its return type in 1.21.6, which crashed the screen on 1.21–1.21.5.
+  - The `KeyMapping` constructor changed in 1.21.9 and 1.21.11, which crashed start-up.
+  - `Camera.getPosition` was removed in 1.21.11, which silently disabled walls.
+  - `Entity.position` was removed in 1.21.9.
+
+  Every Minecraft member the jar uses has been checked against the mappings of 1.21 through 1.21.11.
+- 26.x: 15 missing translation keys showed up as raw keys. Glass, leaves and doors were never counted as walls.
+- The filter bypass never re-engaged after the first wall, so the voice stayed slightly filtered.
+- Occlusion caches were never cleared; they are now reset when the world or server changes.
+- The release workflow used JDK 21, which cannot build the 26.x module.
+- `fabric.mod.json` and `mods.toml` disagreed on the supported 26.x versions.
+
+### Notes
+- Forge / NeoForge jars are a lite build: distance curves configured through `config/vc-audio-distance.properties`. The settings screen, walls and monitor are Fabric-only.
+
 ## [1.1.0] - 2026-09-25
 
 ### Added
