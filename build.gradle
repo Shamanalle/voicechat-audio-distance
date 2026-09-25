@@ -15,6 +15,7 @@ tasks.register('buildAll') {
     group = 'build'
     description = 'Builds and collects the release jars for every Minecraft version and loader into build/libs'
     dependsOn releaseTargets.collect { "${it.project}:build" }
+    dependsOn ':bukkit:build'
 
     doLast {
         def outDir = layout.buildDirectory.dir("libs").get().asFile
@@ -36,6 +37,15 @@ tasks.register('buildAll') {
                     rename { "voicechat-audio-distance-${loader}-${version}.jar" }
                 }
             }
+        }
+        // Bukkit / Spigot / Paper / Purpur plugin (server side, every supported Minecraft version)
+        def plugin = file("${project(':bukkit').layout.buildDirectory.get().asFile}/libs/voicechat-audio-distance-bukkit-${project.mod_version}.jar")
+        if (!plugin.exists()) {
+            throw new GradleException("Expected release jar is missing: ${plugin}")
+        }
+        copy {
+            from plugin
+            into outDir
         }
     }
 }

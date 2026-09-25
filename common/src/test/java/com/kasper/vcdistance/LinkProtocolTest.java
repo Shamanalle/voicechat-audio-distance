@@ -95,4 +95,38 @@ public class LinkProtocolTest {
         assertEquals(ServerSettings.ProfileMode.ENFORCE, s.getProfileMode());
         assertEquals(ServerSettings.MAX_STREAMS_LIMIT, s.getMaxStreams());
     }
+
+    @Test
+    @DisplayName("Wire form matches Minecraft's string encoding (VarInt byte length + UTF-8)")
+    void wireFormat() {
+        byte[] ascii = LinkProtocol.encode("abc");
+        assertArrayEquals(new byte[]{3, 'a', 'b', 'c'}, ascii);
+
+        // 200 bytes need a two-byte VarInt: 0xC8 0x01
+        String longText = "x".repeat(200);
+        byte[] encoded = LinkProtocol.encode(longText);
+        assertEquals((byte) 0xC8, encoded[0]);
+        assertEquals(1, encoded[1]);
+        assertEquals(longText, LinkProtocol.decode(encoded));
+
+        // Length counts bytes, not characters
+        String cyrillic = "Громкость";
+        byte[] ru = LinkProtocol.encode(cyrillic);
+        assertEquals(cyrillic.getBytes(java.nio.charset.StandardCharsets.UTF_8).length, ru[0]);
+        assertEquals(cyrillic, LinkProtocol.decode(ru));
+
+        ServerSettings s = new ServerSettings(dir.resolve("w.properties"));
+        String profile = LinkProtocol.profile(s, 48.0, 24.0);
+        assertEquals(profile, LinkProtocol.decode(LinkProtocol.encode(profile)));
+    }
+
+    @Test
+    @DisplayName("Malformed wire data is rejected")
+    void wireRejectsGarbage() {
+        assertNull(LinkProtocol.decode(null));
+        assertNull(LinkProtocol.decode(new byte[0]));
+        assertNull(LinkProtocol.decode(new byte[]{5, 'a', 'b'}));
+        assertNull(LinkProtocol.decode(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, 1}));
+        assertThrows(IllegalArgumentException.class, () -> LinkProtocol.encode("x".repeat(LinkProtocol.MAX_LENGTH + 1)));
+    }
 }

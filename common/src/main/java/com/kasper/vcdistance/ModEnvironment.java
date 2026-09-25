@@ -11,11 +11,21 @@ public final class ModEnvironment {
     public static final String SOUND_PHYSICS_MOD_ID = "sound_physics_remastered";
 
     private static volatile Boolean soundPhysicsPresent;
+    private static volatile Path configDirOverride;
 
     private ModEnvironment() {
     }
 
+    /** Used by platforms without a loader config directory (the Bukkit plugin's data folder). */
+    public static void setConfigDir(Path dir) {
+        configDirOverride = dir;
+    }
+
     public static Path configDir() {
+        Path override = configDirOverride;
+        if (override != null) {
+            return override;
+        }
         Path fabric = attempt(() -> {
             Class<?> loaderClass = Class.forName("net.fabricmc.loader.api.FabricLoader");
             Object loader = loaderClass.getMethod("getInstance").invoke(null);

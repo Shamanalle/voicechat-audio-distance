@@ -119,8 +119,17 @@ public final class ServerWalls {
         return addonListeners.contains(player);
     }
 
+    /** The player left the game: forget everything about them. */
     public void forgetPlayer(UUID player) {
         addonListeners.remove(player);
+        releaseListener(player);
+    }
+
+    /**
+     * The player's voice connection closed. They may reconnect voice without rejoining the game,
+     * so whether they have the addon is kept until they leave.
+     */
+    public void releaseListener(UUID player) {
         for (Pair p : pairs.values()) {
             if (p.listener.equals(player)) {
                 p.lastSeenNanos = 0L;

@@ -23,7 +23,7 @@ import org.lwjgl.openal.AL11;
  * ({@link ServerWalls}).
  * <p>
  * This class only depends on the SVC API and LWJGL, so the same code runs on every Minecraft
- * version and loader. World access (raycasts, entity lookups) lives in the glue of each version,
+ * version and loader. The Bukkit plugin registers only {@link #registerServerEvents}. World access (raycasts, entity lookups) lives in the glue of each version,
  * which feeds {@link #SPEAKERS} and {@link #SERVER_WALLS} from the game threads.
  */
 @ForgeVoicechatPlugin
@@ -65,6 +65,9 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     @Override
     public void initialize(VoicechatApi voicechatApi) {
         api = voicechatApi;
+        if (voicechatApi instanceof VoicechatServerApi server) {
+            serverApi = server;
+        }
         // The client config is loaded by the client entrypoint or on the first voice frame,
         // so dedicated servers never create it.
         DistanceConfig.LOGGER.info("VoiceChat Audio Distance plugin initialized");
@@ -76,7 +79,11 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         registration.registerEvent(OpenALSoundEvent.class, AudioDistancePlugin::onOpenALSound);
         registration.registerEvent(ClientReceiveSoundEvent.EntitySound.class, AudioDistancePlugin::onEntitySound);
         registration.registerEvent(ClientReceiveSoundEvent.LocationalSound.class, AudioDistancePlugin::onLocationalSound);
+        registerServerEvents(registration);
+    }
 
+    /** Server-side events: wall muffling for players without the addon. */
+    public static void registerServerEvents(EventRegistration registration) {
         registration.registerEvent(VoicechatServerStartedEvent.class, e -> {
             serverApi = e.getVoicechat();
             ensureServerSettings();
@@ -87,7 +94,8 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         });
         registration.registerEvent(EntitySoundPacketEvent.class, SERVER_WALLS::onEntitySound);
         registration.registerEvent(LocationalSoundPacketEvent.class, SERVER_WALLS::onLocationalSound);
-        registration.registerEvent(PlayerDisconnectedEvent.class, e -> SERVER_WALLS.forgetPlayer(e.getPlayerUuid()));
+        // Only the voice connection closed; leaving the game is reported by the platform glue
+        registration.registerEvent(PlayerDisconnectedEvent.class, e -> SERVER_WALLS.releaseListener(e.getPlayerUuid()));
     }
 
     // -------------------------------------------------------------------------
