@@ -1,0 +1,11 @@
+net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
+net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
+net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement
+net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements
+net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+net.minecraft.client.resources.sounds.SimpleSoundInstance
+net.minecraft.client.KeyMapping
+net.minecraft.client.DeltaTracker
+net.minecraft.client.gui.GuiGraphics
+net.minecraft.client.gui.GuiGraphicsExtractor
+net.minecraft.client.sounds.SoundManager

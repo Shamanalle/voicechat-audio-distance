@@ -1,0 +1,10 @@
+net.minecraft.sounds.SoundEvents VILLAGER_AMBIENT|VILLAGER_YES|NOTE_BLOCK_HAT
+net.minecraft.world.entity.Entity isUnderWater|isEyeInFluid|getYRot|isInWater|isInWaterOrRain|isInRain|getViewYRot|isInvisibleTo|wasEyeInWater|level\(\)
+net.minecraft.world.level.Level isRaining|isThundering|isRainingAt|canSeeSky|getRainLevel|clip\(|getBlockState|getFluidState
+net.minecraft.world.level.BlockGetter clip|getBlockState|getFluidState
+net.minecraft.client.Minecraft options|gui |player|getWindow|getSoundManager|screen|font|level|getConnection|getInstance|isPaused|hasSingleplayerServer
+net.minecraft.client.player.LocalPlayer isUnderWater|getYRot|isSpectator
+net.minecraft.world.level.ClipContext ClipContext\(
+net.minecraft.client.Options hideGui|renderDebug|getGuiScale|keyChat
+net.minecraft.client.gui.Font width|lineHeight|drawInBatch
+net.minecraft.world.phys.BlockHitResult getType|getLocation|getBlockPos
