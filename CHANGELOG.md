@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-09-25
 
 ### Added
+- **Multi-Version Dual-Target Support**:
+  - **Minecraft 1.21.x (`1.21` – `1.21.11`)**: Target file `voicechat-audio-distance-addon-1.1.0+mc1.21.x.jar` (Java 21).
+  - **Minecraft 26.x (`26.1` – `26.3`)**: Target file `voicechat-audio-distance-addon-1.1.0+mc26.3.jar` (Java 25, unobfuscated Loom, SDL3 input, and `GuiGraphicsExtractor` rendering).
 - **Sound Occlusion & Acoustic Muffling**: Physical sound absorption through solid obstacles (walls, doors, floors, caves). Voices are muffled via real-time digital low-pass filtering when behind barriers.
 - **DSP Low-Pass Filter Engine (`OcclusionFilter`)**:
   - High-performance 1-pole IIR filter: `y[n] = y[n-1] + α · (x[n] - y[n-1])`.

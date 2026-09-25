@@ -1,67 +1,23 @@
 plugins {
-    id 'fabric-loom' version '1.14-SNAPSHOT'
-    id 'java'
+    id 'base'
 }
 
-version = project.mod_version
-group = project.maven_group
+tasks.register('buildAll') {
+    group = 'build'
+    description = 'Builds and packages release JARs for all supported Minecraft versions'
+    dependsOn ':fabric-1.21:build', ':fabric-26:build'
 
-base {
-    archivesName = "voicechat-audio-distance-addon"
-}
-
-repositories {
-    mavenCentral()
-    maven {
-        name = "henkelmax.public"
-        url = 'https://maven.maxhenkel.de/repository/public'
-    }
-    maven {
-        name = "TerraformersMC"
-        url = 'https://maven.terraformersmc.com/releases'
+    doLast {
+        copy {
+            from project(':fabric-1.21').layout.buildDirectory.file("libs")
+            from project(':fabric-26').layout.buildDirectory.file("libs")
+            into layout.buildDirectory.dir("libs")
+            include "*.jar"
+            exclude "*-dev.jar", "*-sources.jar"
+        }
     }
 }
 
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-
-    // Simple Voice Chat API (compile only - SVC is already installed as a mod)
-    compileOnly "de.maxhenkel.voicechat:voicechat-api:${project.voicechat_api_version}"
-
-    // Optional Mod Menu integration (compile only)
-    modCompileOnly "com.terraformersmc:modmenu:15.0.0"
-
-    testImplementation platform('org.junit:junit-bom:5.10.2')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-test {
-    useJUnitPlatform()
-}
-
-processResources {
-    inputs.property "version", project.version
-
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.release = 21
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${project.base.archivesName.get()}" }
-    }
+tasks.named('build') {
+    dependsOn 'buildAll'
 }

@@ -22,9 +22,10 @@ public class DistanceConfig {
 
     private static Path resolveConfigPath() {
         try {
-            return net.fabricmc.loader.api.FabricLoader.getInstance()
-                    .getConfigDir()
-                    .resolve("vc-audio-distance.properties");
+            Class<?> loaderClass = Class.forName("net.fabricmc.loader.api.FabricLoader");
+            Object loader = loaderClass.getMethod("getInstance").invoke(null);
+            Path configDir = (Path) loaderClass.getMethod("getConfigDir").invoke(loader);
+            return configDir.resolve("vc-audio-distance.properties");
         } catch (Throwable ignored) {
             return Path.of("config", "vc-audio-distance.properties");
         }

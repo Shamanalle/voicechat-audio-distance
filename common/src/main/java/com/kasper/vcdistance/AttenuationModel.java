@@ -1,8 +1,5 @@
 package com.kasper.vcdistance;
 
-import net.minecraft.network.chat.Component;
-import org.lwjgl.openal.AL11;
-
 /**
  * OpenAL distance attenuation models supported by the addon.
  */
@@ -16,7 +13,7 @@ public enum AttenuationModel {
             "linear",
             "gui.vc-audio-distance.model.linear",
             "gui.vc-audio-distance.model.linear.tooltip",
-            AL11.AL_LINEAR_DISTANCE_CLAMPED
+            0xD004 // AL_LINEAR_DISTANCE_CLAMPED
     ),
 
     /**
@@ -27,7 +24,7 @@ public enum AttenuationModel {
             "realistic_inverse",
             "gui.vc-audio-distance.model.inverse",
             "gui.vc-audio-distance.model.inverse.tooltip",
-            AL11.AL_INVERSE_DISTANCE_CLAMPED
+            0xD002 // AL_INVERSE_DISTANCE_CLAMPED
     ),
 
     /**
@@ -38,7 +35,7 @@ public enum AttenuationModel {
             "exponential",
             "gui.vc-audio-distance.model.exponential",
             "gui.vc-audio-distance.model.exponential.tooltip",
-            AL11.AL_EXPONENT_DISTANCE_CLAMPED
+            0xD006 // AL_EXPONENT_DISTANCE_CLAMPED
     );
 
     private final String id;
@@ -57,12 +54,12 @@ public enum AttenuationModel {
         return id;
     }
 
-    public Component getDisplayName() {
-        return Component.translatable(translationKey);
+    public String getTranslationKey() {
+        return translationKey;
     }
 
-    public Component getTooltip() {
-        return Component.translatable(tooltipKey);
+    public String getTooltipKey() {
+        return tooltipKey;
     }
 
     public int getOpenAlConstant() {

@@ -57,14 +57,14 @@ public class AudioDistanceScreen extends Screen {
         // ── 1. Model Selector Button ─────────────────────────────────────────
         int y = startY + 68;
         Button modelButton = Button.builder(
-                Component.translatable("gui.vc-audio-distance.model.label", AudioDistancePlugin.CONFIG.model.getDisplayName()),
+                Component.translatable("gui.vc-audio-distance.model.label", Component.translatable(AudioDistancePlugin.CONFIG.model.getTranslationKey())),
                 btn -> {
                     AudioDistancePlugin.CONFIG.model = AudioDistancePlugin.CONFIG.model.next();
                     refreshScreen();
                 }
         )
         .bounds(startX, y, totalWidth, 20)
-        .tooltip(Tooltip.create(AudioDistancePlugin.CONFIG.model.getTooltip()))
+        .tooltip(Tooltip.create(Component.translatable(AudioDistancePlugin.CONFIG.model.getTooltipKey())))
         .build();
         addRenderableWidget(modelButton);
         y += 22;
@@ -451,25 +451,6 @@ public class AudioDistanceScreen extends Screen {
      */
     public static double calculateGain(double distFraction, AttenuationModel model,
                                       double rolloff, double minVol, double refRatio) {
-        double gain;
-        if (distFraction <= refRatio) {
-            gain = 1.0;
-        } else {
-            double excess = distFraction - refRatio;
-            double remaining = Math.max(0.001, 1.0 - refRatio);
-
-            switch (model) {
-                case REALISTIC_INVERSE -> {
-                    gain = refRatio / (refRatio + rolloff * excess);
-                }
-                case EXPONENTIAL -> {
-                    gain = Math.pow(Math.max(0.0001, distFraction / Math.max(0.01, refRatio)), -rolloff);
-                }
-                default -> {
-                    gain = 1.0 - rolloff * (excess / remaining);
-                }
-            }
-        }
-        return Math.max(minVol, Math.max(0.0, Math.min(1.0, gain)));
+        return AudioPhysics.calculateGain(distFraction, model, rolloff, minVol, refRatio);
     }
 }

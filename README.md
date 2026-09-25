@@ -85,30 +85,39 @@
 
 ---
 
-## 📦 Установка / Installation
+## 📦 Совместимость и установка / Versions & Installation
 
-1. Установите **Minecraft** `1.21+` (любую версию 1.21.x).
-2. Установите **Fabric Loader** и **Fabric API**.
-3. Установите мод **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)** (версии `2.4.0` или новее).
-4. Поместите файл `voicechat-audio-distance-addon-1.1.0.jar` в папку `.minecraft/mods/`.
-5. *(Опционально)* Установите **Mod Menu** для быстрого доступа к настройкам из списка модов.
+Аддон выпускается в виде отдельных оптимизированных сборок под каждое поколение Minecraft:
+
+| Версия Minecraft | Релизный файл аддона | Требуемая Java | Версия Simple Voice Chat |
+|---|---|---|---|
+| **Minecraft 1.21.x** (`1.21`, `1.21.1` ... `1.21.11`) | `voicechat-audio-distance-addon-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
+| **Minecraft 26.x** (`26.1`, `26.2`, `26.3`) | `voicechat-audio-distance-addon-1.1.0+mc26.3.jar` | Java 25+ | `>=2.6.0` (например, `2.6.24+26.3`) |
+
+### Инструкция по установке:
+1. Выберите подходящий файл аддона из таблицы выше под вашу версию Minecraft.
+2. Убедитесь, что у вас установлены **Fabric Loader**, **Fabric API** и мод **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)**.
+3. Поместите скачанный `.jar` файл в папку `.minecraft/mods/`.
+4. *(Опционально)* Установите **Mod Menu** для быстрого доступа к интерфейсу настроек.
 
 ---
 
 ## 🛠️ Сборка из исходников / Building from Source
 
-Требуется **JDK 21** или новее:
+Требуется **JDK 25** (поддерживает сборку обоих модулей):
 
 ```bash
 # Клонируйте репозиторий
 git clone https://github.com/Shamanalle/voicechat-audio-distance.git
 cd voicechat-audio-distance
 
-# Сборка проекта через Gradle
+# Полная сборка всех поддерживаемых версий (1.21.x и 26.x)
 ./gradlew build
 ```
 
-Собранный JAR-архив появится в папке `build/libs/`.
+Собранные JAR-архивы для всех версий появятся в `build/libs/`:
+- `voicechat-audio-distance-addon-1.1.0+mc1.21.x.jar`
+- `voicechat-audio-distance-addon-1.1.0+mc26.3.jar`
 
 ---
 
