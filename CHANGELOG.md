@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [Unreleased]
+
+### English
+
+#### Changed
+- **Readable settings files.** The client and server files now list their keys in a fixed order, grouped under headings, with a comment on every key in English and Russian: what it does, its range and its default. Numbers are written short (`0.6` instead of `0.6000`).
+- **Simpler server settings**, in three sections:
+  1. *Walls, for every player:* `walls_strength` (0 turns walls off) and `material.*`.
+  2. *Players without the addon:* `server_walls`, `server_walls_max_streams`.
+  3. *Players with the addon:* `profile_mode`, the new `profile_preset` (`vanilla`, `realistic`, `clear`, `stealth` or `custom`), and the custom `profile.*` curve.
+
+  Walls no longer depend on the chosen profile, so everyone hears the same walls.
+- Server files from 1.2.0 and client files from earlier versions are rewritten in the new format on the first start, keeping their values.
+
+### Русский
+
+#### Изменено
+- **Понятные файлы настроек.** В файлах клиента и сервера ключи теперь идут в постоянном порядке, сгруппированы по разделам, и у каждого есть комментарий на английском и русском: что он делает, диапазон и значение по умолчанию. Числа записываются коротко (`0.6` вместо `0.6000`).
+- **Более простые настройки сервера**, в трёх разделах:
+  1. *Стены, для всех игроков:* `walls_strength` (0 выключает стены) и `material.*`.
+  2. *Игроки без аддона:* `server_walls`, `server_walls_max_streams`.
+  3. *Игроки с аддоном:* `profile_mode`, новый `profile_preset` (`vanilla`, `realistic`, `clear`, `stealth` или `custom`) и своя кривая `profile.*`.
+
+  Стены больше не зависят от выбранного профиля, поэтому все слышат одинаковые стены.
+- Файлы сервера из 1.2.0 и файлы клиента из прошлых версий при первом запуске переписываются в новый формат с сохранением значений.
+
 ## [1.2.0] - 2026-09-25
 
 ### English
