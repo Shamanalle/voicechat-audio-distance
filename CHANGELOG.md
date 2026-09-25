@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **NeoForge 1.21.x**: `voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar` (includes `META-INF/neoforge.mods.toml` and `@ForgeVoicechatPlugin`).
   - **Forge 1.21.x**: `voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar` (includes `META-INF/mods.toml` and `@ForgeVoicechatPlugin`).
   - **Fabric 26.x**: `voicechat-audio-distance-fabric-1.1.0+mc26.x.jar` (Minecraft 26.1 – 26.3+, Java 25, unobfuscated Loom, SDL3 input).
+  - **NeoForge 26.x**: `voicechat-audio-distance-neoforge-1.1.0+mc26.x.jar` (includes `META-INF/neoforge.mods.toml` and `@ForgeVoicechatPlugin`).
+  - **Forge 26.x**: `voicechat-audio-distance-forge-1.1.0+mc26.x.jar` (includes `META-INF/mods.toml` and `@ForgeVoicechatPlugin`).
   - Standardized all release artifact names to `[project]-[loader]-[version]+mc[target].jar`.
 - **Sound Occlusion & Acoustic Muffling**: Physical sound absorption through solid obstacles (walls, doors, floors, caves). Voices are muffled via real-time digital low-pass filtering when behind barriers.
 - **DSP Low-Pass Filter Engine (`OcclusionFilter`)**:

@@ -43,7 +43,10 @@ processResources {
     inputs.property "version", project.version
 
     filesMatching("fabric.mod.json") {
-        expand "version": "1.1.0+mc26.3"
+        expand "version": "1.1.0+mc26.x"
+    }
+    filesMatching("META-INF/*.toml") {
+        expand "version": "1.1.0+mc26.x"
     }
 }
 

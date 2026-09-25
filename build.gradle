@@ -39,6 +39,18 @@ tasks.register('buildAll') {
                 from fabric26Jar
                 into targetDir
             }
+            // 5. Package dedicated NeoForge 26.x release JAR (with META-INF/neoforge.mods.toml & @ForgeVoicechatPlugin)
+            copy {
+                from fabric26Jar
+                into targetDir
+                rename { "voicechat-audio-distance-neoforge-1.1.0+mc26.x.jar" }
+            }
+            // 6. Package dedicated Forge 26.x release JAR (with META-INF/mods.toml & @ForgeVoicechatPlugin)
+            copy {
+                from fabric26Jar
+                into targetDir
+                rename { "voicechat-audio-distance-forge-1.1.0+mc26.x.jar" }
+            }
         }
     }
 }
