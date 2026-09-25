@@ -59,6 +59,8 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     /** Server-side settings and wall muffling. */
     public static final ServerSettings SERVER_SETTINGS = new ServerSettings();
     public static final ServerWalls SERVER_WALLS = new ServerWalls(SERVER_SETTINGS);
+    /** Which sound zone each player with the addon was last sent (server). */
+    public static final ZoneTracker ZONES = new ZoneTracker();
 
     private static volatile VoicechatApi api;
     private static volatile VoicechatServerApi serverApi;
@@ -143,8 +145,13 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         }
     }
 
-    /** Text of the {@code profile} message for players who have the addon. */
+    /** Text of the {@code profile} message for players who have the addon, outside any zone. */
     public static String serverProfileMessage() {
+        return serverProfileMessage(null);
+    }
+
+    /** Text of the {@code profile} message for a player in {@code zone} ({@code null}: no zone). */
+    public static String serverProfileMessage(Zone zone) {
         double voice = FALLBACK_DISTANCE;
         double whisper = FALLBACK_DISTANCE / 2.0;
         VoicechatServerApi s = serverApi;
@@ -155,7 +162,27 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             } catch (Throwable ignored) {
             }
         }
-        return LinkProtocol.profile(SERVER_SETTINGS, voice, whisper);
+        return LinkProtocol.profile(SERVER_SETTINGS, zone, voice, whisper);
+    }
+
+    /** Simple Voice Chat's voice range on this server, or 0 when it is not running. */
+    public static double serverVoiceDistance() {
+        VoicechatServerApi s = serverApi;
+        try {
+            return s != null ? s.getVoiceChatDistance() : 0.0;
+        } catch (Throwable t) {
+            return 0.0;
+        }
+    }
+
+    /** Simple Voice Chat's whisper range on this server, or 0 when it is not running. */
+    public static double serverWhisperDistance() {
+        VoicechatServerApi s = serverApi;
+        try {
+            return s != null ? s.getServerConfig().getDouble("whisper_distance", s.getVoiceChatDistance() / 2.0) : 0.0;
+        } catch (Throwable t) {
+            return 0.0;
+        }
     }
 
     /** How often the server sends {@code nearby} messages, in ticks. */
@@ -227,6 +254,20 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     public static boolean isSelfTalking(long nowNanos) {
         long t = selfTalkNanos;
         return t != Long.MIN_VALUE && nowNanos - t <= SELF_TALK_HOLD_NANOS;
+    }
+
+    /** Name of the Simple Voice Chat group you are in, or {@code null}. */
+    public static String selfGroupName() {
+        VoicechatClientApi c = clientApi;
+        if (c == null) {
+            return null;
+        }
+        try {
+            de.maxhenkel.voicechat.api.Group group = c.getGroup();
+            return group == null ? null : group.getName();
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     /** Whether your last microphone frame was a whisper. */
@@ -366,6 +407,8 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             double curve = AudioPhysics.calculateGain(sourceDistance(source) / range, c.getModel(),
                     effectiveRolloff(c, whispering), c.getMinVolumeFraction(), c.getOpenalReferenceRatio());
 
+            redirectThroughOpening(event, source, c);
+
             float sourceGain = Math.max(0.0F, AL11.alGetSourcef(source, AL11.AL_GAIN));
             AL11.alSourcef(source, AL11.AL_ROLLOFF_FACTOR, 0.0F);
             AL11.alSourcef(source, AL11.AL_MAX_GAIN, (float) (curve * sourceGain));
@@ -377,6 +420,35 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     }
 
     /** Distance between the source and the listener, the way OpenAL measures it. */
+    /**
+     * A voice coming round a wall through a doorway is heard from the doorway's direction, at its
+     * real distance (so the distance curve stays the same). Directions are taken in world axes,
+     * which Simple Voice Chat's OpenAL space shares.
+     */
+    private static void redirectThroughOpening(OpenALSoundEvent event, int source, DistanceConfig c) {
+        SpeakerRegistry.Speaker speaker = SPEAKERS.get(event.getChannelId());
+        if (speaker == null || !speaker.hasOpening() || !c.isDiffractionEnabled()
+                || occlusionStatus() != OcclusionStatus.ACTIVE
+                || AL11.alGetSourcei(source, AL11.AL_SOURCE_RELATIVE) != AL11.AL_FALSE) {
+            return;
+        }
+        double[] eye = ENVIRONMENT.position();
+        double dx = speaker.getOpeningX() - eye[0];
+        double dy = speaker.getOpeningY() - eye[1];
+        double dz = speaker.getOpeningZ() - eye[2];
+        double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (!(len > 0.01)) {
+            return;
+        }
+        float[] lx = new float[1];
+        float[] ly = new float[1];
+        float[] lz = new float[1];
+        AL11.alGetListener3f(AL11.AL_POSITION, lx, ly, lz);
+        double dist = sourceDistance(source);
+        AL11.alSource3f(source, AL11.AL_POSITION,
+                (float) (lx[0] + dx / len * dist), (float) (ly[0] + dy / len * dist), (float) (lz[0] + dz / len * dist));
+    }
+
     private static double sourceDistance(int source) {
         float[] sx = new float[1];
         float[] sy = new float[1];
@@ -445,8 +517,9 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             EnvironmentEffects.Effect effect = EnvironmentEffects.Effect.NONE;
             if (status == OcclusionStatus.ACTIVE && speaker.isOcclusionKnown()) {
                 double strength = c.getOcclusionStrength();
-                effect = new EnvironmentEffects.Effect(OcclusionModel.muffle(speaker.getThickness(), strength),
-                        OcclusionModel.lossDb(speaker.getThickness(), strength));
+                double thickness = speaker.getEffectiveThickness();
+                effect = new EnvironmentEffects.Effect(OcclusionModel.muffle(thickness, strength),
+                        OcclusionModel.lossDb(thickness, strength));
             }
             // Sound Physics Remastered does its own water and echo; weather is ours either way
             boolean ownPhysics = status != OcclusionStatus.SOUND_PHYSICS && status != OcclusionStatus.UNAVAILABLE;

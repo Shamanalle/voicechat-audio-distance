@@ -19,8 +19,9 @@ public final class DistanceConfig {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("VC-AudioDistance");
 
-    /** 3: the file is written with a comment for every key; 4: interface section; 5: echo, water, weather. */
-    private static final int CONFIG_VERSION = 5;
+    /** 3: the file is written with a comment for every key; 4: interface section; 5: echo, water, weather; 6: sound around corners;
+     * 7: the HUD moves from the top left (under Simple Voice Chat's group list) to the top right. */
+    private static final int CONFIG_VERSION = 7;
     private static final String FILE_NAME = "vc-audio-distance.properties";
 
     // -------------------------------------------------------------------------
@@ -54,6 +55,7 @@ public final class DistanceConfig {
     public static final double DEFAULT_REVERB_STRENGTH = 0.60;
     public static final boolean DEFAULT_UNDERWATER_ENABLED = true;
     public static final boolean DEFAULT_WEATHER_ENABLED = true;
+    public static final boolean DEFAULT_DIFFRACTION_ENABLED = true;
 
     private volatile AttenuationModel model = DEFAULT_MODEL;
     private volatile double attenuationFactor = DEFAULT_ATTENUATION_FACTOR;
@@ -66,11 +68,13 @@ public final class DistanceConfig {
     private volatile double reverbStrength = DEFAULT_REVERB_STRENGTH;
     private volatile boolean underwaterEnabled = DEFAULT_UNDERWATER_ENABLED;
     private volatile boolean weatherEnabled = DEFAULT_WEATHER_ENABLED;
+    private volatile boolean diffractionEnabled = DEFAULT_DIFFRACTION_ENABLED;
     private final double[] materialWeights = new double[AcousticMaterial.values().length];
 
     // Interface: only ever read from the player's own file, never part of a server profile
     public static final HudMode DEFAULT_HUD_MODE = HudMode.TALKING;
-    public static final HudCorner DEFAULT_HUD_CORNER = HudCorner.TOP_LEFT;
+    /** Top right: Simple Voice Chat's own group list sits in the top left. */
+    public static final HudCorner DEFAULT_HUD_CORNER = HudCorner.TOP_RIGHT;
     private volatile HudMode hudMode = DEFAULT_HUD_MODE;
     private volatile HudCorner hudCorner = DEFAULT_HUD_CORNER;
     private volatile boolean welcomeShown;
@@ -201,6 +205,16 @@ public final class DistanceConfig {
         changed();
     }
 
+    /** Voices behind a wall come round through a nearby doorway: less muffled, from its direction. */
+    public boolean isDiffractionEnabled() {
+        return diffractionEnabled;
+    }
+
+    public void setDiffractionEnabled(boolean value) {
+        diffractionEnabled = value;
+        changed();
+    }
+
     public double getMaterialWeight(AcousticMaterial material) {
         synchronized (materialWeights) {
             return materialWeights[material.ordinal()];
@@ -283,6 +297,7 @@ public final class DistanceConfig {
         reverbStrength = DEFAULT_REVERB_STRENGTH;
         underwaterEnabled = DEFAULT_UNDERWATER_ENABLED;
         weatherEnabled = DEFAULT_WEATHER_ENABLED;
+        diffractionEnabled = DEFAULT_DIFFRACTION_ENABLED;
         resetMaterials();
     }
 
@@ -306,6 +321,7 @@ public final class DistanceConfig {
         reverbStrength = other.reverbStrength;
         underwaterEnabled = other.underwaterEnabled;
         weatherEnabled = other.weatherEnabled;
+        diffractionEnabled = other.diffractionEnabled;
         for (AcousticMaterial m : AcousticMaterial.values()) {
             double w = other.getMaterialWeight(m);
             synchronized (materialWeights) {
@@ -353,6 +369,9 @@ public final class DistanceConfig {
         hudMode = HudMode.fromId(props.getProperty("hud_mode"), DEFAULT_HUD_MODE);
         hudCorner = HudCorner.fromId(props.getProperty("hud_corner"), DEFAULT_HUD_CORNER);
         welcomeShown = parseBoolean(props, "welcome_shown", false);
+        if (parseDouble(props, "config_version", 1) < 7 && hudCorner == HudCorner.TOP_LEFT) {
+            hudCorner = HudCorner.TOP_RIGHT;
+        }
 
         LOGGER.info("Configuration loaded: model={}, rolloff={}, floor={}, reference={}, whisper={}, walls={} ({})",
                 model.getId(), attenuationFactor, minVolumeFraction, openalReferenceRatio, whisperMultiplier,
@@ -367,11 +386,11 @@ public final class DistanceConfig {
     public synchronized void save() {
         ConfigWriter w = new ConfigWriter()
                 .title("VoiceChat Audio Distance - client settings",
-                        "Easier to change in game: voice chat settings (V) -> \"Voice distance & walls...\".",
+                        "Easier to change in game: voice chat settings (V) -> \"Voice Physics...\".",
                         "The voice and whisper range itself is set by the server (Simple Voice Chat).",
                         "",
                         "VoiceChat Audio Distance - настройки клиента",
-                        "Удобнее менять в игре: настройки голосового чата (V) -> «Дальность голоса и стены…».",
+                        "Удобнее менять в игре: настройки голосового чата (V) -> «Voice Physics…».",
                         "Сама дальность голоса и шёпота задаётся на сервере (Simple Voice Chat).")
                 .comment("Format version, do not change. / Версия формата, не меняйте.")
                 .value("config_version", CONFIG_VERSION);
@@ -380,14 +399,14 @@ public final class DistanceConfig {
         w.section("Walls", "Стены");
         writeWalls(w, "");
         writeMaterials(w, "");
-        w.section("Echo, water and weather", "Эхо, вода и погода");
+        w.section("Echo, water, weather, corners", "Эхо, вода, погода, углы");
         writeEffects(w, "");
         w.section("Interface", "Интерфейс");
         w.comment("Voice HUD on screen: off, talking (while someone nearby or you talk), always. Default talking.",
                         "HUD голоса на экране: off (выкл.), talking (пока кто-то рядом или вы говорите), always (всегда). По умолчанию talking.")
                 .value("hud_mode", hudMode.getId())
-                .comment("Corner of the voice HUD: top_left, top_right, bottom_left, bottom_right. Default top_left.",
-                        "Угол экрана для HUD: top_left, top_right, bottom_left, bottom_right. По умолчанию top_left.")
+                .comment("Corner of the voice HUD: top_left, top_right, bottom_left, bottom_right. Default top_right.",
+                        "Угол экрана для HUD: top_left, top_right, bottom_left, bottom_right. По умолчанию top_right.")
                 .value("hud_corner", hudCorner.getId())
                 .comment("The first-join hint was shown. / Подсказка при первом входе уже показана.")
                 .value("welcome_shown", welcomeShown);
@@ -437,7 +456,10 @@ public final class DistanceConfig {
                 .value(prefix + "underwater_enabled", underwaterEnabled)
                 .comment("Rain and thunder cover far voices under the open sky: true / false. Default true.",
                         "Дождь и гроза заглушают дальние голоса под открытым небом: true / false. По умолчанию true.")
-                .value(prefix + "weather_enabled", weatherEnabled);
+                .value(prefix + "weather_enabled", weatherEnabled)
+                .comment("Voices behind a wall come round through a nearby doorway or window: less muffled, from its direction. Default true.",
+                        "Голоса за стеной обходят её через ближайший проём или окно: глушатся меньше и слышны с его стороны. По умолчанию true.")
+                .value(prefix + "diffraction_enabled", diffractionEnabled);
     }
 
     /** Per-material weights with their explanations (shared by the client and server files). */
@@ -463,6 +485,7 @@ public final class DistanceConfig {
         props.setProperty(prefix + "reverb_strength", format(reverbStrength));
         props.setProperty(prefix + "underwater_enabled", String.valueOf(underwaterEnabled));
         props.setProperty(prefix + "weather_enabled", String.valueOf(weatherEnabled));
+        props.setProperty(prefix + "diffraction_enabled", String.valueOf(diffractionEnabled));
         for (AcousticMaterial m : AcousticMaterial.values()) {
             props.setProperty(prefix + "material." + m.getId(), format(getMaterialWeight(m)));
         }
@@ -481,6 +504,7 @@ public final class DistanceConfig {
         reverbStrength = clamp(parseDouble(props, prefix + "reverb_strength", DEFAULT_REVERB_STRENGTH), REVERB_MIN, REVERB_MAX);
         underwaterEnabled = parseBoolean(props, prefix + "underwater_enabled", DEFAULT_UNDERWATER_ENABLED);
         weatherEnabled = parseBoolean(props, prefix + "weather_enabled", DEFAULT_WEATHER_ENABLED);
+        diffractionEnabled = parseBoolean(props, prefix + "diffraction_enabled", DEFAULT_DIFFRACTION_ENABLED);
         synchronized (materialWeights) {
             for (AcousticMaterial m : AcousticMaterial.values()) {
                 materialWeights[m.ordinal()] = clamp(parseDouble(props, prefix + "material." + m.getId(), m.getDefaultWeight()), 0.0, AcousticMaterial.MAX_WEIGHT);

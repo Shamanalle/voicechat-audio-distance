@@ -88,10 +88,31 @@ public class DistanceConfigTest {
         c.load();
         assertEquals(AttenuationModel.REALISTIC_INVERSE, c.getModel());
         String text = Files.readString(file);
-        assertTrue(text.contains("config_version=5"));
+        assertTrue(text.contains("config_version=7"));
         assertTrue(text.contains("reverb_enabled=true"));
         assertTrue(text.contains("material.stone"));
         assertTrue(text.contains("hud_mode=talking"));
+    }
+
+    @Test
+    @DisplayName("The HUD moves from the old top-left default to the top right once; a later choice stays")
+    void movesHudOffOldDefault() throws IOException {
+        Path file = dir.resolve("vc.properties");
+        Files.writeString(file, "config_version=6\nhud_corner=top_left\n");
+        DistanceConfig c = new DistanceConfig(file);
+        c.load();
+        assertEquals(HudCorner.TOP_RIGHT, c.getHudCorner());
+
+        c.setHudCorner(HudCorner.TOP_LEFT);
+        c.save();
+        DistanceConfig again = new DistanceConfig(file);
+        again.load();
+        assertEquals(HudCorner.TOP_LEFT, again.getHudCorner());
+
+        Files.writeString(file, "config_version=6\nhud_corner=bottom_left\n");
+        DistanceConfig kept = new DistanceConfig(file);
+        kept.load();
+        assertEquals(HudCorner.BOTTOM_LEFT, kept.getHudCorner());
     }
 
     @Test
@@ -129,7 +150,7 @@ public class DistanceConfigTest {
         String[] keys = {"config_version=", "distance_model=", "attenuation_factor=", "openal_reference_ratio=",
                 "min_volume_fraction=", "whisper_multiplier=", "occlusion_enabled=", "occlusion_strength=",
                 "material.stone=", "material.liquid=", "reverb_enabled=", "reverb_strength=", "underwater_enabled=",
-                "weather_enabled=", "hud_mode=", "hud_corner=", "welcome_shown="};
+                "weather_enabled=", "diffraction_enabled=", "hud_mode=", "hud_corner=", "welcome_shown="};
         int last = -1;
         for (String key : keys) {
             int at = text.indexOf("\n" + key);

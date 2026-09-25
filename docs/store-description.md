@@ -37,7 +37,8 @@ It works on either side, and each side is useful alone:
 
 ### Which file
 - **Fabric / Quilt:** the full version, client and server. Needs Fabric API; Mod Menu is optional.
-- **Forge / NeoForge:** a lite version with distance curves only, set in `config/vc-audio-distance.properties`.
+- **NeoForge 26.x:** the full version, client and server, like Fabric.
+- **Forge, and NeoForge for 1.20.1 / 1.21.x:** a lite version with distance curves only, set in `config/vc-audio-distance.properties`.
 - **Paper / Purpur / Spigot / Bukkit:** the server side as a plugin, Minecraft 1.20.1 and newer.
 
 Source code, full documentation and the changelog: https://github.com/Shamanalle/voicechat-audio-distance
@@ -75,7 +76,8 @@ Source code, full documentation and the changelog: https://github.com/Shamanalle
 
 ### Какой файл
 - **Fabric / Quilt:** полная версия, клиент и сервер. Нужен Fabric API; Mod Menu — по желанию.
-- **Forge / NeoForge:** облегчённая версия, только кривые громкости, настройка в `config/vc-audio-distance.properties`.
+- **NeoForge 26.x:** полная версия, клиент и сервер, как на Fabric.
+- **Forge, а также NeoForge для 1.20.1 / 1.21.x:** облегчённая версия, только кривые громкости, настройка в `config/vc-audio-distance.properties`.
 - **Paper / Purpur / Spigot / Bukkit:** серверная часть в виде плагина, Minecraft 1.20.1 и новее.
 
 Исходный код, полная документация и список изменений: https://github.com/Shamanalle/voicechat-audio-distance

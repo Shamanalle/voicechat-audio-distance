@@ -241,9 +241,9 @@ public abstract class SettingsScreen extends Screen {
         graphBottom = rows - 6;
 
         // Not an edit widget: listening is allowed while the server enforces its profile
-        Component listen = tr("listen");
-        int lw = this.font.width(listen) + 12;
-        listenButton = Button.builder(listen, b -> startPreview())
+        // One width for both labels, so the button does not jump when it toggles
+        int lw = Math.max(this.font.width(tr("listen")), this.font.width(tr("listen.stop"))) + 12;
+        listenButton = Button.builder(previewStep >= 0 ? tr("listen.stop") : tr("listen"), b -> togglePreview())
                 .bounds(right - lw - 3, graphTop + 3, lw, 14).tooltip(tip("listen.tooltip")).build();
         addRenderableWidget(listenButton);
 
@@ -345,7 +345,11 @@ public abstract class SettingsScreen extends Screen {
             config.setWeatherEnabled(!config.isWeatherEnabled());
             b.setMessage(onOff("effects.weather", config.isWeatherEnabled()));
         }).bounds(right - colW, contentTop + ROW, colW, 20).tooltip(tip("effects.weather.tooltip")).build());
-        panelTop = contentTop + ROW * 2 + 2;
+        edit(Button.builder(onOff("effects.corners", shown().isDiffractionEnabled()), b -> {
+            config.setDiffractionEnabled(!config.isDiffractionEnabled());
+            b.setMessage(onOff("effects.corners", config.isDiffractionEnabled()));
+        }).bounds(left, contentTop + ROW * 2, colW, 20).tooltip(tip("effects.corners.tooltip")).build());
+        panelTop = contentTop + ROW * 3 + 2;
     }
 
     private static Component onOff(String key, boolean on) {
@@ -356,13 +360,13 @@ public abstract class SettingsScreen extends Screen {
         int w = right - left;
         int bw = (w - GAP * 2) / 3;
         DistanceConfig prefs = config;
-        addRenderableWidget(Button.builder(HudOverlay.modeLabel(prefs.getHudMode()), b -> {
+        addRenderableWidget(Button.builder(HudOverlay.shortModeLabel(prefs.getHudMode()), b -> {
             prefs.setHudMode(prefs.getHudMode().next());
-            b.setMessage(HudOverlay.modeLabel(prefs.getHudMode()));
+            b.setMessage(HudOverlay.shortModeLabel(prefs.getHudMode()));
         }).bounds(left, contentTop, bw, 20).tooltip(tip("hud.mode.tooltip")).build());
-        addRenderableWidget(Button.builder(HudOverlay.cornerLabel(prefs.getHudCorner()), b -> {
+        addRenderableWidget(Button.builder(HudOverlay.shortCornerLabel(prefs.getHudCorner()), b -> {
             prefs.setHudCorner(prefs.getHudCorner().next());
-            b.setMessage(HudOverlay.cornerLabel(prefs.getHudCorner()));
+            b.setMessage(HudOverlay.shortCornerLabel(prefs.getHudCorner()));
         }).bounds(left + bw + GAP, contentTop, bw, 20).tooltip(tip("hud.corner.tooltip")).build());
         addRenderableWidget(Button.builder(viewLabel(), b -> {
             radarView = !radarView;
@@ -379,10 +383,24 @@ public abstract class SettingsScreen extends Screen {
     // Walk-away preview
     // =========================================================================
 
-    private void startPreview() {
+    private void togglePreview() {
+        if (previewStep >= 0) {
+            stopPreview();
+            return;
+        }
         previewStep = 0;
         previewTicks = 0;
         playPreviewStep();
+        if (listenButton != null) {
+            listenButton.setMessage(tr("listen.stop"));
+        }
+    }
+
+    private void stopPreview() {
+        previewStep = -1;
+        if (listenButton != null) {
+            listenButton.setMessage(tr("listen"));
+        }
     }
 
     private void playPreviewStep() {
@@ -408,7 +426,7 @@ public abstract class SettingsScreen extends Screen {
             previewTicks = 0;
             previewStep++;
             if (previewStep >= PREVIEW_STEPS.length) {
-                previewStep = -1;
+                stopPreview();
             } else {
                 playPreviewStep();
             }
@@ -766,6 +784,20 @@ public abstract class SettingsScreen extends Screen {
                 weather != EnvironmentEffects.Weather.CLEAR && shown.isWeatherEnabled() ? Palette.WARN : Palette.TEXT_MUTED);
         rowY += 14;
 
+        // Corners: voices that come round a wall right now
+        int round = 0;
+        for (SpeakerRegistry.Speaker sp : AudioDistancePlugin.SPEAKERS.active(System.nanoTime())) {
+            if (sp.hasOpening()) {
+                round++;
+            }
+        }
+        boolean cornersOn = shown.isDiffractionEnabled() && status == AudioDistancePlugin.OcclusionStatus.ACTIVE;
+        if (rowY + 10 <= contentBottom - 4) {
+            c.text(fit(c, round > 0 ? tr("effects.corners.now", round) : tr("effects.corners.none"), w), x, rowY,
+                    round > 0 && cornersOn ? Palette.ACCENT_LINE : Palette.TEXT_MUTED);
+            rowY += 14;
+        }
+
         if (rowY + 22 <= contentBottom - 4) {
             c.text(fit(c, tr("effects.hint"), w), x, contentBottom - 14, Palette.TEXT_MUTED);
         }
@@ -918,6 +950,31 @@ public abstract class SettingsScreen extends Screen {
         }
         if (rows.isEmpty()) {
             c.centered(tr("monitor.empty"), cx, cy + radius / 2, Palette.TEXT_DIM);
+        }
+        paintRadarLegend(c, left + 8, cx - radius - 8, y2);
+    }
+
+    /** What the marks mean, in the free space left of the radar (skipped when there is none). */
+    private void paintRadarLegend(Canvas c, int x, int maxX, int bottom) {
+        int w = maxX - x;
+        if (w < 50) {
+            return;
+        }
+        Component[] labels = {tr("monitor.talking"), tr("monitor.whisper"), tr("hud.walls"),
+                tr("monitor.state.silent"), tr("monitor.legend.voice_ring"), tr("monitor.legend.whisper_ring")};
+        int[] colors = {Palette.GOOD, Palette.WHISPER, Palette.MUFFLED, Palette.TEXT_MUTED,
+                Palette.ACCENT, Palette.WHISPER};
+        int y = bottom - labels.length * 11;
+        for (int i = 0; i < labels.length; i++) {
+            if (i == 3) {
+                c.frame(x, y + 2, x + 5, y + 7, 0x00000000, colors[i]);
+            } else if (i >= 4) {
+                c.hLine(x, x + 6, y + 4, Palette.withAlpha(colors[i], 0xC0));
+            } else {
+                c.fill(x, y + 2, x + 5, y + 7, colors[i]);
+            }
+            c.text(fit(c, labels[i], w - 9), x + 9, y, Palette.TEXT_DIM);
+            y += 11;
         }
     }
 

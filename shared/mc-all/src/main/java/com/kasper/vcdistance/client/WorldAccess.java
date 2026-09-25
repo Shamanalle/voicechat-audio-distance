@@ -47,6 +47,9 @@ public interface WorldAccess {
      */
     double rayDistance(Vec3 from, double dx, double dy, double dz, double maxDistance);
 
+    /** {@code true} when sound passes this block freely: air, water, open doors and gates, fences, bars. */
+    boolean isOpenForSound(int x, int y, int z);
+
     /** {@code true} when this point is inside water. */
     boolean isUnderWater(Vec3 point);
 

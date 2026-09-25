@@ -6,6 +6,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [1.5.0] - 2026-09-26
+
+### English
+
+#### Added
+- **Sound around corners.** When a wall is between you and a speaker, the addon looks for a way round it through open blocks. If a doorway or window is close, the voice comes through it: less muffled than through the wall, and from the doorway's side. A switch on the Effects tab.
+- **`/vcd` for server admins** on Fabric and Paper: `status`, `reload`, `profile`, `preset`, `walls`, `serverwalls`, `zones`. Changes are saved and sent to players with the addon right away. Operators (level 2+) and the console; on Paper the `vcd.admin` permission. Replies in English or Russian.
+- **Sound zones.** A world (dimension) or, on Paper with WorldGuard, a region can have its own profile mode and preset. The profile follows players as they move, and the HUD names the zone.
+- **The full addon on NeoForge 26.x:** settings screen, walls, echo, HUD, monitor and the server side, the same as on Fabric. Forge, and NeoForge for 1.20.1 / 1.21.x, stay lite.
+
+#### Changed
+- **One name everywhere: Voice Physics.** The settings title, the button in Simple Voice Chat's settings (now with a tooltip), the Controls category, chat messages and the mod list all use it.
+- **Voice HUD:**
+  - it now sits in the top right by default, clear of Simple Voice Chat's group list, and moves down when status effect icons are shown;
+  - distances show their unit;
+  - "nobody hears you" is shown quietly instead of as a warning;
+  - in a voice chat group it says so, since the group hears you anywhere.
+- **Monitor:**
+  - shorter HUD buttons, and the corner button goes round the screen clockwise;
+  - the radar has a legend.
+- **The Listen button** turns into **Stop** while the voice plays.
+
+### Русский
+
+#### Добавлено
+- **Звук из-за угла.** Если между вами и говорящим стена, аддон ищет путь в обход через открытые блоки. Если рядом есть проём или окно, голос проходит через него: глушится меньше, чем сквозь стену, и слышен со стороны проёма. Переключатель на вкладке «Эффекты».
+- **`/vcd` для админов сервера** на Fabric и Paper: `status`, `reload`, `profile`, `preset`, `walls`, `serverwalls`, `zones`. Изменения сохраняются и сразу отправляются игрокам с аддоном. Для операторов (уровень 2+) и консоли; на Paper — право `vcd.admin`. Ответы на английском или русском.
+- **Звуковые зоны.** У мира (измерения) или, на Paper с WorldGuard, у региона может быть свой режим и пресет профиля. Профиль следует за игроком, а HUD называет зону.
+- **Полный аддон на NeoForge 26.x:** экран настроек, стены, эхо, HUD, монитор и серверная часть — как на Fabric. Forge, а также NeoForge для 1.20.1 / 1.21.x, остаются облегчёнными.
+
+#### Изменено
+- **Одно название везде — Voice Physics.** Заголовок настроек, кнопка в настройках Simple Voice Chat (теперь с подсказкой), раздел в «Управлении», сообщения в чате и список модов.
+- **HUD голоса:**
+  - по умолчанию теперь справа сверху, не перекрывая список группы Simple Voice Chat, и опускается ниже, когда видны значки эффектов;
+  - у расстояний указаны единицы;
+  - «вас никто не слышит» показывается спокойно, а не как предупреждение;
+  - в группе голосового чата HUD пишет об этом: группа слышит вас где угодно.
+- **Монитор:**
+  - кнопки HUD стали короче, а кнопка угла обходит экран по часовой стрелке;
+  - у радара появилась легенда.
+- **Кнопка «Прослушать»** превращается в **«Стоп»**, пока звучит голос.
+
 ## [1.4.0] - 2026-09-25
 
 ### English

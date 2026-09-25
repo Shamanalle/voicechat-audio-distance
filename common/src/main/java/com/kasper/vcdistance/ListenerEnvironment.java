@@ -12,6 +12,8 @@ public final class ListenerEnvironment {
     private volatile RoomEstimate room = RoomEstimate.OPEN;
     private volatile boolean underWater;
     private volatile EnvironmentEffects.Weather weather = EnvironmentEffects.Weather.CLEAR;
+    /** The listener's head in world coordinates, for directions to doorways; NaN when unknown. */
+    private volatile double[] position = {Double.NaN, Double.NaN, Double.NaN};
 
     public RoomEstimate room() {
         return room;
@@ -35,7 +37,16 @@ public final class ListenerEnvironment {
         this.weather = weather == null ? EnvironmentEffects.Weather.CLEAR : weather;
     }
 
+    public double[] position() {
+        return position;
+    }
+
+    public void setPosition(double x, double y, double z) {
+        position = new double[]{x, y, z};
+    }
+
     public void reset() {
+        position = new double[]{Double.NaN, Double.NaN, Double.NaN};
         room = RoomEstimate.OPEN;
         underWater = false;
         weather = EnvironmentEffects.Weather.CLEAR;
