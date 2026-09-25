@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [Unreleased]
+
+### English
+
+#### Added
+- **The Paper / Purpur / Spigot plugin is listed for Minecraft 1.20.1 – 26.3.** A CI check builds it against the 1.20.1 API and checks that every class, method, field and override it uses resolves the same way on every Paper release from 1.20.1 to 26.3. The one difference, `Sound` becoming an interface in 1.21.3, was reviewed: the plugin only reads its constants. Paper 1.20.5 cannot be checked, as its API snapshot is no longer downloadable.
+
+#### Fixed
+- The Modrinth upload no longer fails after uploading: it tried to unfeature older versions, which the token is not allowed to do.
+
+### Русский
+
+#### Добавлено
+- **Плагин для Paper / Purpur / Spigot отмечен для Minecraft 1.20.1 – 26.3.** Проверка в CI собирает его против API 1.20.1 и проверяет, что каждый класс, метод, поле и переопределение, которые он использует, разрешаются одинаково на каждом релизе Paper от 1.20.1 до 26.3. Единственное различие — `Sound` стал интерфейсом в 1.21.3 — разобрано: плагин только читает его константы. Paper 1.20.5 проверить нельзя: снимок его API больше не скачивается.
+
+#### Исправлено
+- Загрузка на Modrinth больше не падает после загрузки: она пыталась снять отметку «featured» со старых версий, а токену это не разрешено.
+
 ## [1.2.2] - 2026-09-25
 
 ### English
