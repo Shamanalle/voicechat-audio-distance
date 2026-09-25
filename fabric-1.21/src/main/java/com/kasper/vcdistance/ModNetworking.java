@@ -7,6 +7,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import com.kasper.vcdistance.server.ServerZones;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -67,12 +68,15 @@ public final class ModNetworking {
             return;
         }
         AudioDistancePlugin.SERVER_WALLS.markAddonListener(player.getUUID());
-        sendProfile(player);
+        Zone zone = ServerZones.of(player);
+        AudioDistancePlugin.ZONES.set(player.getUUID(), zone);
+        sendProfile(player, zone);
     }
 
-    public static void sendProfile(ServerPlayer player) {
+    /** Sends the profile as it applies in {@code zone} ({@code null}: the main profile). */
+    public static void sendProfile(ServerPlayer player, Zone zone) {
         if (ServerPlayNetworking.canSend(player, Profile.TYPE)) {
-            ServerPlayNetworking.send(player, new Profile(AudioDistancePlugin.serverProfileMessage()));
+            ServerPlayNetworking.send(player, new Profile(AudioDistancePlugin.serverProfileMessage(zone)));
         }
     }
 

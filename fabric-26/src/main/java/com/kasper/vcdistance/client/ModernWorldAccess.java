@@ -1,5 +1,6 @@
 package com.kasper.vcdistance.client;
 
+import com.kasper.vcdistance.AcousticMaterial;
 import com.kasper.vcdistance.AudioDistancePlugin;
 import com.kasper.vcdistance.Bearing;
 import com.kasper.vcdistance.EnvironmentEffects;
@@ -11,6 +12,9 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.entity.Entity;
@@ -107,6 +111,23 @@ public final class ModernWorldAccess implements WorldAccess {
         Vec3 to = from.add(dx * maxDistance, dy * maxDistance, dz * maxDistance);
         BlockHitResult hit = mc.level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
         return hit.getType() == HitResult.Type.MISS ? -1.0 : hit.getLocation().distanceTo(from);
+    }
+
+    @Override
+    public boolean isOpenForSound(int x, int y, int z) {
+        Level level = Minecraft.getInstance().level;
+        if (level == null) {
+            return true;
+        }
+        BlockPos pos = new BlockPos(x, y, z);
+        BlockState state = level.getBlockState(pos);
+        if (state.isAir() || state.getCollisionShape(level, pos).isEmpty()) {
+            return true;
+        }
+        if (state.hasProperty(BlockStateProperties.OPEN) && state.getValue(BlockStateProperties.OPEN)) {
+            return true;
+        }
+        return BlockAcoustics.classify(state) == AcousticMaterial.THIN;
     }
 
     @Override

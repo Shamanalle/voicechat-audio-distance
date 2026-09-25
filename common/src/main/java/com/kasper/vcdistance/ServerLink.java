@@ -19,6 +19,7 @@ public final class ServerLink {
 
     private volatile LinkProtocol.ServerProfile profile;
     private volatile boolean noticePending;
+    private volatile String zoneNotice;
     private volatile Nearby nearby;
 
     private record Nearby(Map<UUID, VoiceState> states, long receivedNanos) {
@@ -37,6 +38,11 @@ public final class ServerLink {
         profile = p;
         if (p.mode() != ServerSettings.ProfileMode.OFF && (previous == null || previous.mode() != p.mode())) {
             noticePending = true;
+        }
+        String before = previous == null ? null : previous.zone();
+        if (!java.util.Objects.equals(before, p.zone())) {
+            // Entering a zone names it; leaving one says the main profile is back ("")
+            zoneNotice = p.zone() != null ? p.zone() : (before != null ? "" : null);
         }
     }
 
@@ -107,10 +113,20 @@ public final class ServerLink {
         return false;
     }
 
+    /**
+     * @return the zone just entered, "" when a zone was just left, or {@code null}; once per change
+     */
+    public String consumeZoneNotice() {
+        String z = zoneNotice;
+        zoneNotice = null;
+        return z;
+    }
+
     /** Called when leaving a server. */
     public void reset() {
         profile = null;
         noticePending = false;
+        zoneNotice = null;
         nearby = null;
     }
 }

@@ -5,6 +5,7 @@ import com.kasper.vcdistance.Bearing;
 import com.kasper.vcdistance.DistanceConfig;
 import com.kasper.vcdistance.ListenerEnvironment;
 import com.kasper.vcdistance.RoomEstimate;
+import com.kasper.vcdistance.SoundPath;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.world.phys.Vec3;
 
@@ -21,6 +22,12 @@ public final class SpeakerTicker {
     private static final int MAX_TRACES_PER_TICK = 12;
     /** The room around the listener is measured this often (18 rays). */
     private static final int ROOM_INTERVAL_TICKS = 10;
+    /** A wall at least this thick (stone blocks) makes it worth looking for a way round. */
+    private static final double MIN_WALL_FOR_PATH = 0.4;
+    private static final long PATH_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(500);
+    /** Ways round searched per tick, and how big each search may get. */
+    private static final int PATHS_PER_TICK = 1;
+    private static final int PATH_NODES = 1200;
 
     private final WorldAccess access;
     private int lastMaterialRevision = Integer.MIN_VALUE;
@@ -85,6 +92,9 @@ public final class SpeakerTicker {
         updateNearby(listener);
         updateEnvironment(listener);
         int budget = MAX_TRACES_PER_TICK;
+        int pathBudget = PATHS_PER_TICK;
+        boolean corners = config.isDiffractionEnabled();
+        SoundPath.Grid grid = cachedGrid();
 
         for (SpeakerRegistry.Speaker s : active) {
             try {
@@ -106,6 +116,17 @@ public final class SpeakerTicker {
                         || now - s.getLastTraceNanos() >= TRACE_INTERVAL_NANOS)) {
                     s.setOcclusion(OcclusionTracer.trace(access::traceRay, listener, source), now);
                     budget--;
+                }
+                // Behind a wall: is there a doorway round it?
+                if (!tracing || !corners || s.getThickness() < MIN_WALL_FOR_PATH) {
+                    s.clearPath();
+                } else if (pathBudget > 0 && now - s.getLastPathNanos() >= PATH_INTERVAL_NANOS) {
+                    pathBudget--;
+                    double direct = listener.distanceTo(source);
+                    double limit = Math.min(Math.max(16.0, s.getMaxDistance()), direct * 2.0 + 12.0);
+                    SoundPath.Result path = SoundPath.find(grid, listener.x, listener.y, listener.z,
+                            source.x, source.y, source.z, limit, PATH_NODES);
+                    s.setPath(path, path != null && path.thickness() < s.getThickness(), now);
                 }
             } catch (Throwable t) {
                 DistanceConfig.LOGGER.debug("Failed to update speaker {}: {}", s.getChannelId(), t.toString());
@@ -136,6 +157,7 @@ public final class SpeakerTicker {
                 return;
             }
             env.update(access.isUnderWater(listener), access.weatherAt(listener));
+            env.setPosition(listener.x, listener.y, listener.z);
             if (ticks++ % ROOM_INTERVAL_TICKS == 0) {
                 double[] hits = new double[RoomEstimate.DIRECTIONS.length];
                 for (int i = 0; i < hits.length; i++) {
@@ -151,6 +173,13 @@ public final class SpeakerTicker {
                 DistanceConfig.LOGGER.warn("Could not measure the surroundings, echo and water are paused: {}", t.toString());
             }
         }
+    }
+
+    /** Block lookups for this tick's path searches, shared so each block is read once. */
+    private SoundPath.Grid cachedGrid() {
+        java.util.Map<Long, Boolean> cache = new java.util.HashMap<>();
+        return (x, y, z) -> cache.computeIfAbsent(((long) (x & 0x3FFFFFF) << 38) | ((long) (y & 0xFFF) << 26) | (z & 0x3FFFFFFL),
+                k -> access.isOpenForSound(x, y, z));
     }
 
     private void reset() {

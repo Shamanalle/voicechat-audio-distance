@@ -1,4 +1,4 @@
-# 🎙️ VoiceChat Audio Distance
+# 🎙️ Voice Physics — Simple Voice Chat addon
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.x%20%7C%2026.x-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-lightgrey.svg?logo=fabric&logoColor=white)](https://fabricmc.net/)
@@ -53,6 +53,7 @@ It works on either side, and each side is useful alone:
 - **Echo in caves and halls:** every half second 18 rays from your head measure how closed and how big the space around you is. A big cave or hall gives a long echo, a small room a short one, the open air none. The echo glides as you walk and has its own strength setting.
 - **Under water:** when your head or the speaker's is under water, voices become dull (~600 Hz) and 10 dB quieter.
 - **Rain and thunder:** under the open sky, rain takes up to 6 dB off far voices and a thunderstorm up to about 10 dB; close voices stay clear.
+- **Around corners:** when a wall is between you, the addon looks for a way round it through open blocks (air, water, open doors and gates, fences). If a doorway or window is close, the voice comes through it: less muffled than through the wall, and from the doorway's side, like a voice from the next room through an open door.
 - The *Effects* tab has a switch for each, the echo strength, and a live view of what is around you right now.
 - With Sound Physics Remastered installed, our echo and water stay off (it does them itself); rain still works.
 
@@ -95,6 +96,20 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 - **Exact whisper range:** the server sends its real voice and whisper distances, so the whisper curve on the graph is exact.
 - **Voice chat state of nearby players:** once a second the server tells each player with the addon who within voice range has no Simple Voice Chat, has it disconnected, turned the sound off, or is in a group, for the monitor.
 - **Hot reload:** edits to the server settings file are picked up without a restart and sent to connected players.
+- **Sound zones:** a world (dimension) or, on Paper with WorldGuard, a region can have its own profile mode and preset — a quiet library, a loud arena, a stealth dungeon. The profile follows players as they move, and the HUD names the zone.
+- **`/vcd` command** for operators (level 2+) and the console:
+
+  | Command | What it does |
+  |---|---|
+  | `/vcd` or `/vcd status` | Version, voice range, walls, players with the addon, profile, zones |
+  | `/vcd reload` | Re-read the settings file |
+  | `/vcd profile off\|suggest\|enforce` | How the profile is offered |
+  | `/vcd preset vanilla\|realistic\|clear\|stealth\|custom` | The server's sound |
+  | `/vcd walls 0-100\|off` | Wall strength for everyone, in % |
+  | `/vcd serverwalls on\|off` | Walls for players without the addon |
+  | `/vcd zones` | Worlds and regions with their own profile |
+
+  Changes are saved to the settings file and sent to players with the addon right away. On Paper the permission is `vcd.admin` (operators by default). Replies are in English or Russian (`messages_language`).
 
 ### What works where
 
@@ -110,17 +125,19 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 
 | Loader | Minecraft | File | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.4.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.4.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.4.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voicechat-audio-distance-bukkit-1.4.0.jar` | 17+ | Bukkit version |
-| Forge | 1.20.1 | `voicechat-audio-distance-forge-1.4.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.4.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| NeoForge / Forge | 26.1 – 26.3 | `voicechat-audio-distance-{neoforge,forge}-1.4.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.5.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.5.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voicechat-audio-distance-bukkit-1.5.0.jar` | 17+ | Bukkit version |
+| Forge | 1.20.1 | `voicechat-audio-distance-forge-1.5.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.5.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voicechat-audio-distance-neoforge-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voicechat-audio-distance-forge-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** is the full version, on the client and on the server. It needs [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 - **Paper / Purpur / Spigot / Bukkit** is the server side as a plugin: walls for players without the addon, and the server profile for players with it. Players can join with any client: with the Fabric addon, without it, or without mods at all. The plugin is compiled against the 1.20.1 API and checked in CI against every Paper release from 1.20.1 to 26.3: every class, method, field and override it uses resolves the same way (Paper 1.20.5 cannot be checked: its API snapshot is no longer downloadable).
-- **Forge / NeoForge** is a lite version: distance curves only, configured in `config/vc-audio-distance.properties`. There is no settings screen, no walls, no monitor and no server side.
+- **NeoForge for 26.x** is the full version, the same as Fabric: client and server, settings screen, walls, HUD, monitor, `/vcd`. The settings are also under *Mods → Voice Physics → Config*.
+- **Forge, and NeoForge for 1.20.1 / 1.21.x,** are a lite version: distance curves only, configured in `config/vc-audio-distance.properties`. There is no settings screen, no walls, no monitor and no server side (those jars are built for Fabric's class names; 26.x has one set of names for every loader).
 - The 1.21.x jar was checked against the signatures of every Minecraft method it uses on each release from 1.21 to 1.21.11.
 - The 26.x jar is built for 26.3 and checked in CI on every 26.x release (26.1 – 26.3): every class, method, field and override the jar uses resolves on each one exactly as on 26.3. Where 26.x changed (screens moved to `Gui` in 26.2, SDL input in 26.3), the jar picks the right API at runtime.
 
@@ -129,7 +146,7 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 **Client**
 1. Install [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) and [Fabric API](https://modrinth.com/mod/fabric-api).
 2. Put the matching `.jar` into `.minecraft/mods/`.
-3. In game, open the voice chat settings (`V`) → **Voice distance & walls…**. The screen is also available from Mod Menu or with your own key (*Options → Controls*, unbound by default).
+3. In game, open the voice chat settings (`V`) → **Voice Physics…**. The screen is also available from Mod Menu or with your own key (*Options → Controls*, unbound by default).
 
 Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everything.
 
@@ -139,7 +156,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 3. Walls for players without the addon are on by default. To share a profile, set `profile_mode` to `suggest` or `enforce` and pick a `profile_preset`. Every key in the file has a comment in English and Russian, and the file is re-read automatically.
 
 **Server (Paper / Purpur / Spigot / Bukkit)**
-1. Put `voicechat-audio-distance-bukkit-1.4.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
+1. Put `voicechat-audio-distance-bukkit-1.5.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
 2. Start the server once; it creates `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. The settings are the same as on Fabric (see below), and the file is also re-read automatically.
 
@@ -159,14 +176,15 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 | `reverb_strength` | 0.0 – 1.0 | 0.6 | Echo strength |
 | `underwater_enabled` | true / false | true | Dull, quiet voices under water |
 | `weather_enabled` | true / false | true | Rain and thunder cover far voices |
+| `diffraction_enabled` | true / false | true | Voices come round walls through doorways |
 | `hud_mode` | `off` / `talking` / `always` | `talking` | Voice HUD |
-| `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_left` | Corner of the voice HUD |
+| `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_right` | Corner of the voice HUD |
 
 ### Server settings — `config/vc-audio-distance-server.properties`
 
 On Paper / Purpur / Spigot / Bukkit the file is `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 
-The file has four sections, and every key has a comment in English and Russian. Changes apply within 2 seconds without a restart. The voice and whisper range itself is set in Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
+The file has six sections, and every key has a comment in English and Russian. Changes apply within 2 seconds without a restart. The voice and whisper range itself is set in Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
 
 **1. Walls, for every player**
 
@@ -194,7 +212,23 @@ The file has four sections, and every key has a comment in English and Russian. 
 
 | Key | Values | Default | What it does |
 |---|---|---|---|
-| `profile.reverb_enabled`, `profile.reverb_strength`, `profile.underwater_enabled`, `profile.weather_enabled` | as in the client file | as in the client file | Part of the profile whatever `profile_preset` says, so an event can turn the echo off for everyone |
+| `profile.reverb_enabled`, `profile.reverb_strength`, `profile.underwater_enabled`, `profile.weather_enabled`, `profile.diffraction_enabled` | as in the client file | as in the client file | Part of the profile whatever `profile_preset` says, so an event can turn the echo off for everyone |
+
+**5. Zones**
+
+| Key | Values | What it does |
+|---|---|---|
+| `zone.world.<world>.profile_mode` | `off` / `suggest` / `enforce` | How the profile is offered in this world |
+| `zone.world.<world>.profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` | The preset in this world |
+| `zone.region.<region id>.profile_mode`, `zone.region.<region id>.profile_preset` | as above | The same for a WorldGuard region (Paper); a region wins over its world |
+
+On Paper the world is its folder name (`world_nether`); on Fabric it is the dimension (`the_nether`, or `minecraft:the_nether` written as `minecraft\:the_nether`). What a zone leaves out comes from section 3; walls always come from section 1.
+
+**6. Messages**
+
+| Key | Values | Default | What it does |
+|---|---|---|---|
+| `messages_language` | `en` / `ru` | `en` | Language of the `/vcd` replies |
 
 Walls always come from section 1, whichever preset is chosen. Older files are rewritten in this format on the first start, keeping their values.
 
@@ -252,6 +286,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Эхо в пещерах и залах:** раз в полсекунды 18 лучей от вашей головы измеряют, насколько пространство вокруг закрытое и большое. Большая пещера или зал дают долгое эхо, маленькая комната — короткое, открытый воздух — никакого. Эхо плавно меняется, пока вы идёте, у него своя настройка силы.
 - **Под водой:** когда ваша голова или голова говорящего под водой, голоса становятся глухими (~600 Гц) и на 10 дБ тише.
 - **Дождь и гроза:** под открытым небом дождь отнимает у дальних голосов до 6 дБ, гроза — примерно до 10 дБ; близкие голоса остаются чёткими.
+- **Из-за угла:** если между вами стена, аддон ищет путь в обход через открытые блоки (воздух, вода, открытые двери и калитки, заборы). Если рядом есть проём или окно, голос проходит через него: глушится меньше, чем сквозь стену, и слышен со стороны проёма — как голос из соседней комнаты через открытую дверь.
 - На вкладке «Эффекты» — переключатель для каждого, сила эха и живая панель того, что вокруг вас сейчас.
 - Если установлен Sound Physics Remastered, наши эхо и вода выключены (он делает их сам); дождь работает.
 
@@ -294,6 +329,20 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Точная дальность шёпота:** сервер передаёт настоящие дальности голоса и шёпота, поэтому кривая шёпота на графике точная.
 - **Состояние голосового чата у игроков рядом:** раз в секунду сервер сообщает каждому игроку с аддоном, у кого в радиусе голоса нет Simple Voice Chat, у кого он не подключён, кто выключил звук и кто в группе, — для монитора.
 - **Горячая перезагрузка:** изменения в файле настроек сервера подхватываются без перезапуска и отправляются подключённым игрокам.
+- **Звуковые зоны:** у мира (измерения) или, на Paper с WorldGuard, у региона может быть свой режим и пресет профиля — тихая библиотека, громкая арена, стелс-подземелье. Профиль следует за игроком, а HUD называет зону.
+- **Команда `/vcd`** для операторов (уровень 2+) и консоли:
+
+  | Команда | Что делает |
+  |---|---|
+  | `/vcd` или `/vcd status` | Версия, дальность голоса, стены, игроки с аддоном, профиль, зоны |
+  | `/vcd reload` | Перечитать файл настроек |
+  | `/vcd profile off\|suggest\|enforce` | Как предлагать профиль |
+  | `/vcd preset vanilla\|realistic\|clear\|stealth\|custom` | Звук сервера |
+  | `/vcd walls 0-100\|off` | Сила стен для всех, в % |
+  | `/vcd serverwalls on\|off` | Стены для игроков без аддона |
+  | `/vcd zones` | Миры и регионы со своим профилем |
+
+  Изменения сохраняются в файл настроек и сразу отправляются игрокам с аддоном. На Paper право — `vcd.admin` (по умолчанию у операторов). Ответы на английском или русском (`messages_language`).
 
 ### Что где работает
 
@@ -309,17 +358,19 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 | Загрузчик | Minecraft | Файл | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.4.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.4.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.4.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voicechat-audio-distance-bukkit-1.4.0.jar` | 17+ | версия для Bukkit |
-| Forge | 1.20.1 | `voicechat-audio-distance-forge-1.4.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.4.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| NeoForge / Forge | 26.1 – 26.3 | `voicechat-audio-distance-{neoforge,forge}-1.4.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.5.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.5.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voicechat-audio-distance-bukkit-1.5.0.jar` | 17+ | версия для Bukkit |
+| Forge | 1.20.1 | `voicechat-audio-distance-forge-1.5.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.5.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voicechat-audio-distance-neoforge-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voicechat-audio-distance-forge-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** — полная версия, на клиенте и на сервере. Нужен [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
 - **Paper / Purpur / Spigot / Bukkit** — серверная часть в виде плагина: стены для игроков без аддона и профиль сервера для игроков с ним. Заходить можно с любым клиентом: с аддоном для Fabric, без него или совсем без модов. Плагин собран против API 1.20.1 и в CI проверяется на каждом релизе Paper от 1.20.1 до 26.3: каждый класс, метод, поле и переопределение, которые он использует, разрешаются одинаково (Paper 1.20.5 проверить нельзя: снимок его API больше не скачивается).
-- **Forge / NeoForge** — облегчённая версия: только кривые громкости, настройка в `config/vc-audio-distance.properties`. Нет экрана настроек, стен, монитора и серверной части.
+- **NeoForge для 26.x** — полная версия, как на Fabric: клиент и сервер, экран настроек, стены, HUD, монитор, `/vcd`. Настройки есть и в «Моды → Voice Physics → Настроить».
+- **Forge, а также NeoForge для 1.20.1 / 1.21.x,** — облегчённая версия: только кривые громкости, настройка в `config/vc-audio-distance.properties`. Нет экрана настроек, стен, монитора и серверной части (эти файлы собраны под имена классов Fabric; в 26.x имена одни для всех загрузчиков).
 - JAR для 1.21.x проверен по сигнатурам каждого используемого метода Minecraft на всех версиях с 1.21 по 1.21.11.
 - JAR для 26.x собран под 26.3 и в CI проверяется на каждом релизе 26.x (26.1 – 26.3): каждый класс, метод, поле и переопределение, которые использует JAR, разрешаются на каждой версии так же, как на 26.3. Там, где 26.x менялся (экраны переехали в `Gui` в 26.2, ввод через SDL в 26.3), JAR выбирает нужный API во время работы.
 
@@ -328,7 +379,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 **Клиент**
 1. Установите [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) и [Fabric API](https://modrinth.com/mod/fabric-api).
 2. Положите подходящий `.jar` в `.minecraft/mods/`.
-3. В игре откройте настройки голосового чата (`V`) → **«Дальность голоса и стены…»**. Экран также открывается через Mod Menu или своей клавишей (*Настройки → Управление*, по умолчанию не назначена).
+3. В игре откройте настройки голосового чата (`V`) → **«Voice Physics…»**. Экран также открывается через Mod Menu или своей клавишей (*Настройки → Управление*, по умолчанию не назначена).
 
 Изменения слышны сразу. «Готово» или `Esc` сохраняют, «Отмена» возвращает всё как было.
 
@@ -338,7 +389,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 3. Стены для игроков без аддона включены по умолчанию. Чтобы передавать профиль, поставьте `profile_mode` в `suggest` или `enforce` и выберите `profile_preset`. У каждого ключа в файле есть комментарий на английском и русском, файл перечитывается автоматически.
 
 **Сервер (Paper / Purpur / Spigot / Bukkit)**
-1. Положите `voicechat-audio-distance-bukkit-1.4.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
+1. Положите `voicechat-audio-distance-bukkit-1.5.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
 2. Запустите сервер один раз — он создаст `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. Настройки те же, что на Fabric (см. ниже), файл тоже перечитывается автоматически.
 
@@ -358,14 +409,15 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 | `reverb_strength` | 0.0 – 1.0 | 0.6 | Сила эха |
 | `underwater_enabled` | true / false | true | Глухие, тихие голоса под водой |
 | `weather_enabled` | true / false | true | Дождь и гроза заглушают дальние голоса |
+| `diffraction_enabled` | true / false | true | Голоса обходят стены через проёмы |
 | `hud_mode` | `off` / `talking` / `always` | `talking` | HUD голоса |
-| `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_left` | Угол экрана для HUD |
+| `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_right` | Угол экрана для HUD |
 
 ### Настройки сервера — `config/vc-audio-distance-server.properties`
 
 На Paper / Purpur / Spigot / Bukkit файл находится в `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 
-В файле четыре раздела, у каждого ключа есть комментарий на английском и русском. Изменения применяются в течение 2 секунд без перезапуска. Сама дальность голоса и шёпота задаётся в Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
+В файле шесть разделов, у каждого ключа есть комментарий на английском и русском. Изменения применяются в течение 2 секунд без перезапуска. Сама дальность голоса и шёпота задаётся в Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
 
 **1. Стены, для всех игроков**
 
@@ -393,7 +445,23 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 | Ключ | Значения | По умолчанию | Что делает |
 |---|---|---|---|
-| `profile.reverb_enabled`, `profile.reverb_strength`, `profile.underwater_enabled`, `profile.weather_enabled` | как в файле клиента | как в файле клиента | Входят в профиль при любом `profile_preset` — например, на ивенте можно выключить эхо всем |
+| `profile.reverb_enabled`, `profile.reverb_strength`, `profile.underwater_enabled`, `profile.weather_enabled`, `profile.diffraction_enabled` | как в файле клиента | как в файле клиента | Входят в профиль при любом `profile_preset` — например, на ивенте можно выключить эхо всем |
+
+**5. Зоны**
+
+| Ключ | Значения | Что делает |
+|---|---|---|
+| `zone.world.<мир>.profile_mode` | `off` / `suggest` / `enforce` | Как предлагать профиль в этом мире |
+| `zone.world.<мир>.profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` | Пресет в этом мире |
+| `zone.region.<id региона>.profile_mode`, `zone.region.<id региона>.profile_preset` | как выше | То же для региона WorldGuard (Paper); регион главнее своего мира |
+
+На Paper мир — это имя его папки (`world_nether`); на Fabric — измерение (`the_nether` или `minecraft:the_nether`, записанное как `minecraft\:the_nether`). Чего в зоне нет, берётся из раздела 3; стены всегда из раздела 1.
+
+**6. Сообщения**
+
+| Ключ | Значения | По умолчанию | Что делает |
+|---|---|---|---|
+| `messages_language` | `en` / `ru` | `en` | Язык ответов `/vcd` |
 
 Стены всегда берутся из раздела 1, какой бы пресет ни был выбран. Старые файлы при первом запуске переписываются в этот формат с сохранением значений.
 

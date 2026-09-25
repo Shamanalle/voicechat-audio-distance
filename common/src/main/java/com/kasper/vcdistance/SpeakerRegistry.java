@@ -49,6 +49,13 @@ public final class SpeakerRegistry {
         private volatile double bearing = Double.NaN;
         private volatile boolean underWater;
         private volatile EnvironmentEffects.Weather weather = EnvironmentEffects.Weather.CLEAR;
+        // The way around a wall (client tick), or no opening
+        private volatile boolean hasOpening;
+        private volatile double openingX;
+        private volatile double openingY;
+        private volatile double openingZ;
+        private volatile double pathThickness = Double.NaN;
+        private volatile long lastPathNanos = Long.MIN_VALUE;
         private volatile String displayName;
         private volatile long lastTraceNanos;
         private volatile int cachedEntityNetworkId = Integer.MIN_VALUE;
@@ -118,13 +125,66 @@ public final class SpeakerRegistry {
             return weather;
         }
 
+        /** {@code true} while the voice reaches the listener round a wall, from {@link #getOpeningX()} etc. */
+        public boolean hasOpening() {
+            return hasOpening;
+        }
+
+        public double getOpeningX() {
+            return openingX;
+        }
+
+        public double getOpeningY() {
+            return openingY;
+        }
+
+        public double getOpeningZ() {
+            return openingZ;
+        }
+
+        /** Muffling of the way round, in stone blocks, or NaN when there is none. */
+        public double getPathThickness() {
+            return pathThickness;
+        }
+
+        public long getLastPathNanos() {
+            return lastPathNanos;
+        }
+
+        /** Records the way round ({@code path} null: none); the opening is used only when it beats the wall. */
+        public void setPath(SoundPath.Result path, boolean useOpening, long nowNanos) {
+            lastPathNanos = nowNanos;
+            if (path == null) {
+                pathThickness = Double.NaN;
+                hasOpening = false;
+                return;
+            }
+            pathThickness = path.thickness();
+            openingX = path.openingX();
+            openingY = path.openingY();
+            openingZ = path.openingZ();
+            hasOpening = useOpening;
+        }
+
+        public void clearPath() {
+            pathThickness = Double.NaN;
+            hasOpening = false;
+        }
+
         public void setSurroundings(boolean underWater, EnvironmentEffects.Weather weather) {
             this.underWater = underWater;
             this.weather = weather == null ? EnvironmentEffects.Weather.CLEAR : weather;
         }
 
+        /** Wall thickness on the straight line, in stone blocks. */
         public double getThickness() {
             return thickness;
+        }
+
+        /** What the voice goes through: the straight line or, when thinner, the way round a wall. */
+        public double getEffectiveThickness() {
+            double path = pathThickness;
+            return hasOpening && !Double.isNaN(path) ? Math.min(thickness, path) : thickness;
         }
 
         public boolean isOcclusionKnown() {

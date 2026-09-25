@@ -1,0 +1,53 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.147'
+    id 'java'
+}
+
+// NeoForge hooks for the 26.x jar. Minecraft 26.x is not obfuscated, so this module only compiles
+// the classes in com.kasper.vcdistance.neoforge against NeoForge; fabric-26 packs them into the
+// same jar as the Fabric build, next to the shared code they call.
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "henkelmax.public"
+        url = 'https://maven.maxhenkel.de/repository/public'
+    }
+}
+
+neoForge {
+    version = project.nf26_neoforge
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir "${rootDir}/shared/mc-all/src/main/java"
+            srcDir "${rootDir}/fabric-26/src/main/java"
+            // The Fabric hooks are not needed (and cannot compile) here
+            exclude 'com/kasper/vcdistance/AudioDistanceClient.java'
+            exclude 'com/kasper/vcdistance/AudioDistanceMod.java'
+            exclude 'com/kasper/vcdistance/ModClientNetworking.java'
+            exclude 'com/kasper/vcdistance/ModNetworking.java'
+            exclude 'com/kasper/vcdistance/ModMenuIntegration.java'
+            exclude 'com/kasper/vcdistance/client/HudHook.java'
+        }
+        // The resources ship with the fabric-26 jar
+        resources.srcDirs = []
+    }
+}
+
+dependencies {
+    implementation project(':common')
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:${project.voicechat_api_version}"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+    options.encoding = 'UTF-8'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}

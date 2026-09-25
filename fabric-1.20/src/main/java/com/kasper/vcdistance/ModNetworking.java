@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import com.kasper.vcdistance.server.ServerZones;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -35,13 +36,16 @@ public final class ModNetworking {
             return;
         }
         AudioDistancePlugin.SERVER_WALLS.markAddonListener(player.getUUID());
-        sendProfile(player);
+        Zone zone = ServerZones.of(player);
+        AudioDistancePlugin.ZONES.set(player.getUUID(), zone);
+        sendProfile(player, zone);
     }
 
-    public static void sendProfile(ServerPlayer player) {
+    /** Sends the profile as it applies in {@code zone} ({@code null}: the main profile). */
+    public static void sendProfile(ServerPlayer player, Zone zone) {
         if (ServerPlayNetworking.canSend(player, PROFILE)) {
             FriendlyByteBuf buf = PacketByteBufs.create();
-            buf.writeUtf(AudioDistancePlugin.serverProfileMessage(), LinkProtocol.MAX_LENGTH);
+            buf.writeUtf(AudioDistancePlugin.serverProfileMessage(zone), LinkProtocol.MAX_LENGTH);
             ServerPlayNetworking.send(player, PROFILE, buf);
         }
     }
