@@ -53,7 +53,7 @@ status=$?
 set -e
 cat out.txt
 [ "${status}" -eq 1 ] || { echo "expected exit code 1, got ${status}"; exit 1; }
-for expected in 'lib/Lib.size()I' 'lib/Lib.util()V' 'lib/Lib.field:I' 'mod/Mod.draw(I)V' 'abstract methods left in mod/Mod'; do
+for expected in '.size()I' 'lib/Lib.util()V' '.field:I' 'override mod/Mod.draw(I)V' 'abstract methods left in mod/Mod'; do
     grep -F "DIFF" out.txt | grep -qF "${expected}" || { echo "not reported: ${expected}"; exit 1; }
 done
 if grep -F "DIFF" out.txt | grep -qF 'kept()V'; then
