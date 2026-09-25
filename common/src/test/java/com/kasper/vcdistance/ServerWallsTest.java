@@ -126,10 +126,15 @@ public class ServerWallsTest {
         return proxy(OpusDecoder.class, m);
     }
 
-    /** Builder that records every field, like the real one. */
+    /** Builder that starts as a copy of the original packet, like Simple Voice Chat's. */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private EntitySoundPacket.Builder builder() {
+    private EntitySoundPacket.Builder builder(UUID ch, long seq, byte[] data, boolean whisper, float distance) {
         Map<String, Object> fields = new HashMap<>();
+        fields.put("channelId", ch);
+        fields.put("sequenceNumber", seq);
+        fields.put("opusEncodedData", data);
+        fields.put("whispering", whisper);
+        fields.put("distance", distance);
         Object[] self = new Object[1];
         Map<String, java.util.function.Function<Object[], Object>> m = new HashMap<>();
         for (String name : new String[]{"channelId", "sender", "opusEncodedData", "sequenceNumber", "category",
@@ -155,7 +160,7 @@ public class ServerWallsTest {
         m.put("getEntityUuid", a -> speaker);
         m.put("isWhispering", a -> whisper);
         m.put("getDistance", a -> distance);
-        m.put("entitySoundPacketBuilder", a -> builder());
+        m.put("entitySoundPacketBuilder", a -> builder(ch, seq, data, whisper, distance));
         return proxy(EntitySoundPacket.class, m);
     }
 
