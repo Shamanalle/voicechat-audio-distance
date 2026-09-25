@@ -60,4 +60,16 @@ if grep -F "DIFF" out.txt | grep -qF 'kept()V'; then
     echo "reported an unchanged method"
     exit 1
 fi
+# A reviewed difference listed in an allowed file is reported but does not fail the check
+printf '# reviewed\nmethod lib/Lib.util()V\n' > allowed.txt
+set +e
+java "${here}/LinkCheck.java" mod.jar ref.txt target.txt allowed.txt > out2.txt
+set -e
+grep -q '^ALLOWED method lib/Lib.util()V' out2.txt || { echo "allowed difference not marked"; exit 1; }
+if grep -q '^DIFF method lib/Lib.util()V' out2.txt; then
+    echo "allowed difference still counted"
+    exit 1
+fi
+grep -q '1 reviewed and allowed' out2.txt || { echo "allowed count missing"; exit 1; }
+
 echo "LinkCheck self-test passed"

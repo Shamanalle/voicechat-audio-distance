@@ -2,7 +2,8 @@ name: Paper plugin compatibility
 
 # Checks the Paper / Purpur / Spigot plugin on every Minecraft release from 1.20.1 on. The plugin is
 # built against gradle.properties' bukkit_api_version; LinkCheck.java then checks that every class,
-# method, field and override it uses resolves on each later Paper API the same way. The versions come
+# method, field and override it uses resolves on each later Paper API the same way. Reviewed, safe
+# differences are listed in .github/scripts/linkcheck-allowed-bukkit.txt. The versions come
 # from Mojang's release list and the Paper API versions from PaperMC's maven.
 
 on:
@@ -81,16 +82,27 @@ jobs:
           cp "bukkit/build/libs/voicechat-audio-distance-bukkit-${version}.jar" "${RUNNER_TEMP}/plugin.jar"
           cp bukkit/build/compat-classpath.txt "${RUNNER_TEMP}/reference-classpath.txt"
 
+      # Some old Paper API snapshots can no longer be resolved (1.20.5 names an adventure-bom
+      # snapshot that is gone); such a version is reported as not checkable, not as a failure
       - name: Classpath of Paper ${{ matrix.mc }}
+        id: target
         run: |
-          ./gradlew :bukkit:writeCompatClasspath --no-daemon -PcompatPaperApi=${{ matrix.api }}
-          cp bukkit/build/compat-classpath.txt "${RUNNER_TEMP}/target-classpath.txt"
+          if ./gradlew :bukkit:writeCompatClasspath --no-daemon -PcompatPaperApi=${{ matrix.api }}; then
+            cp bukkit/build/compat-classpath.txt "${RUNNER_TEMP}/target-classpath.txt"
+            echo "resolved=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Paper API ${{ matrix.api }} cannot be resolved; Paper ${{ matrix.mc }} is not checked"
+            echo "Paper API ${{ matrix.api }} cannot be resolved from PaperMC's maven: not checked" > "${RUNNER_TEMP}/link.txt"
+            echo "resolved=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Check the plugin links against Paper ${{ matrix.mc }}
+        if: steps.target.outputs.resolved == 'true'
         run: |
           set -o pipefail
           java .github/scripts/LinkCheck.java "${RUNNER_TEMP}/plugin.jar" \
-            "${RUNNER_TEMP}/reference-classpath.txt" "${RUNNER_TEMP}/target-classpath.txt" | tee "${RUNNER_TEMP}/link.txt"
+            "${RUNNER_TEMP}/reference-classpath.txt" "${RUNNER_TEMP}/target-classpath.txt" \
+            .github/scripts/linkcheck-allowed-bukkit.txt | tee "${RUNNER_TEMP}/link.txt"
 
       - name: Summary
         if: always()
