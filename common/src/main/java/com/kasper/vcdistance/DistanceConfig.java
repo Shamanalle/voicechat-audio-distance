@@ -223,9 +223,14 @@ public final class DistanceConfig {
     }
 
     /** Loads the config once; later calls are no-ops. */
-    public synchronized void ensureLoaded() {
-        if (!loaded) {
-            load();
+    public void ensureLoaded() {
+        if (loaded) {
+            return;
+        }
+        synchronized (this) {
+            if (!loaded) {
+                load();
+            }
         }
     }
 
@@ -243,20 +248,7 @@ public final class DistanceConfig {
             LOGGER.error("Failed to read {}, using defaults: {}", file, e.getMessage());
             return;
         }
-
-        model = AttenuationModel.fromId(props.getProperty("distance_model"), DEFAULT_MODEL);
-        attenuationFactor = clamp(parseDouble(props, "attenuation_factor", DEFAULT_ATTENUATION_FACTOR), ROLLOFF_MIN, ROLLOFF_MAX);
-        minVolumeFraction = clamp(parseDouble(props, "min_volume_fraction", DEFAULT_MIN_VOLUME_FRACTION), MIN_VOLUME_MIN, MIN_VOLUME_MAX);
-        openalReferenceRatio = clamp(parseDouble(props, "openal_reference_ratio", DEFAULT_OPENAL_REFERENCE_RATIO), REFERENCE_MIN, REFERENCE_MAX);
-        whisperMultiplier = clamp(parseDouble(props, "whisper_multiplier", DEFAULT_WHISPER_MULTIPLIER), WHISPER_MIN, WHISPER_MAX);
-        occlusionEnabled = parseBoolean(props, "occlusion_enabled", DEFAULT_OCCLUSION_ENABLED);
-        occlusionStrength = clamp(parseDouble(props, "occlusion_strength", DEFAULT_OCCLUSION_STRENGTH), STRENGTH_MIN, STRENGTH_MAX);
-        synchronized (materialWeights) {
-            for (AcousticMaterial m : AcousticMaterial.values()) {
-                materialWeights[m.ordinal()] = clamp(parseDouble(props, "material." + m.getId(), m.getDefaultWeight()), 0.0, AcousticMaterial.MAX_WEIGHT);
-            }
-        }
-        changed();
+        readFrom(props, "");
 
         LOGGER.info("Configuration loaded: model={}, rolloff={}, floor={}, reference={}, whisper={}, walls={} ({})",
                 model.getId(), attenuationFactor, minVolumeFraction, openalReferenceRatio, whisperMultiplier,
@@ -269,33 +261,58 @@ public final class DistanceConfig {
     }
 
     public synchronized void save() {
-        Path file = getPath();
         Properties props = new Properties();
         props.setProperty("config_version", String.valueOf(CONFIG_VERSION));
-        props.setProperty("distance_model", model.getId());
-        props.setProperty("attenuation_factor", format(attenuationFactor));
-        props.setProperty("min_volume_fraction", format(minVolumeFraction));
-        props.setProperty("openal_reference_ratio", format(openalReferenceRatio));
-        props.setProperty("whisper_multiplier", format(whisperMultiplier));
-        props.setProperty("occlusion_enabled", String.valueOf(occlusionEnabled));
-        props.setProperty("occlusion_strength", format(occlusionStrength));
-        for (AcousticMaterial m : AcousticMaterial.values()) {
-            props.setProperty("material." + m.getId(), format(getMaterialWeight(m)));
-        }
+        writeTo(props, "");
+        store(getPath(), props, "VoiceChat Audio Distance Addon\n"
+                + "distance_model: linear | realistic_inverse | exponential\n"
+                + "attenuation_factor: falloff strength (0.0 - 1.0)\n"
+                + "min_volume_fraction: volume floor at the edge of hearing range (0.0 - 0.5)\n"
+                + "openal_reference_ratio: share of the distance heard at full volume (0.05 - 1.0)\n"
+                + "whisper_multiplier: falloff multiplier while whispering (0.5 - 2.0)\n"
+                + "occlusion_enabled / occlusion_strength: wall muffling (0.0 - 1.0)\n"
+                + "material.*: acoustic thickness of one block, stone = 1.0 (0.0 - 3.0)");
+    }
 
+    /** Writes every setting under {@code prefix} (e.g. {@code "profile."}). */
+    public void writeTo(Properties props, String prefix) {
+        props.setProperty(prefix + "distance_model", model.getId());
+        props.setProperty(prefix + "attenuation_factor", format(attenuationFactor));
+        props.setProperty(prefix + "min_volume_fraction", format(minVolumeFraction));
+        props.setProperty(prefix + "openal_reference_ratio", format(openalReferenceRatio));
+        props.setProperty(prefix + "whisper_multiplier", format(whisperMultiplier));
+        props.setProperty(prefix + "occlusion_enabled", String.valueOf(occlusionEnabled));
+        props.setProperty(prefix + "occlusion_strength", format(occlusionStrength));
+        for (AcousticMaterial m : AcousticMaterial.values()) {
+            props.setProperty(prefix + "material." + m.getId(), format(getMaterialWeight(m)));
+        }
+    }
+
+    /** Reads every setting under {@code prefix}; missing or broken values fall back to the defaults. */
+    public void readFrom(Properties props, String prefix) {
+        model = AttenuationModel.fromId(props.getProperty(prefix + "distance_model"), DEFAULT_MODEL);
+        attenuationFactor = clamp(parseDouble(props, prefix + "attenuation_factor", DEFAULT_ATTENUATION_FACTOR), ROLLOFF_MIN, ROLLOFF_MAX);
+        minVolumeFraction = clamp(parseDouble(props, prefix + "min_volume_fraction", DEFAULT_MIN_VOLUME_FRACTION), MIN_VOLUME_MIN, MIN_VOLUME_MAX);
+        openalReferenceRatio = clamp(parseDouble(props, prefix + "openal_reference_ratio", DEFAULT_OPENAL_REFERENCE_RATIO), REFERENCE_MIN, REFERENCE_MAX);
+        whisperMultiplier = clamp(parseDouble(props, prefix + "whisper_multiplier", DEFAULT_WHISPER_MULTIPLIER), WHISPER_MIN, WHISPER_MAX);
+        occlusionEnabled = parseBoolean(props, prefix + "occlusion_enabled", DEFAULT_OCCLUSION_ENABLED);
+        occlusionStrength = clamp(parseDouble(props, prefix + "occlusion_strength", DEFAULT_OCCLUSION_STRENGTH), STRENGTH_MIN, STRENGTH_MAX);
+        synchronized (materialWeights) {
+            for (AcousticMaterial m : AcousticMaterial.values()) {
+                materialWeights[m.ordinal()] = clamp(parseDouble(props, prefix + "material." + m.getId(), m.getDefaultWeight()), 0.0, AcousticMaterial.MAX_WEIGHT);
+            }
+        }
+        changed();
+    }
+
+    /** Writes a properties file atomically (temp file + move). */
+    static void store(Path file, Properties props, String comment) {
         try {
             Path dir = file.toAbsolutePath().getParent();
             Files.createDirectories(dir);
-            Path tmp = Files.createTempFile(dir, FILE_NAME, ".tmp");
+            Path tmp = Files.createTempFile(dir, file.getFileName().toString(), ".tmp");
             try (OutputStream out = Files.newOutputStream(tmp)) {
-                props.store(out, "VoiceChat Audio Distance Addon\n"
-                        + "distance_model: linear | realistic_inverse | exponential\n"
-                        + "attenuation_factor: falloff strength (0.0 - 1.0)\n"
-                        + "min_volume_fraction: volume floor at the edge of hearing range (0.0 - 0.5)\n"
-                        + "openal_reference_ratio: share of the distance heard at full volume (0.05 - 1.0)\n"
-                        + "whisper_multiplier: falloff multiplier while whispering (0.5 - 2.0)\n"
-                        + "occlusion_enabled / occlusion_strength: wall muffling (0.0 - 1.0)\n"
-                        + "material.*: acoustic thickness of one block, stone = 1.0 (0.0 - 3.0)");
+                props.store(out, comment);
             }
             try {
                 Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
@@ -315,11 +332,11 @@ public final class DistanceConfig {
         revision++;
     }
 
-    private static String format(double value) {
+    static String format(double value) {
         return String.format(Locale.ROOT, "%.4f", value);
     }
 
-    private static double parseDouble(Properties props, String key, double fallback) {
+    static double parseDouble(Properties props, String key, double fallback) {
         String val = props.getProperty(key);
         if (val == null) {
             return fallback;
@@ -332,7 +349,7 @@ public final class DistanceConfig {
         }
     }
 
-    private static boolean parseBoolean(Properties props, String key, boolean fallback) {
+    static boolean parseBoolean(Properties props, String key, boolean fallback) {
         String val = props.getProperty(key);
         if (val == null) {
             return fallback;

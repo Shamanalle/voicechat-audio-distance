@@ -102,5 +102,15 @@
   "key.categories.vc-audio-distance": "Voice Distance",
   "key.category.vc-audio-distance.general": "Voice Distance",
   "key.vc-audio-distance.open_settings": "Open voice distance settings",
-  "message.vc-audio-distance.button": "Voice distance & walls…"
+  "message.vc-audio-distance.button": "Voice distance & walls…",
+  "gui.vc-audio-distance.server.apply": "Apply server profile",
+  "gui.vc-audio-distance.server.apply.tooltip": "This server suggests its own sound profile.\nApply copies it into your settings; you can still change or cancel it.",
+  "gui.vc-audio-distance.server.enforced": "Server profile in use",
+  "gui.vc-audio-distance.monitor.server.none": "Server: no addon (walls are muffled only on your side)",
+  "gui.vc-audio-distance.monitor.server.addon": "Server: has the addon, %s",
+  "gui.vc-audio-distance.monitor.server.mode.off": "your own settings",
+  "gui.vc-audio-distance.monitor.server.mode.suggest": "profile suggested",
+  "gui.vc-audio-distance.monitor.server.mode.enforce": "profile enforced",
+  "message.vc-audio-distance.server_profile.suggest": "[Voice Distance] This server suggests a sound profile. Open the voice chat settings (V) → \"Voice distance & walls…\" to apply it.",
+  "message.vc-audio-distance.server_profile.enforce": "[Voice Distance] This server uses its own sound profile while you play here. Your own settings return when you leave."
 }

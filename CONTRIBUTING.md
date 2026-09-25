@@ -22,8 +22,8 @@ cd voicechat-audio-distance
 | Папка | Куда попадает | Что внутри |
 |---|---|---|
 | `common/` | во все JAR (Java 17, без классов Minecraft) | плагин SVC, кривая OpenAL, конфиг и пресеты, фильтр стен (`VoiceFilter`), модель приглушения, реестр говорящих, **переводы и иконка** |
-| `shared/client-all/` | во все три модуля Fabric | экран настроек (`SettingsScreen`), `Canvas`, слайдер, логика тика, трассировка несколькими лучами |
-| `shared/client-1.20-1.21/` | `fabric-1.20`, `fabric-1.21` | точка входа клиента, адаптеры экрана и отрисовки, доступ к миру, регистрация клавиши |
+| `shared/mc-all/` | во все три модуля Fabric | экран настроек (`SettingsScreen`), `Canvas`, слайдер, логика тика, трассировка несколькими лучами |
+| `shared/mc-1.20-1.21/` | `fabric-1.20`, `fabric-1.21` | точка входа клиента, адаптеры экрана и отрисовки, доступ к миру, регистрация клавиши |
 | `fabric-1.20/`, `fabric-1.21/` | свой модуль | `Compat` (единственное отличие 1.20 от 1.21), `fabric.mod.json`, `mods.toml` |
 | `fabric-26/` | свой модуль | адаптеры для 26.x (новый API отрисовки, ввод SDL), метаданные |
 
@@ -66,8 +66,8 @@ cd voicechat-audio-distance
 | Directory | Compiled into | Contains |
 |---|---|---|
 | `common/` | every jar (Java 17, no Minecraft classes) | SVC plugin, OpenAL curve, config & presets, wall DSP (`VoiceFilter`), occlusion model, speaker registry, **translations and icon** |
-| `shared/client-all/` | all three Fabric modules | settings screen (`SettingsScreen`), `Canvas`, slider, tick logic, multi-ray tracer |
-| `shared/client-1.20-1.21/` | `fabric-1.20`, `fabric-1.21` | client entrypoint, screen/canvas adapters, world access, key mapping |
+| `shared/mc-all/` | all three Fabric modules | settings screen (`SettingsScreen`), `Canvas`, slider, tick logic, multi-ray tracer |
+| `shared/mc-1.20-1.21/` | `fabric-1.20`, `fabric-1.21` | client entrypoint, screen/canvas adapters, world access, key mapping |
 | `fabric-1.20/`, `fabric-1.21/` | own module | `Compat` (the only difference between 1.20 and 1.21), `fabric.mod.json`, `mods.toml` |
 | `fabric-26/` | own module | 26.x adapters (render-state API, SDL input), metadata |
 
