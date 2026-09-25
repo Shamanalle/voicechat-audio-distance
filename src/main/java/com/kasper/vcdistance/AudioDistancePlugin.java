@@ -68,7 +68,8 @@ public class AudioDistancePlugin implements VoicechatPlugin {
 
             // 2. Determine if this source is whispering (SVC sets whisper distance to ~half of voice distance)
             float maxDist = AL11.alGetSourcef(source, AL11.AL_MAX_DISTANCE);
-            boolean isWhisper = (maxDist > 0F && maxDist <= 28F);
+            float serverDist = (float) getServerMaxDistance();
+            boolean isWhisper = (maxDist > 0F && maxDist < serverDist * 0.75F);
 
             // 3. Compute rolloff factor (applying whisper multiplier if whispering)
             float rolloff = (float) CONFIG.attenuationFactor;
@@ -78,9 +79,14 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             AL11.alSourcef(source, AL11.AL_ROLLOFF_FACTOR, rolloff);
 
             // 4. Hardware volume floor (AL_MIN_GAIN)
-            // Ensures audio volume never drops below minVolumeFraction at maximum range
-            float minGain = (float) Math.max(0.0, Math.min(1.0, CONFIG.minVolumeFraction));
-            AL11.alSourcef(source, AL11.AL_MIN_GAIN, minGain);
+            // Scaled relative to current source AL_GAIN so muted or quieted players are never overridden
+            float currentGain = AL11.alGetSourcef(source, AL11.AL_GAIN);
+            if (currentGain <= 0.0001F) {
+                AL11.alSourcef(source, AL11.AL_MIN_GAIN, 0.0F);
+            } else {
+                float effectiveMinGain = (float) Math.max(0.0, Math.min(currentGain, CONFIG.minVolumeFraction * currentGain));
+                AL11.alSourcef(source, AL11.AL_MIN_GAIN, effectiveMinGain);
+            }
 
             // 5. Reference distance (point where attenuation begins)
             if (maxDist > 0F) {

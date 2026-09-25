@@ -1,0 +1,67 @@
+name: Bug Report
+description: Report a problem or unexpected behavior in VoiceChat Audio Distance Addon
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Please provide as much detail as possible to help us reproduce and resolve the problem.
+  - type: input
+    id: mc_version
+    attributes:
+      label: Minecraft Version
+      placeholder: e.g. 1.21, 1.21.8
+    validations:
+      required: true
+  - type: input
+    id: fabric_version
+    attributes:
+      label: Fabric Loader & Fabric API Versions
+      placeholder: e.g. Loader 0.16.13, Fabric API 0.136.1+1.21.8
+    validations:
+      required: true
+  - type: input
+    id: svc_version
+    attributes:
+      label: Simple Voice Chat Version
+      placeholder: e.g. 2.6.13
+    validations:
+      required: true
+  - type: input
+    id: addon_version
+    attributes:
+      label: Addon Version
+      placeholder: e.g. 1.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the Bug
+      description: A clear and concise description of what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Open audio distance settings via keybind or SVC settings.
+        2. Set distance model to Realistic Inverse.
+        3. Listen to remote voice...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs / Crash Reports
+      description: Paste any crash reports or logs from `.minecraft/logs/latest.log`.
+      render: text

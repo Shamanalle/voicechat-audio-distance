@@ -16,7 +16,7 @@ public enum AttenuationModel {
             "linear",
             "gui.vc-audio-distance.model.linear",
             "gui.vc-audio-distance.model.linear.tooltip",
-            AL11.AL_LINEAR_DISTANCE
+            AL11.AL_LINEAR_DISTANCE_CLAMPED
     ),
 
     /**
@@ -27,7 +27,7 @@ public enum AttenuationModel {
             "realistic_inverse",
             "gui.vc-audio-distance.model.inverse",
             "gui.vc-audio-distance.model.inverse.tooltip",
-            AL11.AL_INVERSE_DISTANCE
+            AL11.AL_INVERSE_DISTANCE_CLAMPED
     ),
 
     /**
@@ -38,7 +38,7 @@ public enum AttenuationModel {
             "exponential",
             "gui.vc-audio-distance.model.exponential",
             "gui.vc-audio-distance.model.exponential.tooltip",
-            AL11.AL_EXPONENT_DISTANCE
+            AL11.AL_EXPONENT_DISTANCE_CLAMPED
     );
 
     private final String id;

@@ -44,9 +44,14 @@ public class AudioDistanceClient implements ClientModInitializer {
         }
 
         int x = (scaledWidth - 200) / 2;
-        // Place button just below the SVC panel (panel is 219px tall, centered)
         int panelBottom = (scaledHeight + 219) / 2;
-        int y = panelBottom + 3;
+        int y;
+        if (scaledHeight - panelBottom >= 25) {
+            y = panelBottom + 3;
+        } else {
+            int panelTop = (scaledHeight - 219) / 2;
+            y = Math.max(3, panelTop - 23);
+        }
 
         Screens.getButtons(screen).add(Button.builder(
                 Component.translatable("message.vc-audio-distance.button"),

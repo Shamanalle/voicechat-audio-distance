@@ -13,6 +13,8 @@
   "gui.vc-audio-distance.min_volume.tooltip": "Минимальная слышимость на максимальной дистанции (%s бл.).\n0% = голос полностью исчезает на границе\n20%+ = собеседника всё ещё можно тихо услышать на самом краю",
   "gui.vc-audio-distance.attenuation_start": "Спад с: %s бл. (%s%%)",
   "gui.vc-audio-distance.attenuation_start.tooltip": "Дистанция, до которой голос звучит на максимальной громкости (100%).\nВ ванильном Simple Voice Chat спад начинается ровно с половины пути (50%).",
+  "gui.vc-audio-distance.whisper_multiplier": "Спад шёпота: %s",
+  "gui.vc-audio-distance.whisper_multiplier.tooltip": "Множитель затухания шёпота.\n1.00x = стандартный спад шёпота\n1.40x+ = шёпот затихает гораздо быстрее\n0.50x = шёпот разносится дальше",
   "gui.vc-audio-distance.summary.zone100": "🟢 100%% громкость: первые %s бл.",
   "gui.vc-audio-distance.summary.falloff": "🔵 Спад до %s%% громкости на краю (%s бл.)",
   "gui.vc-audio-distance.summary.flat": "🟢 Звук одинаково громкий на всей дистанции (%s бл.)",

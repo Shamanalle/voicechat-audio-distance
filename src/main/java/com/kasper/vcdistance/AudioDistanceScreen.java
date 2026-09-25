@@ -47,8 +47,11 @@ public class AudioDistanceScreen extends Screen {
         int totalWidth = 230;
         int startX = centerX - totalWidth / 2;
 
+        int totalContentHeight = 224;
+        int startY = Math.max(8, (this.height - totalContentHeight) / 2);
+
         // ── 1. Model Selector Button ─────────────────────────────────────────
-        int y = this.height / 2 - 50;
+        int y = startY + 68;
         Button modelButton = Button.builder(
                 Component.translatable("gui.vc-audio-distance.model.label", AudioDistancePlugin.CONFIG.model.getDisplayName()),
                 btn -> {
@@ -60,7 +63,7 @@ public class AudioDistanceScreen extends Screen {
         .tooltip(Tooltip.create(AudioDistancePlugin.CONFIG.model.getTooltip()))
         .build();
         addRenderableWidget(modelButton);
-        y += 23;
+        y += 22;
 
         // ── 2. Attenuation / Decay Rate Slider (0% - 100%) ───────────────────
         AbstractSliderButton attenuationSlider = new AbstractSliderButton(
@@ -85,7 +88,7 @@ public class AudioDistanceScreen extends Screen {
             }
         };
         addRenderableWidget(attenuationSlider);
-        y += 23;
+        y += 22;
 
         // ── 3. Far Volume Floor Slider (0% - 100%) ───────────────────────────
         AbstractSliderButton minVolumeSlider = new AbstractSliderButton(
@@ -111,7 +114,7 @@ public class AudioDistanceScreen extends Screen {
             }
         };
         addRenderableWidget(minVolumeSlider);
-        y += 23;
+        y += 22;
 
         // ── 4. Falloff Start Ratio Slider (10% - 100%) ───────────────────────
         double initialRatioNorm = (AudioDistancePlugin.CONFIG.openalReferenceRatio - 0.10) / 0.90;
@@ -139,9 +142,35 @@ public class AudioDistanceScreen extends Screen {
             }
         };
         addRenderableWidget(refDistanceSlider);
-        y += 24;
+        y += 22;
 
-        // ── 5. Presets Row (4 buttons) ───────────────────────────────────────
+        // ── 5. Whisper Decay Multiplier Slider (0.50x - 2.00x) ───────────────
+        double initialWhisperNorm = (AudioDistancePlugin.CONFIG.whisperMultiplier - 0.50) / 1.50;
+        AbstractSliderButton whisperSlider = new AbstractSliderButton(
+                startX, y, totalWidth, 20,
+                Component.empty(),
+                Math.max(0.0, Math.min(1.0, initialWhisperNorm))
+        ) {
+            {
+                setTooltip(Tooltip.create(Component.translatable("gui.vc-audio-distance.whisper_multiplier.tooltip")));
+                updateMessage();
+            }
+
+            @Override
+            protected void updateMessage() {
+                double mult = 0.50 + value * 1.50;
+                setMessage(Component.translatable("gui.vc-audio-distance.whisper_multiplier", String.format(java.util.Locale.ROOT, "%.2fx", mult)));
+            }
+
+            @Override
+            protected void applyValue() {
+                AudioDistancePlugin.CONFIG.whisperMultiplier = 0.50 + value * 1.50;
+            }
+        };
+        addRenderableWidget(whisperSlider);
+        y += 23;
+
+        // ── 6. Presets Row (4 buttons) ───────────────────────────────────────
         int gap = 2;
         int presetBtnWidth = (totalWidth - gap * 3) / 4;
 
@@ -244,7 +273,12 @@ public class AudioDistanceScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        renderTransparentBackground(guiGraphics);
+        if (this.minecraft != null && this.minecraft.level != null) {
+            renderTransparentBackground(guiGraphics);
+        } else {
+            renderPanorama(guiGraphics, delta);
+            renderBlurredBackground(guiGraphics);
+        }
     }
 
     @Override
@@ -258,12 +292,15 @@ public class AudioDistanceScreen extends Screen {
         int totalWidth = 230;
         int startX = centerX - totalWidth / 2;
 
+        int totalContentHeight = 224;
+        int startY = Math.max(8, (this.height - totalContentHeight) / 2);
+
         // Title
-        guiGraphics.drawCenteredString(this.font, this.title, centerX, this.height / 2 - 122, 0xFFFFFF);
+        guiGraphics.drawCenteredString(this.font, this.title, centerX, startY, 0xFFFFFF);
 
         // ── 1. Interactive Acoustic Curve Box ────────────────────────────────
-        int previewY = this.height / 2 - 108;
-        int previewHeight = 28;
+        int previewY = startY + 14;
+        int previewHeight = 26;
 
         // Border and background
         guiGraphics.fill(startX - 1, previewY - 1, startX + totalWidth + 1, previewY + previewHeight + 1, 0xFF666666);
@@ -328,16 +365,16 @@ public class AudioDistanceScreen extends Screen {
 
             Component inspectText = Component.translatable("gui.vc-audio-distance.curve_inspect", inspectBlock, inspectPct);
             int badgeWidth = this.font.width(inspectText) + 8;
-            int badgeX = Math.max(startX, Math.min(startX + totalWidth - badgeWidth, mouseX - badgeWidth / 2));
-            int badgeY = previewY - 14;
+            int badgeX = Math.max(startX + 2, Math.min(startX + totalWidth - badgeWidth - 2, mouseX - badgeWidth / 2));
+            int badgeY = previewY + 2;
 
             guiGraphics.fill(badgeX - 1, badgeY - 1, badgeX + badgeWidth + 1, badgeY + 11, 0xFF333333);
-            guiGraphics.fill(badgeX, badgeY, badgeX + badgeWidth, badgeY + 10, 0xEE1A1A1A);
+            guiGraphics.fill(badgeX, badgeY, badgeX + badgeWidth, badgeY + 10, 0xF0141418);
             guiGraphics.drawString(this.font, inspectText, badgeX + 4, badgeY + 1, 0xFFFF55, false);
         }
 
         // ── 2. Live Human-Readable Scenario Summary ──────────────────────────
-        int summaryY = this.height / 2 - 76;
+        int summaryY = startY + 43;
         int summaryHeight = 22;
 
         guiGraphics.fill(startX - 1, summaryY - 1, startX + totalWidth + 1, summaryY + summaryHeight + 1, 0xFF3D444D);
@@ -375,7 +412,7 @@ public class AudioDistanceScreen extends Screen {
                     gain = refRatio / (refRatio + rolloff * excess);
                 }
                 case EXPONENTIAL -> {
-                    gain = Math.pow(Math.max(0.0001, distFraction / Math.max(0.01, refRatio)), -rolloff * 1.5);
+                    gain = Math.pow(Math.max(0.0001, distFraction / Math.max(0.01, refRatio)), -rolloff);
                 }
                 default -> {
                     gain = 1.0 - rolloff * (excess / remaining);

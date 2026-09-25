@@ -16,6 +16,10 @@ out/
 
 # Minecraft runtime run directories
 run/
+logs/
+
+# Knowledge graph
+graphify-out/
 
 # OS specific files
 .DS_Store

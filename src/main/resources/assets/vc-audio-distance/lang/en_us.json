@@ -13,6 +13,8 @@
   "gui.vc-audio-distance.min_volume.tooltip": "Minimum audibility at maximum range (%s blocks).\n0% = voice fades completely to silence at edge\n20%+ = voice remains quietly audible even at max distance",
   "gui.vc-audio-distance.attenuation_start": "Falloff Starts at: %s bl. (%s%%)",
   "gui.vc-audio-distance.attenuation_start.tooltip": "Distance up to which voice stays at maximum 100% volume.\nIn vanilla Simple Voice Chat, falloff starts halfway (50%).",
+  "gui.vc-audio-distance.whisper_multiplier": "Whisper Falloff: %s",
+  "gui.vc-audio-distance.whisper_multiplier.tooltip": "Multiplier for whisper attenuation speed.\n1.00x = standard whisper decay\n1.40x+ = whisper drops off much faster\n0.50x = whisper carries further",
   "gui.vc-audio-distance.summary.zone100": "🟢 100%% volume: first %s blocks",
   "gui.vc-audio-distance.summary.falloff": "🔵 Fades to %s%% volume at edge (%s blocks)",
   "gui.vc-audio-distance.summary.flat": "🟢 Volume is constant across all %s blocks",

@@ -18,7 +18,17 @@ import java.util.Properties;
 public class DistanceConfig {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("VC-AudioDistance");
-    private static final Path CONFIG_PATH = Path.of("config", "vc-audio-distance.properties");
+    private static final Path CONFIG_PATH = resolveConfigPath();
+
+    private static Path resolveConfigPath() {
+        try {
+            return net.fabricmc.loader.api.FabricLoader.getInstance()
+                    .getConfigDir()
+                    .resolve("vc-audio-distance.properties");
+        } catch (Throwable ignored) {
+            return Path.of("config", "vc-audio-distance.properties");
+        }
+    }
 
     // -------------------------------------------------------------------------
     // Vanilla Simple Voice Chat Defaults
@@ -30,35 +40,35 @@ public class DistanceConfig {
     public static final double DEFAULT_WHISPER_MULTIPLIER            = 1.0;
 
     // -------------------------------------------------------------------------
-    // Configuration Fields
+    // Configuration Fields (volatile for thread safety between GUI & OpenAL)
     // -------------------------------------------------------------------------
 
     /** OpenAL distance attenuation model */
-    public AttenuationModel model = DEFAULT_MODEL;
+    public volatile AttenuationModel model = DEFAULT_MODEL;
 
     /**
      * Rolloff factor (0.0 - 1.0):
      * Controls decay steepness. 0 = constant volume, 1 = normal decay.
      */
-    public double attenuationFactor = DEFAULT_ATTENUATION_FACTOR;
+    public volatile double attenuationFactor = DEFAULT_ATTENUATION_FACTOR;
 
     /**
      * Hardware volume floor via AL_MIN_GAIN (0.0 - 1.0):
      * Ensures distant voice never drops below this volume level.
      */
-    public double minVolumeFraction = DEFAULT_MIN_VOLUME_FRACTION;
+    public volatile double minVolumeFraction = DEFAULT_MIN_VOLUME_FRACTION;
 
     /**
      * Point where volume decay begins (0.1 - 1.0 fraction of max distance).
      * 0.5 = vanilla SVC default (decay starts halfway).
      */
-    public double openalReferenceRatio = DEFAULT_OPENAL_REFERENCE_RATIO;
+    public volatile double openalReferenceRatio = DEFAULT_OPENAL_REFERENCE_RATIO;
 
     /**
      * Decay multiplier when the speaker is whispering (0.5 - 2.0).
      * 1.0 = normal whisper decay. Higher = whisper drops off faster.
      */
-    public double whisperMultiplier = DEFAULT_WHISPER_MULTIPLIER;
+    public volatile double whisperMultiplier = DEFAULT_WHISPER_MULTIPLIER;
 
     public void load() {
         if (!Files.exists(CONFIG_PATH)) {

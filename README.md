@@ -3,9 +3,11 @@
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21%20--%201.21.8%2B-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-lightgrey.svg?logo=fabric&logoColor=white)](https://fabricmc.net/)
 [![Simple Voice Chat](https://img.shields.io/badge/Simple%20Voice%20Chat-2.4.0%2B-orange.svg)](https://modrinth.com/plugin/simple-voice-chat)
+[![Build Status](https://github.com/Shamanalle/voicechat-audio-distance/actions/workflows/build.yml/badge.svg)](https://github.com/Shamanalle/voicechat-audio-distance/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/Shamanalle/voicechat-audio-distance?logo=github&color=brightgreen)](https://github.com/Shamanalle/voicechat-audio-distance/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Продвинутый клиентский аддон для **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)**, предоставляющий полный контроль над физикой затухания 3D-звука в пространстве, аппаратным порогом громкости через OpenAL и наглядным интерактивным графиком слышимости в реальном времени.
+Продвинутый клиентский аддон для **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)**, предоставляющий полный контроль над физикой затухания 3D-звука в пространстве, аппаратным порогом громкости через OpenAL, настраиваемым спадом шёпота и наглядным интерактивным графиком слышимости в реальном времени.
 
 ---
 
@@ -15,37 +17,45 @@
 * **Линейная (Linear / Vanilla SVC)**: Стандартная модель Simple Voice Chat. Громкость держится на 100% до заданной дистанции, затем линейно спадает.
 * **Реалистичная акустическая (Realistic Inverse $1/r$)**: Реальное физическое затухание звуковых волн в воздухе по закону обратных квадратов. Голос вблизи звучит естественно и объемно, плавно растворяясь на расстоянии.
 * **Экспоненциальная (Exponential)**: Быстрый спад звука, создающий напряженную атмосферу. Идеально для хоррор-карт, стелс-миссий и приключений.
+* **Безопасность слуха (Clamped Bounds)**: Использование нативных Clamped-моделей OpenAL 1.1 предотвращает акустические удары в упор.
 
 ### 2. Аппаратный порог слышимости (`AL_MIN_GAIN`)
 * Никаких цифровых искажений и перегрузок PCM (`Math.tanh`).
 * Порог громкости задается напрямую в аудиочип через нативный параметр OpenAL `AL_MIN_GAIN`.
-* На предельной дистанции голос собеседника не затихает в абсолютный ноль, если вам нужно слышать предупреждения или радиопереговоры на краю зоны.
+* Автоматически учитывает индивидуальный мут и громкость игроков (замьюченный игрок остаётся неслышимым).
+* На предельной дистанции голос собеседника не затихает в абсолютный ноль, если вам нужно слышать радиопереговоры на краю зоны.
 
 ### 3. Интерактивный предпросмотр затухания (Live Audio Curve)
 * В меню настроек отображается динамическая шкала (от 0 блоков до максимального радиуса), которая в реальном времени отрисовывает точную математическую кривую громкости звука при смене моделей или перемещении ползунков.
+* Встроенный инспектор курсора показывает точную дистанцию в блоках и итоговый процент громкости в любой точке кривой.
 
-### 4. Быстрые пресеты в 1 клик
+### 4. Множитель спада шёпота (Whisper Falloff)
+* Отдельный ползунок в интерфейсе (`0.50x – 2.00x`) для регулировки разборчивости и затухания шёпота на дистанции.
+
+### 5. Быстрые пресеты в 1 клик
 * **Ваниль (Vanilla)**: Сброс к поведению чистого Simple Voice Chat (100% спад, 0% мин. громкость, 50% старт).
 * **Мягкий (Realistic)**: Акустическая модель $1/r$, комфортный естественный баланс для выживания.
 * **Чёткий (Audible)**: Повышенная слышимость на дальних расстояниях для серверов, стримов и мини-игр.
 * **Стелс (Stealth)**: Резкое затухание для игр в прятки и хорроров.
 
-### 5. Удобство и интеграция
+### 6. Удобство и интеграция
 * **Горячая клавиша**: Назначается в стандартном меню Minecraft «Управление» -> «Назначение клавиш».
 * **Интеграция с Mod Menu**: Настройки открываются прямо из списка модов Fabric.
-* **Кнопка в меню голосового чата**: Добавляется в стандартное окно настроек Simple Voice Chat.
+* **Кнопка в меню голосового чата**: Добавляется в стандартное окно настроек Simple Voice Chat с умным позиционированием.
 * **Полная локализация**: Поддержка русского (`ru_ru`) и английского (`en_us`) языков.
 
 ---
 
 ## 🇬🇧 Features Overview
 
-* **Physical Acoustic Attenuation**: Switch between *Linear (Vanilla)*, *Realistic Inverse ($1/r$)*, and *Exponential* falloff curves.
-* **Native OpenAL Hardware Floor**: Uses `AL_MIN_GAIN` hardware clamping — zero clipping, zero latency, pure audio quality.
-* **Live Curve Visualizer**: Real-time acoustic audibility graph rendered directly inside the configuration GUI.
+* **Physical Acoustic Attenuation**: Switch between *Linear (Vanilla)*, *Realistic Inverse ($1/r$)*, and *Exponential* falloff curves with OpenAL 1.1 clamped bounds.
+* **Native OpenAL Hardware Floor**: Uses `AL_MIN_GAIN` hardware clamping — zero clipping, zero latency, pure audio quality, fully respecting mute & volume levels.
+* **Whisper Falloff Multiplier**: Dedicated in-GUI slider (`0.50x – 2.00x`) to control whisper decay distance.
+* **Live Curve Visualizer**: Real-time acoustic audibility graph with built-in block & volume inspector.
 * **Instant Presets**: 1-click presets for Vanilla, Realistic, High Audibility, and Stealth modes.
-* **Keybinding & Mod Menu**: Fully configurable hotkey, Mod Menu integration, and SVC screen hook.
+* **Keybinding & Mod Menu**: Fully configurable hotkey, Mod Menu integration, and SVC screen hook with responsive layout.
 * **Bilingual Localization**: English (`en_us`) and Russian (`ru_ru`).
+* **Automated Unit Tests**: Suite of JUnit 5 tests verifying audio physics, boundaries, and preset math.
 
 ---
 
