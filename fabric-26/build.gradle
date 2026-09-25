@@ -62,6 +62,11 @@ processResources {
 
 jar {
     from project(':common').sourceSets.main.output
+    // NeoForge entrypoint: loaded only by NeoForge, which finds it through @Mod
+    dependsOn ':neoforge-26:classes'
+    from(project(':neoforge-26').sourceSets.main.output) {
+        include 'com/kasper/vcdistance/neoforge/**'
+    }
 }
 
 // The classpath the mod compiles against, one entry per line. The 26.x compatibility check

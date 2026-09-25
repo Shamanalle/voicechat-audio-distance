@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [1.5.0] - 2026-09-26
+
+### English
+
+#### Added
+- **Sound around corners.** When a wall is between you and a speaker, the addon looks for a way round it through open blocks. If a doorway or window is close, the voice comes through it: less muffled than through the wall, and from the doorway's side. A switch on the Effects tab.
+- **`/vcd` for server admins** on Fabric and Paper: `status`, `reload`, `profile`, `preset`, `walls`, `serverwalls`, `zones`. Changes are saved and sent to players with the addon right away. Operators (level 2+) and the console; on Paper the `vcd.admin` permission. Replies in English or Russian.
+- **Sound zones.** A world (dimension) or, on Paper with WorldGuard, a region can have its own profile mode and preset. The profile follows players as they move, and the HUD names the zone.
+
+### Русский
+
+#### Добавлено
+- **Звук из-за угла.** Если между вами и говорящим стена, аддон ищет путь в обход через открытые блоки. Если рядом есть проём или окно, голос проходит через него: глушится меньше, чем сквозь стену, и слышен со стороны проёма. Переключатель на вкладке «Эффекты».
+- **`/vcd` для админов сервера** на Fabric и Paper: `status`, `reload`, `profile`, `preset`, `walls`, `serverwalls`, `zones`. Изменения сохраняются и сразу отправляются игрокам с аддоном. Для операторов (уровень 2+) и консоли; на Paper — право `vcd.admin`. Ответы на английском или русском.
+- **Звуковые зоны.** У мира (измерения) или, на Paper с WorldGuard, у региона может быть свой режим и пресет профиля. Профиль следует за игроком, а HUD называет зону.
+
 ## [1.4.0] - 2026-09-25
 
 ### English
