@@ -72,7 +72,7 @@ The workflow *Publish to Modrinth & CurseForge* (`.github/workflows/publish.yml`
 A store is skipped with a warning while its project id or token is missing. Setup, once:
 1. Create the projects by hand: Modrinth → *Create a project* (type *Mod*); CurseForge → *Minecraft → Mods → Create project*. Both sites review new projects; the first upload can go into the project while it waits. The text for the project pages is in `docs/store-description.md`.
 2. Put the project ids into `.github/publish.json`: on Modrinth the *Project ID* from the project's menu, on CurseForge the *Project ID* number on the project page.
-3. Tokens: Modrinth → *Settings → Personal access tokens*, scopes *Create versions* and *Read projects*; CurseForge → *Account → API tokens*. Add them as repository secrets `MODRINTH_TOKEN` and `CURSEFORGE_TOKEN` (*Settings → Secrets and variables → Actions*). Tokens never go into files or chats.
+3. Tokens: Modrinth → *Settings → Personal access tokens*, scopes *Create versions*, *Read projects* and *Write versions* (the last one lets *Sync release notes* update the changelog of Modrinth versions when `CHANGELOG.md` changes); CurseForge → *Account → API tokens*. Add them as repository secrets `MODRINTH_TOKEN` and `CURSEFORGE_TOKEN` (*Settings → Secrets and variables → Actions*). Tokens never go into files or chats.
 
 ### Pull requests
 
@@ -151,7 +151,7 @@ Workflow *Publish to Modrinth & CurseForge* (`.github/workflows/publish.yml`) б
 Площадка пропускается с предупреждением, пока для неё нет ID проекта или токена. Настраивается один раз:
 1. Создайте проекты вручную: Modrinth → *Create a project* (тип *Mod*); CurseForge → *Minecraft → Mods → Create project*. Оба сайта проверяют новые проекты; первую загрузку можно сделать, пока проект ждёт проверки. Текст для страниц проекта лежит в `docs/store-description.md`.
 2. Впишите ID проектов в `.github/publish.json`: на Modrinth — *Project ID* из меню проекта, на CurseForge — число *Project ID* на странице проекта.
-3. Токены: Modrinth → *Settings → Personal access tokens*, права *Create versions* и *Read projects*; CurseForge → *Account → API tokens*. Добавьте их как секреты репозитория `MODRINTH_TOKEN` и `CURSEFORGE_TOKEN` (*Settings → Secrets and variables → Actions*). Токены никогда не пишутся в файлы и чаты.
+3. Токены: Modrinth → *Settings → Personal access tokens*, права *Create versions*, *Read projects* и *Write versions* (последнее позволяет *Sync release notes* обновлять описание версий на Modrinth, когда меняется `CHANGELOG.md`); CurseForge → *Account → API tokens*. Добавьте их как секреты репозитория `MODRINTH_TOKEN` и `CURSEFORGE_TOKEN` (*Settings → Secrets and variables → Actions*). Токены никогда не пишутся в файлы и чаты.
 
 ### Pull request
 
