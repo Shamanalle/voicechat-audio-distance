@@ -111,7 +111,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 **Server (Fabric)**
 1. Put the same `.jar` into the server's `mods/` folder, next to Simple Voice Chat and Fabric API.
 2. Start the server once; it creates `config/vc-audio-distance-server.properties`.
-3. Walls for players without the addon are on by default. To share a profile, set `profile_mode` to `suggest` or `enforce` and edit the `profile.*` keys. The file is re-read automatically.
+3. Walls for players without the addon are on by default. To share a profile, set `profile_mode` to `suggest` or `enforce` and pick a `profile_preset`. Every key in the file has a comment in English and Russian, and the file is re-read automatically.
 
 **Server (Paper / Purpur / Spigot / Bukkit)**
 1. Put `voicechat-audio-distance-bukkit-1.2.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
@@ -135,12 +135,31 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 
 On Paper / Purpur / Spigot / Bukkit the file is `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 
+The file has three sections, and every key has a comment in English and Russian. Changes apply within 2 seconds without a restart. The voice and whisper range itself is set in Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
+
+**1. Walls, for every player**
+
 | Key | Values | Default | What it does |
 |---|---|---|---|
-| `profile_mode` | `off` / `suggest` / `enforce` | `off` | How players with the addon get the profile |
-| `server_walls` | true / false | true | Wall muffling for players without the addon |
-| `server_walls_max_streams` | 0 – 512 | 24 | Most voices re-encoded at once (CPU limit) |
-| `profile.*` | same keys as the client file | client defaults | The server's sound profile; its `occlusion_*` and `material.*` also drive server walls |
+| `walls_strength` | 0.0 – 1.0 | 0.6 | How strongly walls muffle voices; 0 turns walls off |
+| `material.<id>` | 0.0 – 3.0 | stone 1.0, wood 0.7, wool 1.4, glass 0.4, door 0.6, leaves 0.15, thin 0.2, liquid 0.35 | How much one block muffles; stone = 1.0 |
+
+**2. Players without the addon**
+
+| Key | Values | Default | What it does |
+|---|---|---|---|
+| `server_walls` | true / false | true | The server muffles voices through walls for them |
+| `server_walls_max_streams` | 0 – 512 | 24 | Most voices muffled at once (CPU limit); voices above it are heard without walls |
+
+**3. Players with the addon**
+
+| Key | Values | Default | What it does |
+|---|---|---|---|
+| `profile_mode` | `off` / `suggest` / `enforce` | `off` | Keep their own settings / offer the profile / use it while they play here |
+| `profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` / `custom` | `custom` | The server's sound profile; `custom` uses the `profile.*` values |
+| `profile.*` | the curve keys of the client file | client defaults | Custom profile: `distance_model`, `attenuation_factor`, `openal_reference_ratio`, `min_volume_fraction`, `whisper_multiplier` |
+
+Walls always come from section 1, whichever preset is chosen. A file from 1.2.0 is rewritten in this format on the first start, keeping its values.
 
 ### Building
 
@@ -254,7 +273,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 **Сервер (Fabric)**
 1. Положите тот же `.jar` в папку `mods/` сервера, рядом с Simple Voice Chat и Fabric API.
 2. Запустите сервер один раз — он создаст `config/vc-audio-distance-server.properties`.
-3. Стены для игроков без аддона включены по умолчанию. Чтобы передавать профиль, поставьте `profile_mode` в `suggest` или `enforce` и настройте ключи `profile.*`. Файл перечитывается автоматически.
+3. Стены для игроков без аддона включены по умолчанию. Чтобы передавать профиль, поставьте `profile_mode` в `suggest` или `enforce` и выберите `profile_preset`. У каждого ключа в файле есть комментарий на английском и русском, файл перечитывается автоматически.
 
 **Сервер (Paper / Purpur / Spigot / Bukkit)**
 1. Положите `voicechat-audio-distance-bukkit-1.2.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
@@ -278,12 +297,31 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 На Paper / Purpur / Spigot / Bukkit файл находится в `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 
+В файле три раздела, у каждого ключа есть комментарий на английском и русском. Изменения применяются в течение 2 секунд без перезапуска. Сама дальность голоса и шёпота задаётся в Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
+
+**1. Стены, для всех игроков**
+
 | Ключ | Значения | По умолчанию | Что делает |
 |---|---|---|---|
-| `profile_mode` | `off` / `suggest` / `enforce` | `off` | Как игроки с аддоном получают профиль |
-| `server_walls` | true / false | true | Приглушение стенами для игроков без аддона |
-| `server_walls_max_streams` | 0 – 512 | 24 | Сколько голосов перекодируется одновременно (ограничение нагрузки) |
-| `profile.*` | те же ключи, что в файле клиента | как у клиента | Профиль звука сервера; его `occlusion_*` и `material.*` также управляют стенами на сервере |
+| `walls_strength` | 0.0 – 1.0 | 0.6 | Насколько сильно стены глушат голоса; 0 выключает стены |
+| `material.<id>` | 0.0 – 3.0 | камень 1.0, дерево 0.7, шерсть 1.4, стекло 0.4, двери 0.6, листва 0.15, решётки и заборы 0.2, жидкости 0.35 | Насколько глушит один блок; камень = 1.0 |
+
+**2. Игроки без аддона**
+
+| Ключ | Значения | По умолчанию | Что делает |
+|---|---|---|---|
+| `server_walls` | true / false | true | Сервер глушит для них голоса за стенами |
+| `server_walls_max_streams` | 0 – 512 | 24 | Сколько голосов глушится одновременно (ограничение нагрузки); голоса сверх лимита слышно без стен |
+
+**3. Игроки с аддоном**
+
+| Ключ | Значения | По умолчанию | Что делает |
+|---|---|---|---|
+| `profile_mode` | `off` / `suggest` / `enforce` | `off` | Свои настройки / предложить профиль / включить его, пока игрок здесь |
+| `profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` / `custom` | `custom` | Профиль звука сервера; `custom` берёт значения `profile.*` |
+| `profile.*` | ключи кривой из файла клиента | как у клиента | Свой профиль: `distance_model`, `attenuation_factor`, `openal_reference_ratio`, `min_volume_fraction`, `whisper_multiplier` |
+
+Стены всегда берутся из раздела 1, какой бы пресет ни был выбран. Файл из 1.2.0 при первом запуске переписывается в этот формат с сохранением значений.
 
 ### Сборка
 
