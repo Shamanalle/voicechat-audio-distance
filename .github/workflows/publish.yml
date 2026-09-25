@@ -143,6 +143,8 @@ jobs:
         with:
           modrinth-id: ${{ needs.config.outputs.modrinth }}
           modrinth-token: ${{ needs.config.outputs.modrinth != '' && secrets.MODRINTH_TOKEN || '' }}
+          # Older versions stay featured: unfeaturing them would need the token's "Write versions" scope
+          modrinth-unfeature-mode: none
           curseforge-id: ${{ matrix.curseforge && needs.config.outputs.curseforge || '' }}
           curseforge-token: ${{ matrix.curseforge && needs.config.outputs.curseforge != '' && secrets.CURSEFORGE_TOKEN || '' }}
           files: ${{ steps.files.outputs.file }}
