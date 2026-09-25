@@ -29,7 +29,7 @@ side = "CLIENT"
 [[dependencies.vc_audio_distance]]
 modId = "minecraft"
 type = "required"
-versionRange = "[26.3,26.4)"
+versionRange = "[26.1,26.4)"
 ordering = "NONE"
 side = "CLIENT"
 

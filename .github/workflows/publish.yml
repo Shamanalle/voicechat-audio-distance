@@ -90,11 +90,11 @@ jobs:
             java: 21
             dependencies: simple-voice-chat(required) fabric-api(optional) modmenu(optional)
             curseforge: true
-          - name: Mod for 26.3
+          - name: Mod for 26.x
             file: fabric-{v}+mc26.x.jar
             target: mc26.x
             loaders: fabric neoforge forge
-            game-versions: 26.3
+            game-versions: 26.1 26.1.1 26.1.2 26.2 26.3
             java: 25
             dependencies: simple-voice-chat(required) fabric-api(optional) modmenu(optional)
             curseforge: true
