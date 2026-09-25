@@ -56,6 +56,12 @@ The repository description and topics live in `.github/about.json`. The *Reposit
 3. In this repository: *Settings → Secrets and variables → Actions → New repository secret*, name `REPO_ADMIN_TOKEN`, value: the token.
 4. Run *Actions → Repository about → Run workflow* once, or change `.github/about.json`. When the token expires, generate a new one and update the secret.
 
+### Releases
+
+1. Set `mod_version` in `gradle.properties` and add its section to `CHANGELOG.md` (English, then Russian).
+2. Merge into `main` and wait for the green build.
+3. *Actions → Publish Release → Run workflow* on `main`, or push the tag `vX.Y.Z`. The workflow builds every jar, creates the tag and the release, and takes the notes from `CHANGELOG.md`.
+
 ### Pull requests
 
 1. Branch off `main` (`feature/…`, `fix/…`).
@@ -116,6 +122,12 @@ cd voicechat-audio-distance
 2. *Repository access*: *Only select repositories* → этот репозиторий. *Permissions → Repository permissions → Administration*: *Read and write*. Больше ничего не нужно.
 3. В этом репозитории: *Settings → Secrets and variables → Actions → New repository secret*, имя `REPO_ADMIN_TOKEN`, значение — токен.
 4. Один раз запустите *Actions → Repository about → Run workflow* или измените `.github/about.json`. Когда срок токена истечёт, создайте новый и обновите секрет.
+
+### Релизы
+
+1. Укажите `mod_version` в `gradle.properties` и добавьте раздел этой версии в `CHANGELOG.md` (сначала английский, затем русский).
+2. Слейте изменения в `main` и дождитесь зелёной сборки.
+3. *Actions → Publish Release → Run workflow* на `main` или запушьте тег `vX.Y.Z`. Workflow соберёт все JAR, создаст тег и релиз, а описание возьмёт из `CHANGELOG.md`.
 
 ### Pull request
 
