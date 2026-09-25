@@ -5,7 +5,7 @@ allprojects {
                 def out = p.layout.buildDirectory.file('probe-classpath.txt')
                 def files = p.sourceSets.main.compileClasspath
                 outputs.upToDateWhen { false }
-                doLast { out.get().asFile.text = files.files.join('\n') + '\n' }
+                doLast { out.get().asFile.parentFile.mkdirs(); out.get().asFile.text = files.files.join('\n') + '\n' }
             }
         }
     }
