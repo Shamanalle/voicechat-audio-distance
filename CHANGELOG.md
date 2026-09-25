@@ -12,11 +12,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 #### Changed
 - The author is listed as Shamanalle everywhere (Mod Menu, mod metadata, plugin.yml, LICENSE, README).
+- The summary above the graph names the loudness halfway through the fade, where the curves differ.
+
+#### Fixed
+- **The exponential curve was not exponential.** It used OpenAL's "exponent" model, a power law that at 100% falloff is the same curve as 1/r. It is now a true exponential: most of the loudness is gone soon after the full-volume distance.
+- **1/r and the exponential curve no longer cut voices off at the edge.** Both stopped at 50% at the edge of the range, where Simple Voice Chat stops sending the voice, so it cut off from half volume to silence. Every curve now fades to silence at the edge (1/r over the last quarter of the range).
+- The addon now applies the curve itself, the same function that draws the graph, instead of OpenAL's distance models, and no longer changes OpenAL's context-wide distance model. Per-player volume and muting in Simple Voice Chat keep working.
 
 ### Русский
 
 #### Изменено
 - Автор везде указан как Shamanalle (Mod Menu, метаданные мода, plugin.yml, LICENSE, README).
+- Сводка над графиком показывает громкость на середине спада, где кривые различаются.
+
+#### Исправлено
+- **Экспоненциальная кривая не была экспонентой.** Она использовала модель OpenAL «exponent» — степенную функцию, которая при спаде 100% совпадает с 1/r. Теперь это настоящая экспонента: громкость уходит почти сразу за зоной полной громкости.
+- **1/r и экспонента больше не обрывают голос у края.** Обе останавливались на 50% на краю дальности, где Simple Voice Chat перестаёт передавать голос, и он обрывался с половины громкости в тишину. Теперь каждая кривая сходит на нет к краю (1/r — в последней четверти дальности).
+- Аддон теперь применяет кривую сам, той же функцией, что рисует график, а не через модели расстояния OpenAL, и больше не меняет общую для всего контекста модель расстояния OpenAL. Громкость игроков и mute в Simple Voice Chat работают как раньше.
 
 ## [1.2.3] - 2026-09-25
 

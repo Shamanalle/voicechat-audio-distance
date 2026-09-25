@@ -1,53 +1,49 @@
 package com.kasper.vcdistance;
 
 /**
- * OpenAL distance attenuation models supported by the addon.
+ * Distance curves. The formulas are in {@link AudioPhysics}; the addon applies them itself instead
+ * of OpenAL's distance models, so each curve fades to silence at the edge of the range.
  */
 public enum AttenuationModel {
 
     /**
-     * Standard Simple Voice Chat linear distance model.
-     * Sound stays at 100% until reference distance, then decreases linearly to 0.
+     * Simple Voice Chat's own curve: full volume up to the reference distance, then a straight
+     * fade to silence at the edge.
      */
     LINEAR(
             "linear",
             "gui.vc-audio-distance.model.linear",
-            "gui.vc-audio-distance.model.linear.tooltip",
-            0xD004 // AL_LINEAR_DISTANCE_CLAMPED
+            "gui.vc-audio-distance.model.linear.tooltip"
     ),
 
     /**
-     * Physically realistic inverse distance model (1/r acoustic propagation).
-     * Mimics real-world sound physics where volume drops off smoothly and naturally.
+     * Sound in the open (1/r): loudness drops quickly at first, then slowly, and fades to silence
+     * over the last quarter of the range.
      */
     REALISTIC_INVERSE(
             "realistic_inverse",
             "gui.vc-audio-distance.model.inverse",
-            "gui.vc-audio-distance.model.inverse.tooltip",
-            0xD002 // AL_INVERSE_DISTANCE_CLAMPED
+            "gui.vc-audio-distance.model.inverse.tooltip"
     ),
 
     /**
-     * Exponential distance decay.
-     * Fast initial drop-off, suitable for atmospheric or stealth gameplay.
+     * Exponential decay: most of the loudness is gone within the first third past the
+     * full-volume zone, reaching silence at the edge. Suits horror and stealth.
      */
     EXPONENTIAL(
             "exponential",
             "gui.vc-audio-distance.model.exponential",
-            "gui.vc-audio-distance.model.exponential.tooltip",
-            0xD006 // AL_EXPONENT_DISTANCE_CLAMPED
+            "gui.vc-audio-distance.model.exponential.tooltip"
     );
 
     private final String id;
     private final String translationKey;
     private final String tooltipKey;
-    private final int openAlConstant;
 
-    AttenuationModel(String id, String translationKey, String tooltipKey, int openAlConstant) {
+    AttenuationModel(String id, String translationKey, String tooltipKey) {
         this.id = id;
         this.translationKey = translationKey;
         this.tooltipKey = tooltipKey;
-        this.openAlConstant = openAlConstant;
     }
 
     public String getId() {
@@ -60,10 +56,6 @@ public enum AttenuationModel {
 
     public String getTooltipKey() {
         return tooltipKey;
-    }
-
-    public int getOpenAlConstant() {
-        return openAlConstant;
     }
 
     public AttenuationModel next() {
