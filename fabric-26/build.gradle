@@ -63,3 +63,15 @@ processResources {
 jar {
     from project(':common').sourceSets.main.output
 }
+
+// The classpath the mod compiles against, one entry per line. The 26.x compatibility check
+// (.github/workflows/compat-26.yml) compares the jar against this list for each Minecraft version.
+tasks.register('writeCompileClasspath') {
+    def out = layout.buildDirectory.file('compile-classpath.txt')
+    def files = sourceSets.main.compileClasspath
+    outputs.file out
+    outputs.upToDateWhen { false }
+    doLast {
+        out.get().asFile.text = files.files.join('\n') + '\n'
+    }
+}
