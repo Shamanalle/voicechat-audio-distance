@@ -112,5 +112,7 @@
   "gui.vc-audio-distance.monitor.server.mode.suggest": "профиль рекомендован",
   "gui.vc-audio-distance.monitor.server.mode.enforce": "профиль закреплён",
   "message.vc-audio-distance.server_profile.suggest": "[Дальность голоса] Сервер рекомендует профиль звука. Откройте настройки голосового чата (V) → «Дальность голоса и стены…», чтобы применить его.",
-  "message.vc-audio-distance.server_profile.enforce": "[Дальность голоса] На этом сервере действует его профиль звука. Ваши настройки вернутся, когда вы выйдете."
+  "message.vc-audio-distance.server_profile.enforce": "[Дальность голоса] На этом сервере действует его профиль звука. Ваши настройки вернутся, когда вы выйдете.",
+  "modmenu.summaryTranslation.vc-audio-distance": "Дальность голоса и приглушение стенами для Simple Voice Chat.",
+  "modmenu.descriptionTranslation.vc-audio-distance": "Настраивает, как голоса Simple Voice Chat затихают с расстоянием, и глушит их за стенами. Клиент: живой график, превью стен, монитор. Сервер (по желанию): стены для игроков без аддона и общий профиль звука."
 }

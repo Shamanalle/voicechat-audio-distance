@@ -1,22 +1,22 @@
-## Что изменено / What changed
+## What changed / Что изменено
 
-<!-- Кратко: что и зачем. / Briefly: what and why. -->
+<!-- Briefly: what and why. / Кратко: что и зачем. -->
 
-## Как проверено / How it was tested
+## How it was tested / Как проверено
 
-<!-- Версии Minecraft, загрузчик и SVC, на которых проверяли в игре. / Minecraft, loader and SVC versions tested in game. -->
+<!-- Minecraft, loader and Simple Voice Chat versions tested in game; client, server or both. / Версии Minecraft, загрузчика и Simple Voice Chat, на которых проверяли в игре; клиент, сервер или оба. -->
 
-## Тип изменения / Type of change
+## Type of change / Тип изменения
 
-- [ ] Исправление ошибки / Bug fix
-- [ ] Новая возможность / New feature
-- [ ] Рефакторинг или производительность / Refactoring or performance
-- [ ] Документация / Documentation
+- [ ] Bug fix / Исправление ошибки
+- [ ] New feature / Новая возможность
+- [ ] Refactoring or performance / Рефакторинг или производительность
+- [ ] Documentation / Документация
 
-## Чек-лист / Checklist
+## Checklist / Чек-лист
 
-- [ ] `./gradlew :common:test` проходит / passes
-- [ ] `./gradlew build` собирает все версии / builds every target
-- [ ] Переводы добавлены во все файлы в `common/src/main/resources/assets/vc-audio-distance/lang/` / Translations added to every language file
-- [ ] Для модуля 1.21 проверено, что новые методы Minecraft есть во всех 1.21.x / For the 1.21 module, new Minecraft methods exist on every 1.21.x
-- [ ] Запись в `CHANGELOG.md` (RU + EN) / Entry in `CHANGELOG.md` (RU + EN)
+- [ ] `./gradlew :common:test` passes / проходит
+- [ ] `./gradlew build` builds every target / собирает все версии
+- [ ] Translations added to every language file in `common/src/main/resources/assets/vc-audio-distance/lang/` / Переводы добавлены во все файлы языков
+- [ ] For the 1.21 module, new Minecraft methods exist on every 1.21.x / Для модуля 1.21 новые методы Minecraft есть во всех 1.21.x
+- [ ] `CHANGELOG.md` entry in English, then Russian / Запись в `CHANGELOG.md` на английском, затем на русском
