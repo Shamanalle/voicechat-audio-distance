@@ -1,6 +1,6 @@
 # 🎙️ VoiceChat Audio Distance
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.x%20%7C%2026.3-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.x%20%7C%2026.x-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-lightgrey.svg?logo=fabric&logoColor=white)](https://fabricmc.net/)
 [![Server](https://img.shields.io/badge/Server-Fabric%20%7C%20Paper%20%7C%20Purpur%20%7C%20Spigot-lightgrey.svg)](#versions-and-files)
 [![Simple Voice Chat](https://img.shields.io/badge/Simple%20Voice%20Chat-2.4%2B-orange.svg)](https://modrinth.com/plugin/simple-voice-chat)
@@ -88,16 +88,17 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 |---|---|---|---|---|
 | **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.2.1+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
 | **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.2.1+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.3 | `voicechat-audio-distance-fabric-1.2.1+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.2.1+mc26.x.jar` | 25+ | 2.6.0+ |
 | **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 and newer | `voicechat-audio-distance-bukkit-1.2.1.jar` | 17+ | Bukkit version |
 | Forge | 1.20.1 | `voicechat-audio-distance-forge-1.2.1+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
 | NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.2.1+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| NeoForge / Forge | 26.3 | `voicechat-audio-distance-{neoforge,forge}-1.2.1+mc26.x.jar` | 25+ | 2.6.0+ |
+| NeoForge / Forge | 26.1 – 26.3 | `voicechat-audio-distance-{neoforge,forge}-1.2.1+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** is the full version, on the client and on the server. It needs [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 - **Paper / Purpur / Spigot / Bukkit** is the server side as a plugin: walls for players without the addon, and the server profile for players with it. Players can join with any client: with the Fabric addon, without it, or without mods at all. The plugin is compiled against the 1.20.1 API and uses only API that later versions still have.
 - **Forge / NeoForge** is a lite version: distance curves only, configured in `config/vc-audio-distance.properties`. There is no settings screen, no walls, no monitor and no server side.
 - The 1.21.x jar was checked against the signatures of every Minecraft method it uses on each release from 1.21 to 1.21.11.
+- The 26.x jar is built for 26.3 and checked in CI on every 26.x release (26.1 – 26.3): the sources compile against each one, and every class, method, field and override the jar uses resolves the same way. Where 26.x changed (screens moved to `Gui` in 26.2, SDL input in 26.3), the jar picks the right API at runtime.
 
 ### Installation
 
@@ -250,16 +251,17 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 |---|---|---|---|---|
 | **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.2.1+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
 | **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.2.1+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.3 | `voicechat-audio-distance-fabric-1.2.1+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.2.1+mc26.x.jar` | 25+ | 2.6.0+ |
 | **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 и новее | `voicechat-audio-distance-bukkit-1.2.1.jar` | 17+ | версия для Bukkit |
 | Forge | 1.20.1 | `voicechat-audio-distance-forge-1.2.1+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
 | NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.2.1+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| NeoForge / Forge | 26.3 | `voicechat-audio-distance-{neoforge,forge}-1.2.1+mc26.x.jar` | 25+ | 2.6.0+ |
+| NeoForge / Forge | 26.1 – 26.3 | `voicechat-audio-distance-{neoforge,forge}-1.2.1+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** — полная версия, на клиенте и на сервере. Нужен [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
 - **Paper / Purpur / Spigot / Bukkit** — серверная часть в виде плагина: стены для игроков без аддона и профиль сервера для игроков с ним. Заходить можно с любым клиентом: с аддоном для Fabric, без него или совсем без модов. Плагин собран против API 1.20.1 и использует только тот API, который есть и в более новых версиях.
 - **Forge / NeoForge** — облегчённая версия: только кривые громкости, настройка в `config/vc-audio-distance.properties`. Нет экрана настроек, стен, монитора и серверной части.
 - JAR для 1.21.x проверен по сигнатурам каждого используемого метода Minecraft на всех версиях с 1.21 по 1.21.11.
+- JAR для 26.x собран под 26.3 и в CI проверяется на каждом релизе 26.x (26.1 – 26.3): исходники собираются под каждую версию, а каждый класс, метод, поле и переопределение, которые использует JAR, разрешаются одинаково. Там, где 26.x менялся (экраны переехали в `Gui` в 26.2, ввод через SDL в 26.3), JAR выбирает нужный API во время работы.
 
 ### Установка
 

@@ -28,7 +28,7 @@ cd voicechat-audio-distance
 | `shared/mc-all/` | all three Fabric modules | settings screen (`SettingsScreen`), `Canvas`, slider, client tick logic, multi-ray tracer |
 | `shared/mc-1.20-1.21/` | `fabric-1.20`, `fabric-1.21` | client and common entrypoints, screen and canvas adapters, block acoustics, client world access, server wall measuring, key mapping |
 | `fabric-1.20/`, `fabric-1.21/` | own module | `Compat` (the only screen difference between 1.20 and 1.21), networking (channels on 1.20.1, payloads on 1.21), `fabric.mod.json`, `mods.toml` |
-| `fabric-26/` | own module | 26.x adapters (render-state API, SDL input, payload names), block acoustics, server wall measuring, metadata |
+| `fabric-26/` | own module | 26.x adapters (render-state API, key and screen differences between 26.1 and 26.3, payload names), block acoustics, server wall measuring, metadata. Checked on every 26.x release by *Minecraft 26.x compatibility* (`.github/workflows/compat-26.yml`) |
 | `bukkit/` | own jar (Java 17) | Paper / Purpur / Spigot / Bukkit plugin: server side only. Plugin messaging on the same channels as Fabric, block acoustics through the Bukkit API, `plugin.yml` |
 
 Rules of thumb:
@@ -107,7 +107,7 @@ cd voicechat-audio-distance
 | `shared/mc-all/` | во все три модуля Fabric | экран настроек (`SettingsScreen`), `Canvas`, слайдер, логика тика клиента, трассировка несколькими лучами |
 | `shared/mc-1.20-1.21/` | `fabric-1.20`, `fabric-1.21` | точки входа клиента и общая, адаптеры экрана и отрисовки, акустика блоков, доступ к миру на клиенте, измерение стен на сервере, регистрация клавиши |
 | `fabric-1.20/`, `fabric-1.21/` | свой модуль | `Compat` (единственное отличие экрана 1.20 от 1.21), сеть (каналы в 1.20.1, payload в 1.21), `fabric.mod.json`, `mods.toml` |
-| `fabric-26/` | свой модуль | адаптеры 26.x (API отрисовки через render state, ввод SDL, имена payload), акустика блоков, измерение стен на сервере, метаданные |
+| `fabric-26/` | свой модуль | адаптеры 26.x (API отрисовки через render state, различия клавиш и экранов между 26.1 и 26.3, имена payload), акустика блоков, измерение стен на сервере, метаданные. Проверяется на каждом релизе 26.x workflow *Minecraft 26.x compatibility* (`.github/workflows/compat-26.yml`) |
 | `bukkit/` | свой JAR (Java 17) | плагин для Paper / Purpur / Spigot / Bukkit: только серверная часть. Сообщения плагина на тех же каналах, что у Fabric, акустика блоков через API Bukkit, `plugin.yml` |
 
 Правила:
