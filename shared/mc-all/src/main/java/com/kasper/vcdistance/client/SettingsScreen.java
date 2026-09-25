@@ -6,9 +6,11 @@ import com.kasper.vcdistance.AudioDistancePlugin;
 import com.kasper.vcdistance.AudioPhysics;
 import com.kasper.vcdistance.DistanceConfig;
 import com.kasper.vcdistance.LinkProtocol;
+import com.kasper.vcdistance.NearbyPlayers;
 import com.kasper.vcdistance.OcclusionModel;
 import com.kasper.vcdistance.Preset;
 import com.kasper.vcdistance.SpeakerRegistry;
+import com.kasper.vcdistance.VoiceState;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -23,7 +25,7 @@ import java.util.Locale;
  * Settings screen, shared by every Minecraft version.
  * <p>
  * Four tabs: the distance curve with a live graph, wall muffling with an audible preview, per-material
- * absorption, and a live monitor of the voices you are hearing right now. Every change is heard
+ * absorption, and a live monitor of the players within voice range and the voices you are hearing. Every change is heard
  * immediately; "Done" (or Esc) saves, "Cancel" restores what was there when the screen opened.
  * <p>
  * Version subclasses only forward rendering through a {@link Canvas} and switch screens.
@@ -589,8 +591,9 @@ public abstract class SettingsScreen extends Screen {
         c.text(fit(c, serverLine, right - left - 12), left + 6, y, Palette.TEXT_MUTED);
 
         long now = System.nanoTime();
-        List<SpeakerRegistry.Speaker> speakers = AudioDistancePlugin.SPEAKERS.active(now);
-        if (speakers.isEmpty()) {
+        List<NearbyPlayers.Row> rows = NearbyPlayers.rows(AudioDistancePlugin.SPEAKERS.active(now),
+                AudioDistancePlugin.NEARBY.players(), id -> AudioDistancePlugin.LINK.voiceState(id, now));
+        if (rows.isEmpty()) {
             int cy = (contentTop + contentBottom) / 2 - 8;
             c.centered(tr("monitor.empty"), midX, cy, Palette.TEXT_DIM);
             c.centered(fit(c, tr("monitor.empty_hint"), right - left - 12), midX, cy + 12, Palette.TEXT_MUTED);
@@ -614,50 +617,99 @@ public abstract class SettingsScreen extends Screen {
         c.right(tr("monitor.col.walls"), wallsRight, hy, Palette.TEXT_MUTED);
         c.hLine(left + 6, right - 6, hy + 11, Palette.PANEL_BORDER);
 
+        // Without the addon on the server nobody's voice chat state is known, only who is talking
+        int footer = AudioDistancePlugin.LINK.hasVoiceStates(now) ? 0 : 12;
         int rowY = hy + 16;
         int shown = 0;
-        for (SpeakerRegistry.Speaker s : speakers) {
-            if (rowY + 10 > contentBottom - 4) {
-                c.text(tr("monitor.more", speakers.size() - shown), nameLeft, rowY - 2, Palette.TEXT_MUTED);
+        for (NearbyPlayers.Row row : rows) {
+            if (rowY + 10 > contentBottom - 4 - footer) {
+                c.text(tr("monitor.more", rows.size() - shown), nameLeft, rowY - 2, Palette.TEXT_MUTED);
                 break;
             }
-            boolean talking = s.getLevelDb() > -50.0F;
-            c.fill(left + 7, rowY + 2, left + 11, rowY + 6, talking ? Palette.GOOD : Palette.withAlpha(Palette.TEXT_MUTED, 0x80));
-
-            Component name = speakerName(s);
-            if (s.isWhispering()) {
-                Component tag = tr("monitor.whisper");
-                int tagW = c.width(tag) + 4;
-                Component fitted = fit(c, name, nameW - tagW);
-                c.text(fitted, nameLeft, rowY, Palette.TEXT);
-                c.text(tag, nameLeft + c.width(fitted) + 4, rowY, Palette.WHISPER);
+            if (row.isTalking()) {
+                paintTalkingRow(c, row, rowY, wallsActive, nameLeft, nameW, distRight, loudLeft, loudRight, wallsRight);
             } else {
-                c.text(fit(c, name, nameW), nameLeft, rowY, Palette.TEXT);
-            }
-
-            c.right(s.getDistance() >= 0.0 ? tr("blocks", blocks(s.getDistance())) : Component.literal("—"),
-                    distRight, rowY, Palette.TEXT_DIM);
-
-            float lossDb = wallsActive ? s.getFilter().getDisplayLossDb() : 0.0F;
-            double gain = s.getDistance() >= 0.0
-                    ? AudioDistancePlugin.curveGain(s.getDistance(), s.getMaxDistance(), s.isWhispering()) * OcclusionModel.dbToGain(-lossDb)
-                    : 0.0;
-            Component pctText = Component.literal(pct(gain));
-            int barRight = loudRight - c.width(Component.literal("100%")) - 4;
-            c.fill(loudLeft, rowY + 1, barRight, rowY + 7, 0x22FFFFFF);
-            int fill = loudLeft + (int) Math.round(Math.min(1.0, gain) * (barRight - loudLeft));
-            double muffle = wallsActive ? s.getFilter().getDisplayMuffle() : 0.0;
-            c.fill(loudLeft, rowY + 1, fill, rowY + 7, Palette.mix(Palette.ACCENT, Palette.MUFFLED, muffle));
-            c.right(pctText, loudRight, rowY, Palette.TEXT_DIM);
-
-            if (lossDb > 0.5F) {
-                c.right(tr("db", String.format(Locale.ROOT, "−%.1f", lossDb)), wallsRight, rowY, Palette.MUFFLED);
-            } else {
-                c.right(Component.literal("—"), wallsRight, rowY, Palette.TEXT_MUTED);
+                paintSilentRow(c, row, rowY, nameLeft, nameW, distRight, loudLeft, wallsRight);
             }
             rowY += 13;
             shown++;
         }
+        if (footer > 0) {
+            c.text(fit(c, tr("monitor.states_unknown"), right - left - 12), left + 6, contentBottom - 13, Palette.TEXT_MUTED);
+        }
+    }
+
+    private void paintTalkingRow(Canvas c, NearbyPlayers.Row row, int rowY, boolean wallsActive, int nameLeft, int nameW,
+                                 int distRight, int loudLeft, int loudRight, int wallsRight) {
+        SpeakerRegistry.Speaker s = row.speaker();
+        boolean talking = s.getLevelDb() > -50.0F;
+        c.fill(left + 7, rowY + 2, left + 11, rowY + 6, talking ? Palette.GOOD : Palette.withAlpha(Palette.TEXT_MUTED, 0x80));
+
+        // A tag after the name: whispering, or a state that means they will not hear you back
+        Component tag = null;
+        int tagColor = Palette.WHISPER;
+        if (s.isWhispering()) {
+            tag = tr("monitor.whisper");
+        } else if (row.state() != null && row.state().isProblem()) {
+            tag = tr("monitor.state." + row.state().getTranslationKey());
+            tagColor = Palette.WARN;
+        }
+        Component name = speakerName(s);
+        if (tag != null) {
+            int tagW = c.width(tag) + 4;
+            Component fitted = fit(c, name, nameW - tagW);
+            c.text(fitted, nameLeft, rowY, Palette.TEXT);
+            c.text(tag, nameLeft + c.width(fitted) + 4, rowY, tagColor);
+        } else {
+            c.text(fit(c, name, nameW), nameLeft, rowY, Palette.TEXT);
+        }
+
+        c.right(s.getDistance() >= 0.0 ? tr("blocks", blocks(s.getDistance())) : Component.literal("—"),
+                distRight, rowY, Palette.TEXT_DIM);
+
+        float lossDb = wallsActive ? s.getFilter().getDisplayLossDb() : 0.0F;
+        double gain = s.getDistance() >= 0.0
+                ? AudioDistancePlugin.curveGain(s.getDistance(), s.getMaxDistance(), s.isWhispering()) * OcclusionModel.dbToGain(-lossDb)
+                : 0.0;
+        Component pctText = Component.literal(pct(gain));
+        int barRight = loudRight - c.width(Component.literal("100%")) - 4;
+        c.fill(loudLeft, rowY + 1, barRight, rowY + 7, 0x22FFFFFF);
+        int fill = loudLeft + (int) Math.round(Math.min(1.0, gain) * (barRight - loudLeft));
+        double muffle = wallsActive ? s.getFilter().getDisplayMuffle() : 0.0;
+        c.fill(loudLeft, rowY + 1, fill, rowY + 7, Palette.mix(Palette.ACCENT, Palette.MUFFLED, muffle));
+        c.right(pctText, loudRight, rowY, Palette.TEXT_DIM);
+
+        if (lossDb > 0.5F) {
+            c.right(tr("db", String.format(Locale.ROOT, "−%.1f", lossDb)), wallsRight, rowY, Palette.MUFFLED);
+        } else {
+            c.right(Component.literal("—"), wallsRight, rowY, Palette.TEXT_MUTED);
+        }
+    }
+
+    /** A nearby player who is not talking: their voice chat state takes the loudness and walls columns. */
+    private void paintSilentRow(Canvas c, NearbyPlayers.Row row, int rowY, int nameLeft, int nameW,
+                                int distRight, int loudLeft, int wallsRight) {
+        VoiceState state = row.state();
+        int color = stateColor(state);
+        // Hollow marker: in range, not talking
+        c.frame(left + 7, rowY + 2, left + 11, rowY + 6, 0x00000000, Palette.withAlpha(color, 0xC0));
+        String name = row.name();
+        c.text(fit(c, Component.literal(name != null ? name : row.playerId().toString().substring(0, 8)), nameW),
+                nameLeft, rowY, Palette.TEXT_DIM);
+        c.right(tr("blocks", blocks(row.distance())), distRight, rowY, Palette.TEXT_DIM);
+        Component text = tr("monitor.state." + (state == null ? "silent" : state.getTranslationKey()));
+        c.text(fit(c, text, wallsRight - loudLeft), loudLeft, rowY, color);
+    }
+
+    private static int stateColor(VoiceState state) {
+        if (state == null || state == VoiceState.CONNECTED) {
+            return Palette.TEXT_MUTED;
+        }
+        return switch (state) {
+            case GROUP -> Palette.WHISPER;
+            case NO_VOICE_CHAT -> Palette.BAD;
+            default -> Palette.WARN;
+        };
     }
 
     // =========================================================================

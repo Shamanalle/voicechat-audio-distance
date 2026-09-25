@@ -101,6 +101,10 @@ public class LangConsistencyTest {
         for (ServerSettings.ProfileMode m : ServerSettings.ProfileMode.values()) {
             used.add(PREFIX + "monitor.server.mode." + m.getId());
         }
+        for (VoiceState v : VoiceState.values()) {
+            used.add(PREFIX + "monitor.state." + v.getTranslationKey());
+        }
+        used.add(PREFIX + "monitor.state.silent");
         used.add("message.vc-audio-distance.server_profile.suggest");
         used.add("message.vc-audio-distance.server_profile.enforce");
         for (String s : new String[]{"status.sound_physics", "status.unavailable"}) {

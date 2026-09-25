@@ -2,7 +2,9 @@ package com.kasper.vcdistance;
 
 import de.maxhenkel.voicechat.api.ForgeVoicechatPlugin;
 import de.maxhenkel.voicechat.api.Position;
+import de.maxhenkel.voicechat.api.ServerPlayer;
 import de.maxhenkel.voicechat.api.VoicechatApi;
+import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent;
@@ -14,6 +16,14 @@ import de.maxhenkel.voicechat.api.events.PlayerDisconnectedEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStoppedEvent;
 import org.lwjgl.openal.AL11;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.BiPredicate;
 
 /**
  * Simple Voice Chat plugin, on both sides.
@@ -37,6 +47,8 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     public static final SpeakerRegistry SPEAKERS = new SpeakerRegistry();
     /** What the client knows about the server it is connected to. */
     public static final ServerLink LINK = new ServerLink();
+    /** Players within voice range of the listener (client). */
+    public static final NearbyPlayers NEARBY = new NearbyPlayers();
     /** Server-side settings and wall muffling. */
     public static final ServerSettings SERVER_SETTINGS = new ServerSettings();
     public static final ServerWalls SERVER_WALLS = new ServerWalls(SERVER_SETTINGS);
@@ -128,6 +140,51 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             }
         }
         return LinkProtocol.profile(SERVER_SETTINGS, voice, whisper);
+    }
+
+    /** How often the server sends {@code nearby} messages, in ticks. */
+    public static final int NEARBY_INTERVAL_TICKS = 20;
+
+    /**
+     * Text of the {@code nearby} message for one player with the addon: the voice chat state of the
+     * players within voice range, closest first. Server main thread.
+     *
+     * @param player  the receiving player (the platform's player object)
+     * @param visible whether the second player may be shown to the first (vanish, spectators)
+     * @return the message, or {@code null} when Simple Voice Chat is not running
+     */
+    public static String nearbyMessage(Object player, BiPredicate<Object, Object> visible) {
+        VoicechatServerApi s = serverApi;
+        if (s == null || player == null) {
+            return null;
+        }
+        try {
+            ServerPlayer self = s.fromServerPlayer(player);
+            UUID selfId = self.getUuid();
+            double range = s.getVoiceChatDistance();
+            List<ServerPlayer> near = new ArrayList<>(s.getPlayersInRange(self.getServerLevel(), self.getPosition(), range,
+                    p -> !p.getUuid().equals(selfId) && visible.test(player, p.getPlayer())));
+            near.sort(Comparator.comparingDouble(p -> squaredDistance(self, p)));
+            Map<UUID, VoiceState> states = new LinkedHashMap<>();
+            for (ServerPlayer p : near) {
+                VoicechatConnection c = s.getConnectionOf(p.getUuid());
+                states.put(p.getUuid(), c == null ? VoiceState.NO_VOICE_CHAT
+                        : VoiceState.of(c.isInstalled(), c.isConnected(), c.isDisabled(), c.isInGroup()));
+            }
+            return LinkProtocol.nearby(states);
+        } catch (Throwable t) {
+            DistanceConfig.LOGGER.debug("Could not list nearby players: {}", t.toString());
+            return null;
+        }
+    }
+
+    private static double squaredDistance(ServerPlayer a, ServerPlayer b) {
+        Position pa = a.getPosition();
+        Position pb = b.getPosition();
+        double dx = pa.getX() - pb.getX();
+        double dy = pa.getY() - pb.getY();
+        double dz = pa.getZ() - pb.getZ();
+        return dx * dx + dy * dy + dz * dz;
     }
 
     /** Called by the client glue once it feeds occlusion data from the world. */

@@ -37,6 +37,17 @@ public final class ModNetworking {
         }
     }
 
+    /** Server to client: voice chat state of the players nearby. */
+    public record Nearby(String text) implements CustomPacketPayload {
+        public static final Type<Nearby> TYPE = new Type<>(Identifier.fromNamespaceAndPath(LinkProtocol.NAMESPACE, LinkProtocol.NEARBY));
+        public static final StreamCodec<ByteBuf, Nearby> CODEC = ByteBufCodecs.stringUtf8(LinkProtocol.MAX_LENGTH).map(Nearby::new, Nearby::text);
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     private ModNetworking() {
     }
 
@@ -44,6 +55,7 @@ public final class ModNetworking {
     public static void registerCommon() {
         PayloadTypeRegistry.serverboundPlay().register(Hello.TYPE, Hello.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(Profile.TYPE, Profile.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(Nearby.TYPE, Nearby.CODEC);
     }
 
     public static void registerServer() {
@@ -62,5 +74,20 @@ public final class ModNetworking {
         if (ServerPlayNetworking.canSend(player, Profile.TYPE)) {
             ServerPlayNetworking.send(player, new Profile(AudioDistancePlugin.serverProfileMessage()));
         }
+    }
+
+    /** Sends the voice chat state of the players nearby; skipped for clients without a 1.3+ addon. */
+    public static void sendNearby(ServerPlayer player) {
+        if (ServerPlayNetworking.canSend(player, Nearby.TYPE)) {
+            String text = AudioDistancePlugin.nearbyMessage(player, ModNetworking::visible);
+            if (text != null) {
+                ServerPlayNetworking.send(player, new Nearby(text));
+            }
+        }
+    }
+
+    /** Spectators are listed only to other spectators. */
+    private static boolean visible(Object viewer, Object other) {
+        return !((ServerPlayer) other).isSpectator() || ((ServerPlayer) viewer).isSpectator();
     }
 }
