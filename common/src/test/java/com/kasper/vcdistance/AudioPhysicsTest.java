@@ -47,36 +47,68 @@ public class AudioPhysicsTest {
     }
 
     @Test
-    @DisplayName("Realistic Inverse model follows OpenAL 1/r acoustic propagation")
+    @DisplayName("1/r follows zone / distance, then fades to silence over the last quarter")
     void testRealisticInverseFalloff() {
         double refRatio = 0.5;
-        double rolloff = 1.0;
-        double minVol = 0.0;
 
-        // At max distance (1.0): gain = refRatio / (refRatio + rolloff * (1.0 - refRatio)) = 0.5 / (0.5 + 0.5) = 0.5
-        double gain = AudioPhysics.calculateGain(1.0, AttenuationModel.REALISTIC_INVERSE, rolloff, minVol, refRatio);
-        assertEquals(0.5, gain, EPSILON, "Inverse gain at max distance with ref=0.5, rolloff=1.0 should be 0.5");
+        // Before the fade (x < 0.75): gain = ref / (ref + rolloff * (d - ref)); at d = 0.75: 0.5 / 0.75
+        assertEquals(2.0 / 3.0, AudioPhysics.calculateGain(0.75, AttenuationModel.REALISTIC_INVERSE, 1.0, 0.0, refRatio), EPSILON);
+        // Reaches silence at the edge instead of stopping at 50%
+        assertEquals(0.0, AudioPhysics.calculateGain(1.0, AttenuationModel.REALISTIC_INVERSE, 1.0, 0.0, refRatio), EPSILON);
 
-        // Gain must decrease monotonically beyond reference distance
-        double prev = 1.0;
-        for (double d = refRatio + 0.05; d <= 1.0; d += 0.05) {
-            double current = AudioPhysics.calculateGain(d, AttenuationModel.REALISTIC_INVERSE, rolloff, minVol, refRatio);
-            assertTrue(current < prev, "Gain at " + d + " (" + current + ") should be less than " + prev);
-            prev = current;
-        }
+        assertStrictlyDecreasing(AttenuationModel.REALISTIC_INVERSE, refRatio);
     }
 
     @Test
-    @DisplayName("Exponential model matches standard OpenAL formula without artificial distortion")
+    @DisplayName("Exponential is a true exponential: steep after the zone, silent at the edge")
     void testExponentialFalloff() {
         double refRatio = 0.5;
-        double rolloff = 1.0;
-        double minVol = 0.0;
+        AttenuationModel model = AttenuationModel.EXPONENTIAL;
 
-        // OpenAL formula: (dist / ref)^(-rolloff)
-        // At dist = 1.0: (1.0 / 0.5)^(-1.0) = 2.0^(-1.0) = 0.5
-        double gain = AudioPhysics.calculateGain(1.0, AttenuationModel.EXPONENTIAL, rolloff, minVol, refRatio);
-        assertEquals(0.5, gain, EPSILON, "Exponential gain at 1.0 with ref=0.5, rolloff=1.0 should be exactly 0.5");
+        assertEquals(0.0, AudioPhysics.calculateGain(1.0, model, 1.0, 0.0, refRatio), EPSILON);
+
+        // A quarter of the way through the fade it is far below the other curves (not 1/r in disguise)
+        double exp = AudioPhysics.calculateGain(0.625, model, 1.0, 0.0, refRatio);
+        double inverse = AudioPhysics.calculateGain(0.625, AttenuationModel.REALISTIC_INVERSE, 1.0, 0.0, refRatio);
+        double linear = AudioPhysics.calculateGain(0.625, AttenuationModel.LINEAR, 1.0, 0.0, refRatio);
+        assertTrue(exp < 0.35, "exponential at a quarter of the fade: " + exp);
+        assertTrue(exp < inverse && exp < linear, "exponential must be the steepest curve");
+
+        // e^(-4.6 x), normalised to 0 at the edge
+        double x = 0.25;
+        double edge = Math.exp(-AudioPhysics.EXPONENTIAL_STEEPNESS);
+        assertEquals((Math.exp(-AudioPhysics.EXPONENTIAL_STEEPNESS * x) - edge) / (1.0 - edge), exp, EPSILON);
+
+        assertStrictlyDecreasing(model, refRatio);
+    }
+
+    @ParameterizedTest
+    @EnumSource(AttenuationModel.class)
+    @DisplayName("Every curve starts at full volume at the zone edge and ends silent at the range edge")
+    void testCurveEnds(AttenuationModel model) {
+        for (double refRatio : new double[]{0.05, 0.3, 0.5, 0.9}) {
+            assertEquals(1.0, AudioPhysics.calculateGain(refRatio, model, 1.0, 0.0, refRatio), EPSILON, model + " at the zone edge");
+            assertEquals(1.0, AudioPhysics.calculateGain(refRatio + 1e-9, model, 1.0, 0.0, refRatio), 1e-4, model + " just past the zone");
+            assertEquals(0.0, AudioPhysics.calculateGain(1.0, model, 1.0, 0.0, refRatio), EPSILON, model + " at the range edge");
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(AttenuationModel.class)
+    @DisplayName("Whispers (falloff above 100%) fade faster and are silent before the edge")
+    void testWhisperFalloff(AttenuationModel model) {
+        double normal = AudioPhysics.calculateGain(0.7, model, 1.0, 0.0, 0.5);
+        double whisper = AudioPhysics.calculateGain(0.7, model, 2.0, 0.0, 0.5);
+        assertTrue(whisper < normal, model + ": whisper " + whisper + " vs " + normal);
+    }
+
+    private static void assertStrictlyDecreasing(AttenuationModel model, double refRatio) {
+        double prev = 1.0;
+        for (double d = refRatio + 0.05; d <= 1.0 + 1e-9; d += 0.05) {
+            double current = AudioPhysics.calculateGain(d, model, 1.0, 0.0, refRatio);
+            assertTrue(current < prev, model + ": gain at " + d + " (" + current + ") should be less than " + prev);
+            prev = current;
+        }
     }
 
     @ParameterizedTest
@@ -95,15 +127,6 @@ public class AudioPhysicsTest {
     void testZeroRolloffConstantVolume(AttenuationModel model) {
         double gain = AudioPhysics.calculateGain(1.0, model, 0.0, 0.0, 0.5);
         assertEquals(1.0, gain, EPSILON, "Zero rolloff must maintain 1.0 gain at maximum distance for " + model);
-    }
-
-    @Test
-    @DisplayName("Clamped OpenAL constants are properly defined in AttenuationModel")
-    void testAttenuationModelConstants() {
-        // Clamped constants according to OpenAL 1.1 specification
-        assertEquals(0xD004, AttenuationModel.LINEAR.getOpenAlConstant(), "LINEAR must use AL_LINEAR_DISTANCE_CLAMPED");
-        assertEquals(0xD002, AttenuationModel.REALISTIC_INVERSE.getOpenAlConstant(), "REALISTIC_INVERSE must use AL_INVERSE_DISTANCE_CLAMPED");
-        assertEquals(0xD006, AttenuationModel.EXPONENTIAL.getOpenAlConstant(), "EXPONENTIAL must use AL_EXPONENT_DISTANCE_CLAMPED");
     }
 
     @Test

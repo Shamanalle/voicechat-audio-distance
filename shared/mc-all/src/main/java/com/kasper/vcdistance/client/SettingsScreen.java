@@ -375,10 +375,12 @@ public abstract class SettingsScreen extends Screen {
         double floor = shown.getMinVolumeFraction();
         double ref = shown.getOpenalReferenceRatio();
 
-        // Header: plain-language summary + legend
+        // Header: plain-language summary + legend. Every curve ends at the edge volume, so the
+        // summary names the loudness halfway through the fade, where the curves differ.
+        double middle = ref + (1.0 - ref) / 2.0;
         Component summary = rolloff <= 0.001
                 ? tr("summary.flat", blocks(maxDist))
-                : tr("summary.curve", blocks(ref * maxDist), pct(AudioPhysics.calculateGain(1.0, model, rolloff, floor, ref)), blocks(maxDist));
+                : tr("summary.curve", blocks(ref * maxDist), pct(AudioPhysics.calculateGain(middle, model, rolloff, floor, ref)), blocks(middle * maxDist));
         Component voice = tr("legend.voice");
         Component whisper = tr("legend.whisper");
         int legendW = c.width(voice) + c.width(whisper) + 36;

@@ -3,7 +3,7 @@ version: '${version}'
 main: com.kasper.vcdistance.bukkit.AudioDistanceBukkit
 api-version: '1.20'
 depend: [voicechat]
-author: Kasper
+author: Shamanalle
 website: https://github.com/Shamanalle/voicechat-audio-distance
 description: >-
   Server side of VoiceChat Audio Distance for Simple Voice Chat. Muffles voices through walls
