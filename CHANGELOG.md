@@ -11,7 +11,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### English
 
 #### Changed
-- The author is listed as Shamanalle everywhere (Mod Menu, mod metadata, plugin.yml, LICENSE, README).
 - The summary above the graph names the loudness halfway through the fade, where the curves differ.
 
 #### Fixed
@@ -22,7 +21,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Русский
 
 #### Изменено
-- Автор везде указан как Shamanalle (Mod Menu, метаданные мода, plugin.yml, LICENSE, README).
 - Сводка над графиком показывает громкость на середине спада, где кривые различаются.
 
 #### Исправлено
