@@ -1,6 +1,7 @@
 package com.kasper.vcdistance;
 
 import com.kasper.vcdistance.client.ExtractorCanvas;
+import com.kasper.vcdistance.client.ScreenSwitch;
 import com.kasper.vcdistance.client.SettingsScreen;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,8 +17,8 @@ public class AudioDistanceScreen extends SettingsScreen {
 
     @Override
     protected void openScreen(Screen screen) {
-        if (this.minecraft != null && this.minecraft.gui != null) {
-            this.minecraft.gui.setScreen(screen);
+        if (this.minecraft != null) {
+            ScreenSwitch.open(this.minecraft, screen);
         }
     }
 
