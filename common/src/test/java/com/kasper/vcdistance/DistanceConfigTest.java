@@ -88,8 +88,37 @@ public class DistanceConfigTest {
         c.load();
         assertEquals(AttenuationModel.REALISTIC_INVERSE, c.getModel());
         String text = Files.readString(file);
-        assertTrue(text.contains("config_version=2"));
+        assertTrue(text.contains("config_version=3"));
         assertTrue(text.contains("material.stone"));
+    }
+
+    @Test
+    @DisplayName("The file explains every key in English and Russian, in a fixed order")
+    void fileIsReadable() throws IOException {
+        Path file = dir.resolve("vc.properties");
+        DistanceConfig c = new DistanceConfig(file);
+        c.setMaterialWeight(AcousticMaterial.WOOL, 2.5);
+        c.save();
+        String text = Files.readString(file);
+        String[] keys = {"config_version=", "distance_model=", "attenuation_factor=", "openal_reference_ratio=",
+                "min_volume_fraction=", "whisper_multiplier=", "occlusion_enabled=", "occlusion_strength=",
+                "material.stone=", "material.liquid="};
+        int last = -1;
+        for (String key : keys) {
+            int at = text.indexOf("\n" + key);
+            assertTrue(at > last, key + " is missing or out of order");
+            last = at;
+        }
+        // Every key has a comment right above it, and numbers are short
+        String[] lines = text.split("\n");
+        for (int i = 1; i < lines.length; i++) {
+            if (!lines[i].isEmpty() && !lines[i].startsWith("#")) {
+                assertTrue(lines[i - 1].startsWith("#"), "no comment above " + lines[i]);
+            }
+        }
+        assertTrue(text.contains("Кривая громкости"));
+        assertTrue(text.contains("material.wool=2.5\n"));
+        assertTrue(text.contains("attenuation_factor=1.0\n"));
     }
 
     @Test

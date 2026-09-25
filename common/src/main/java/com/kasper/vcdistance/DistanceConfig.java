@@ -4,12 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -23,7 +19,8 @@ public final class DistanceConfig {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("VC-AudioDistance");
 
-    private static final int CONFIG_VERSION = 2;
+    /** 3: the file is written with a comment for every key. */
+    private static final int CONFIG_VERSION = 3;
     private static final String FILE_NAME = "vc-audio-distance.properties";
 
     // -------------------------------------------------------------------------
@@ -241,9 +238,9 @@ public final class DistanceConfig {
             save();
             return;
         }
-        Properties props = new Properties();
-        try (InputStream in = Files.newInputStream(file)) {
-            props.load(in);
+        Properties props;
+        try {
+            props = ConfigWriter.load(file);
         } catch (IOException e) {
             LOGGER.error("Failed to read {}, using defaults: {}", file, e.getMessage());
             return;
@@ -261,20 +258,65 @@ public final class DistanceConfig {
     }
 
     public synchronized void save() {
-        Properties props = new Properties();
-        props.setProperty("config_version", String.valueOf(CONFIG_VERSION));
-        writeTo(props, "");
-        store(getPath(), props, "VoiceChat Audio Distance Addon\n"
-                + "distance_model: linear | realistic_inverse | exponential\n"
-                + "attenuation_factor: falloff strength (0.0 - 1.0)\n"
-                + "min_volume_fraction: volume floor at the edge of hearing range (0.0 - 0.5)\n"
-                + "openal_reference_ratio: share of the distance heard at full volume (0.05 - 1.0)\n"
-                + "whisper_multiplier: falloff multiplier while whispering (0.5 - 2.0)\n"
-                + "occlusion_enabled / occlusion_strength: wall muffling (0.0 - 1.0)\n"
-                + "material.*: acoustic thickness of one block, stone = 1.0 (0.0 - 3.0)");
+        ConfigWriter w = new ConfigWriter()
+                .title("VoiceChat Audio Distance - client settings",
+                        "Easier to change in game: voice chat settings (V) -> \"Voice distance & walls...\".",
+                        "The voice and whisper range itself is set by the server (Simple Voice Chat).",
+                        "",
+                        "VoiceChat Audio Distance - настройки клиента",
+                        "Удобнее менять в игре: настройки голосового чата (V) -> «Дальность голоса и стены…».",
+                        "Сама дальность голоса и шёпота задаётся на сервере (Simple Voice Chat).")
+                .comment("Format version, do not change. / Версия формата, не меняйте.")
+                .value("config_version", CONFIG_VERSION);
+        w.section("Distance curve", "Кривая громкости");
+        writeCurve(w, "");
+        w.section("Walls", "Стены");
+        writeWalls(w, "");
+        writeMaterials(w, "");
+        w.save(getPath());
     }
 
-    /** Writes every setting under {@code prefix} (e.g. {@code "profile."}). */
+    /** The distance curve keys, each with its explanation (shared by the client and server files). */
+    void writeCurve(ConfigWriter w, String prefix) {
+        w.comment("Shape of the curve: linear (as in Simple Voice Chat), realistic_inverse (natural, 1/r),",
+                        "exponential (fades fast).",
+                        "Форма кривой: linear (как в Simple Voice Chat), realistic_inverse (естественная, 1/r),",
+                        "exponential (быстро затихает).")
+                .value(prefix + "distance_model", model.getId())
+                .comment("How strongly voices fade with distance, 0 - 1. Lower: voices carry further. Default 1.0.",
+                        "Насколько сильно голос затихает с расстоянием, 0 - 1. Меньше - голос слышно дальше. По умолчанию 1.0.")
+                .value(prefix + "attenuation_factor", attenuationFactor)
+                .comment("Share of the range heard at full volume, 0.05 - 1. 0.5: the first half of the range. Default 0.5.",
+                        "Доля дальности, где слышно в полную громкость, 0.05 - 1. 0.5 - первая половина дальности. По умолчанию 0.5.")
+                .value(prefix + "openal_reference_ratio", openalReferenceRatio)
+                .comment("Volume at the edge of the range, 0 - 0.5. 0.1 = 10%, 0 = silence. Default 0.",
+                        "Громкость на краю слышимости, 0 - 0.5. 0.1 = 10%, 0 = тишина. По умолчанию 0.")
+                .value(prefix + "min_volume_fraction", minVolumeFraction)
+                .comment("How much faster whispers fade, 0.5 - 2. 1 = like normal speech. Default 1.0.",
+                        "Во сколько раз быстрее затихает шёпот, 0.5 - 2. 1 = как обычная речь. По умолчанию 1.0.")
+                .value(prefix + "whisper_multiplier", whisperMultiplier);
+    }
+
+    private void writeWalls(ConfigWriter w, String prefix) {
+        w.comment("Muffle voices behind walls: true / false. Default true.",
+                        "Глушить голоса за стенами: true / false. По умолчанию true.")
+                .value(prefix + "occlusion_enabled", occlusionEnabled)
+                .comment("How strongly walls muffle, 0 - 1. Default 0.6.",
+                        "Насколько сильно глушат стены, 0 - 1. По умолчанию 0.6.")
+                .value(prefix + "occlusion_strength", occlusionStrength);
+    }
+
+    /** Per-material weights with their explanations (shared by the client and server files). */
+    void writeMaterials(ConfigWriter w, String prefix) {
+        w.comment("How much one block of each material muffles, 0 - 3. Stone = 1.0; 2.0 = like two stone blocks.",
+                "Насколько глушит один блок каждого материала, 0 - 3. Камень = 1.0; 2.0 = как два блока камня.");
+        for (AcousticMaterial m : AcousticMaterial.values()) {
+            w.comment(m.getDescription())
+                    .value(prefix + "material." + m.getId(), getMaterialWeight(m));
+        }
+    }
+
+    /** Writes every setting under {@code prefix} (e.g. {@code "profile."}), for the client-server protocol. */
     public void writeTo(Properties props, String prefix) {
         props.setProperty(prefix + "distance_model", model.getId());
         props.setProperty(prefix + "attenuation_factor", format(attenuationFactor));
@@ -303,25 +345,6 @@ public final class DistanceConfig {
             }
         }
         changed();
-    }
-
-    /** Writes a properties file atomically (temp file + move). */
-    static void store(Path file, Properties props, String comment) {
-        try {
-            Path dir = file.toAbsolutePath().getParent();
-            Files.createDirectories(dir);
-            Path tmp = Files.createTempFile(dir, file.getFileName().toString(), ".tmp");
-            try (OutputStream out = Files.newOutputStream(tmp)) {
-                props.store(out, comment);
-            }
-            try {
-                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException e) {
-                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING);
-            }
-        } catch (IOException e) {
-            LOGGER.error("Failed to save {}: {}", file, e.getMessage());
-        }
     }
 
     // -------------------------------------------------------------------------

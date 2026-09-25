@@ -129,4 +129,76 @@ public class LinkProtocolTest {
         assertNull(LinkProtocol.decode(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, 1}));
         assertThrows(IllegalArgumentException.class, () -> LinkProtocol.encode("x".repeat(LinkProtocol.MAX_LENGTH + 1)));
     }
+
+    @Test
+    @DisplayName("Server file: sections, a preset by name, walls shared by everyone")
+    void serverSettingsPreset() throws IOException {
+        Path file = dir.resolve("preset.properties");
+        ServerSettings s = new ServerSettings(file);
+        s.load();
+        String text = Files.readString(file);
+        assertTrue(text.indexOf("walls_strength=") < text.indexOf("server_walls=")
+                && text.indexOf("server_walls=") < text.indexOf("profile_mode="), "sections in order");
+        assertTrue(text.contains("Игроки без аддона"));
+
+        text = text.replace("profile_preset=custom", "profile_preset=Stealth")
+                .replace("walls_strength=0.6", "walls_strength=0.9")
+                .replace("material.wool=1.4", "material.wool=2.5");
+        Files.writeString(file, text);
+        s.load();
+        assertEquals("stealth", s.getProfilePreset());
+        assertEquals(AttenuationModel.EXPONENTIAL, s.profile().getModel());
+        // Walls come from section 1, not from the preset
+        assertTrue(s.profile().isOcclusionEnabled());
+        assertEquals(0.9, s.profile().getOcclusionStrength(), 1e-9);
+        assertEquals(2.5, s.profile().getMaterialWeight(AcousticMaterial.WOOL), 1e-9);
+
+        // The protocol carries the result to the addon
+        LinkProtocol.ServerProfile p = LinkProtocol.parseProfile(LinkProtocol.profile(s, 48, 24));
+        assertEquals(AttenuationModel.EXPONENTIAL, p.config().getModel());
+        assertEquals(0.9, p.config().getOcclusionStrength(), 1e-4);
+
+        Files.writeString(file, Files.readString(file)
+                .replace("profile_preset=Stealth", "profile_preset=nonsense")
+                .replace("walls_strength=0.9", "walls_strength=0"));
+        s.load();
+        assertEquals(ServerSettings.CUSTOM_PRESET, s.getProfilePreset());
+        assertFalse(s.profile().isOcclusionEnabled());
+    }
+
+    @Test
+    @DisplayName("A 1.2.0 server file is rewritten in the new format with its values kept")
+    void serverSettingsMigration() throws IOException {
+        Path file = dir.resolve("old.properties");
+        Files.writeString(file, String.join("\n",
+                "#VoiceChat Audio Distance - server settings",
+                "profile_mode=suggest",
+                "server_walls=false",
+                "server_walls_max_streams=40",
+                "profile.distance_model=realistic_inverse",
+                "profile.occlusion_enabled=true",
+                "profile.occlusion_strength=0.8500",
+                "profile.material.glass=1.2000"));
+        ServerSettings s = new ServerSettings(file);
+        s.load();
+        assertEquals(ServerSettings.ProfileMode.SUGGEST, s.getProfileMode());
+        assertFalse(s.isServerWalls());
+        assertEquals(40, s.getMaxStreams());
+        assertEquals(AttenuationModel.REALISTIC_INVERSE, s.profile().getModel());
+        assertEquals(0.85, s.profile().getOcclusionStrength(), 1e-9);
+        assertEquals(1.2, s.profile().getMaterialWeight(AcousticMaterial.GLASS), 1e-9);
+
+        String text = Files.readString(file);
+        assertTrue(text.contains("settings_version=2"));
+        assertTrue(text.contains("walls_strength=0.85\n"));
+        assertTrue(text.contains("material.glass=1.2\n"));
+        assertTrue(text.contains("profile.distance_model=realistic_inverse\n"));
+        assertTrue(text.contains("server_walls_max_streams=40\n"));
+
+        // Reading the rewritten file gives the same settings
+        ServerSettings again = new ServerSettings(file);
+        again.load();
+        assertEquals(0.85, again.profile().getOcclusionStrength(), 1e-9);
+        assertEquals(ServerSettings.ProfileMode.SUGGEST, again.getProfileMode());
+    }
 }
