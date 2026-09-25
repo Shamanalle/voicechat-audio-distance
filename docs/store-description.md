@@ -8,7 +8,7 @@ Text for the Modrinth and CurseForge project pages. Copy the English part, then 
 
 ## English
 
-**Name:** VoiceChat Audio Distance
+**Name:** Voice Distance & Walls for Simple Voice Chat
 
 **Summary:** Simple Voice Chat addon: realistic voice distance curves and wall muffling. Client, server, or both.
 
@@ -42,7 +42,7 @@ Source code, full documentation and the changelog: https://github.com/Shamanalle
 
 ## Русский
 
-**Название:** VoiceChat Audio Distance
+**Название:** Voice Distance & Walls for Simple Voice Chat
 
 **Краткое описание:** Аддон Simple Voice Chat: реалистичное затухание голоса с расстоянием и приглушение стенами. Клиент, сервер или оба.
 
