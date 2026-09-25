@@ -14,6 +14,8 @@ Text for the Modrinth and CurseForge project pages. Copy the English part, then 
 
 **Categories:** Utility, Social, Game Mechanics
 
+**Icon:** `icon.png` in the repository root (512×512).
+
 **Description:**
 
 An addon for [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) that shapes how voices fade with distance and muffles them through walls.
@@ -47,6 +49,8 @@ Source code, full documentation and the changelog: https://github.com/Shamanalle
 **Краткое описание** (на площадках только на английском, как выше). Перевод: Голоса как в жизни: плавно затихают с расстоянием и звучат глухо за стенами, дверями и стеклом. Живой график дистанции, пресеты и серверная часть по желанию для Fabric, Paper и Purpur, которая приносит стены даже игрокам без аддона.
 
 **Категории:** Utility, Social, Game Mechanics
+
+**Иконка:** `icon.png` в корне репозитория (512×512).
 
 **Описание:**
 
