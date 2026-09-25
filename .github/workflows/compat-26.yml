@@ -96,8 +96,28 @@ jobs:
         run: |
           # Without Fabric API's injected interfaces, which the mod does not use and some older
           # builds declare with classes they do not ship
+          set -o pipefail
           ./gradlew :fabric-26:compileJava --no-daemon -PnoInterfaceInjection=true \
-            -Pmc26_minecraft=${{ matrix.mc }} -Pmc26_fabric_api=${{ matrix.api }}
+            -Pmc26_minecraft=${{ matrix.mc }} -Pmc26_fabric_api=${{ matrix.api }} 2>&1 | tee "${RUNNER_TEMP}/compile.log"
+
+      - name: Where a missing class comes from
+        if: steps.compile.outcome == 'failure'
+        run: |
+          missing=$(grep -ohP 'class file for \K[\w.$]+(?= not found)' "${RUNNER_TEMP}/compile.log" | sort -u || true)
+          for cls in ${missing}; do
+            path="${cls//.//}"
+            echo "== ${cls}"
+            while read -r entry; do
+              [ -f "${entry}" ] || continue
+              unzip -l "${entry}" 2>/dev/null | grep -q " ${path}.class$" && echo "  shipped in ${entry}"
+              unzip -p "${entry}" fabric.mod.json 2>/dev/null | grep -q "${path}" && echo "  injected by ${entry}"
+              for c in net/minecraft/server/level/ServerPlayer net/minecraft/world/entity/Entity; do
+                if unzip -l "${entry}" 2>/dev/null | grep -q " ${c}.class$"; then
+                  javap -cp "${entry}" "${c//\//.}" 2>/dev/null | head -1 | grep -F "${cls}" > /dev/null && echo "  ${c} implements it in ${entry}"
+                fi
+              done
+            done < "${RUNNER_TEMP}/target-classpath.txt"
+          done
 
       - name: Check the reference jar links against Minecraft ${{ matrix.mc }}
         id: link

@@ -40,6 +40,7 @@ if (project.findProperty('noInterfaceInjection') == 'true') {
             enableDependencyInterfaceInjection = false
         }
     }
+    logger.lifecycle("fabric-26: interface injection from dependencies is off")
 }
 
 dependencies {
