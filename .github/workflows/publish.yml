@@ -102,7 +102,8 @@ jobs:
             file: bukkit-{v}.jar
             target: bukkit
             loaders: paper purpur spigot bukkit
-            game-versions: 1.20.1 1.20.2 1.20.3 1.20.4 1.20.5 1.20.6 1.21 1.21.1 1.21.2 1.21.3 1.21.4 1.21.5 1.21.6 1.21.7 1.21.8 1.21.9 1.21.10 1.21.11
+            # The releases compat-bukkit.yml checks (1.20.5 cannot be checked; 1.21.2 and 26.1 have no Paper build)
+            game-versions: 1.20.1 1.20.2 1.20.3 1.20.4 1.20.6 1.21 1.21.1 1.21.3 1.21.4 1.21.5 1.21.6 1.21.7 1.21.8 1.21.9 1.21.10 1.21.11 26.1.1 26.1.2 26.2 26.3
             java: 17
             dependencies: simple-voice-chat(required)
             curseforge: false
@@ -143,6 +144,8 @@ jobs:
         with:
           modrinth-id: ${{ needs.config.outputs.modrinth }}
           modrinth-token: ${{ needs.config.outputs.modrinth != '' && secrets.MODRINTH_TOKEN || '' }}
+          # Older versions stay featured: unfeaturing them would need the token's "Write versions" scope
+          modrinth-unfeature-mode: none
           curseforge-id: ${{ matrix.curseforge && needs.config.outputs.curseforge || '' }}
           curseforge-token: ${{ matrix.curseforge && needs.config.outputs.curseforge != '' && secrets.CURSEFORGE_TOKEN || '' }}
           files: ${{ steps.files.outputs.file }}

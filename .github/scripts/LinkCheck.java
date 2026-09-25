@@ -43,8 +43,10 @@ import java.util.stream.Stream;
  * method. Comparing with the reference keeps the check honest: anything the tool cannot see
  * (reflection, optional mods) looks the same on both sides and is not reported.
  * <p>
- * Usage: java LinkCheck.java mod.jar reference-classpath.txt target-classpath.txt
- * (a classpath file lists one jar or class directory per line). Needs Java 24+ (ClassFile API).
+ * Usage: java LinkCheck.java mod.jar reference-classpath.txt target-classpath.txt [allowed.txt]
+ * (a classpath file lists one jar or class directory per line). The optional allowed file lists
+ * differences that were reviewed and are safe, one key per line as LinkCheck prints it after "DIFF";
+ * "#" starts a comment. Needs Java 24+ (ClassFile API).
  */
 public final class LinkCheck {
 
@@ -333,8 +335,8 @@ public final class LinkCheck {
     }
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 3) {
-            System.err.println("Usage: java LinkCheck.java mod.jar reference-classpath.txt target-classpath.txt");
+        if (args.length != 3 && args.length != 4) {
+            System.err.println("Usage: java LinkCheck.java mod.jar reference-classpath.txt target-classpath.txt [allowed.txt]");
             System.exit(2);
         }
         List<ClassModel> mod = new ArrayList<>();
@@ -362,12 +364,28 @@ public final class LinkCheck {
         Map<String, String> expected = resolve(mod, own, reference);
         Map<String, String> actual = resolve(mod, own, target);
 
+        Set<String> allowed = new HashSet<>();
+        if (args.length == 4) {
+            for (String line : Files.readAllLines(Path.of(args[3]))) {
+                String key = line.replaceFirst("#.*", "").strip();
+                if (!key.isEmpty()) {
+                    allowed.add(key);
+                }
+            }
+        }
+
         int problems = 0;
+        int accepted = 0;
         for (Map.Entry<String, String> e : expected.entrySet()) {
             String got = actual.get(e.getKey());
             if (!e.getValue().equals(got)) {
-                problems++;
-                System.out.println("DIFF " + e.getKey());
+                boolean ok = allowed.contains(e.getKey());
+                if (ok) {
+                    accepted++;
+                } else {
+                    problems++;
+                }
+                System.out.println((ok ? "ALLOWED " : "DIFF ") + e.getKey());
                 System.out.println("     reference: " + e.getValue());
                 System.out.println("     target:    " + got);
             }
@@ -376,7 +394,7 @@ public final class LinkCheck {
         System.out.println();
         System.out.println(mod.size() + " classes, " + expected.size() + " links checked, "
                 + unresolvedInReference + " unresolved in the reference too (reflection or optional mods), "
-                + problems + " differences.");
+                + problems + " differences" + (accepted > 0 ? ", " + accepted + " reviewed and allowed" : "") + ".");
         System.exit(problems == 0 ? 0 : 1);
     }
 }
