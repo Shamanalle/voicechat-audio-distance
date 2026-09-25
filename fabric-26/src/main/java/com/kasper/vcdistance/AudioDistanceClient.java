@@ -1,8 +1,10 @@
 package com.kasper.vcdistance;
 
 import com.kasper.vcdistance.client.ModernWorldAccess;
+import com.kasper.vcdistance.client.ScreenSwitch;
 import com.kasper.vcdistance.client.SpeakerTicker;
 import com.kasper.vcdistance.client.SvcSettingsButton;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -16,10 +18,11 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.sdl.SDLScancode;
 
 /**
- * Client entrypoint for Minecraft 26.x (SDL3 input, KeyMapping categories).
+ * Client entrypoint for Minecraft 26.x (KeyMapping categories). One jar serves every 26.x release:
+ * the unbound key comes from {@link InputConstants#UNKNOWN} at runtime (GLFW before 26.3, SDL3 after),
+ * and screens are opened through {@link ScreenSwitch}.
  */
 @Environment(EnvType.CLIENT)
 public class AudioDistanceClient implements ClientModInitializer {
@@ -39,7 +42,7 @@ public class AudioDistanceClient implements ClientModInitializer {
         CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("vc-audio-distance", "general"));
         OPEN_SETTINGS_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.vc-audio-distance.open_settings",
-                SDLScancode.SDL_SCANCODE_UNKNOWN,
+                InputConstants.UNKNOWN.getValue(),
                 CATEGORY
         ));
 
@@ -47,9 +50,7 @@ public class AudioDistanceClient implements ClientModInitializer {
             ticker.tick();
             tickServerLink(client);
             while (OPEN_SETTINGS_KEY.consumeClick()) {
-                if (client.gui != null) {
-                    client.gui.setScreen(new AudioDistanceScreen(client.gui.screen()));
-                }
+                ScreenSwitch.open(client, new AudioDistanceScreen(ScreenSwitch.current(client)));
             }
         });
         ScreenEvents.AFTER_INIT.register(AudioDistanceClient::onScreenInit);
@@ -83,7 +84,7 @@ public class AudioDistanceClient implements ClientModInitializer {
         }
         Screens.getWidgets(screen).add(Button.builder(
                 Component.translatable("message.vc-audio-distance.button"),
-                button -> client.gui.setScreen(new AudioDistanceScreen(screen))
+                button -> ScreenSwitch.open(client, new AudioDistanceScreen(screen))
         ).bounds(SvcSettingsButton.x(scaledWidth), SvcSettingsButton.y(scaledHeight),
                 SvcSettingsButton.WIDTH, SvcSettingsButton.HEIGHT).build());
     }

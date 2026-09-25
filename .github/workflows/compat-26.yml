@@ -101,8 +101,34 @@ jobs:
         id: link
         continue-on-error: true
         run: |
+          set -o pipefail
           java .github/scripts/LinkCheck.java "${RUNNER_TEMP}/mod.jar" \
             "${RUNNER_TEMP}/reference-classpath.txt" "${RUNNER_TEMP}/target-classpath.txt" | tee "${RUNNER_TEMP}/link.txt"
+
+      # ScreenSwitch finds these by name at runtime, which LinkCheck cannot see
+      - name: Screen methods used by reflection
+        id: reflection
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          jar=""
+          while read -r entry; do
+            if [ -f "${entry}" ] && unzip -l "${entry}" 2>/dev/null | grep -q ' net/minecraft/client/Minecraft.class$'; then
+              jar="${entry}"
+              break
+            fi
+          done < "${RUNNER_TEMP}/target-classpath.txt"
+          [ -n "${jar}" ] || { echo "Minecraft client jar not found on the classpath"; exit 1; }
+          javap -cp "${jar}" -public net.minecraft.client.Minecraft net.minecraft.client.gui.Gui \
+            | grep -E 'class |setScreen|[ .]screen[;(]' | tee "${RUNNER_TEMP}/reflection.txt"
+          if grep -q 'Gui' "${RUNNER_TEMP}/reflection.txt" && awk '/class net.minecraft.client.gui.Gui/{g=1} g && /setScreen\(net.minecraft.client.gui.screens.Screen\)/{f=1} END{exit !f}' "${RUNNER_TEMP}/reflection.txt"; then
+            echo "Screens open through Gui.setScreen"
+          elif awk '/class net.minecraft.client.Minecraft/{m=1} /class net.minecraft.client.gui.Gui/{m=0} m && /setScreen\(net.minecraft.client.gui.screens.Screen\)/{f=1} END{exit !f}' "${RUNNER_TEMP}/reflection.txt"; then
+            echo "Screens open through Minecraft.setScreen"
+          else
+            echo "Neither Gui.setScreen(Screen) nor Minecraft.setScreen(Screen) is public here"
+            exit 1
+          fi
 
       - name: Result
         env:
@@ -110,14 +136,16 @@ jobs:
           API: ${{ matrix.api }}
           COMPILE: ${{ steps.compile.outcome }}
           LINK: ${{ steps.link.outcome }}
+          REFLECTION: ${{ steps.reflection.outcome }}
         run: |
           {
             echo "### Minecraft ${MC} (Fabric API ${API})"
             echo "- Sources compile: **${COMPILE}**"
             echo "- Reference jar links: **${LINK}**"
+            echo "- Screen methods found by name: **${REFLECTION}**"
             echo
             echo '```'
             tail -200 "${RUNNER_TEMP}/link.txt" 2>/dev/null || true
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
-          [ "${COMPILE}" = "success" ] && [ "${LINK}" = "success" ]
+          [ "${COMPILE}" = "success" ] && [ "${LINK}" = "success" ] && [ "${REFLECTION}" = "success" ]
