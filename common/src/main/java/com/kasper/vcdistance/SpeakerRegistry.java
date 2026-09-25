@@ -45,6 +45,7 @@ public final class SpeakerRegistry {
         private volatile double thickness;
         private volatile boolean occlusionKnown;
         private volatile double distance = -1.0;
+        private volatile double bearing = Double.NaN;
         private volatile String displayName;
         private volatile long lastTraceNanos;
         private volatile int cachedEntityNetworkId = Integer.MIN_VALUE;
@@ -130,6 +131,15 @@ public final class SpeakerRegistry {
 
         public void setDistance(double distance) {
             this.distance = distance;
+        }
+
+        /** Degrees from where the listener looks, positive to the right; NaN when unknown ({@link Bearing}). */
+        public double getBearing() {
+            return bearing;
+        }
+
+        public void setBearing(double bearing) {
+            this.bearing = bearing;
         }
 
         public String getDisplayName() {

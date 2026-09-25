@@ -105,6 +105,21 @@ public class LangConsistencyTest {
             used.add(PREFIX + "monitor.state." + v.getTranslationKey());
         }
         used.add(PREFIX + "monitor.state.silent");
+        for (HudMode m : HudMode.values()) {
+            used.add(m.getTranslationKey());
+        }
+        for (HudCorner c : HudCorner.values()) {
+            used.add(c.getTranslationKey());
+        }
+        // The voice HUD builds its keys from a base and a "_whisper" variant
+        Matcher hud = Pattern.compile("\\bhud\\(\"([\\w.]+)\"").matcher(sources);
+        while (hud.find()) {
+            used.add(PREFIX + "hud." + hud.group(1));
+        }
+        for (String k : new String[]{"nobody", "in_range", "hears"}) {
+            used.add(PREFIX + "hud." + k + "_whisper");
+        }
+        used.add("key.vc-audio-distance.toggle_hud");
         used.add("message.vc-audio-distance.server_profile.suggest");
         used.add("message.vc-audio-distance.server_profile.enforce");
         for (String s : new String[]{"status.sound_physics", "status.unavailable"}) {

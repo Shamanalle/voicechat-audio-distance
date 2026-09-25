@@ -19,8 +19,8 @@ public final class DistanceConfig {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("VC-AudioDistance");
 
-    /** 3: the file is written with a comment for every key. */
-    private static final int CONFIG_VERSION = 3;
+    /** 3: the file is written with a comment for every key; 4: interface section. */
+    private static final int CONFIG_VERSION = 4;
     private static final String FILE_NAME = "vc-audio-distance.properties";
 
     // -------------------------------------------------------------------------
@@ -57,6 +57,13 @@ public final class DistanceConfig {
     private volatile boolean occlusionEnabled = DEFAULT_OCCLUSION_ENABLED;
     private volatile double occlusionStrength = DEFAULT_OCCLUSION_STRENGTH;
     private final double[] materialWeights = new double[AcousticMaterial.values().length];
+
+    // Interface: only ever read from the player's own file, never part of a server profile
+    public static final HudMode DEFAULT_HUD_MODE = HudMode.TALKING;
+    public static final HudCorner DEFAULT_HUD_CORNER = HudCorner.TOP_LEFT;
+    private volatile HudMode hudMode = DEFAULT_HUD_MODE;
+    private volatile HudCorner hudCorner = DEFAULT_HUD_CORNER;
+    private volatile boolean welcomeShown;
 
     private volatile int revision;
     private final Path path;
@@ -167,6 +174,44 @@ public final class DistanceConfig {
         changed();
     }
 
+    // ---- Interface (not part of a server profile, not touched by copyFrom) ----
+
+    public HudMode getHudMode() {
+        return hudMode;
+    }
+
+    public void setHudMode(HudMode mode) {
+        hudMode = mode == null ? DEFAULT_HUD_MODE : mode;
+        changed();
+    }
+
+    public HudCorner getHudCorner() {
+        return hudCorner;
+    }
+
+    public void setHudCorner(HudCorner corner) {
+        hudCorner = corner == null ? DEFAULT_HUD_CORNER : corner;
+        changed();
+    }
+
+    /** {@code true} once the first-join hint was shown. */
+    public boolean isWelcomeShown() {
+        return welcomeShown;
+    }
+
+    public void setWelcomeShown(boolean shown) {
+        welcomeShown = shown;
+        changed();
+    }
+
+    /** Copies the interface settings (HUD); {@link #copyFrom} leaves them alone. */
+    public void copyInterfaceFrom(DistanceConfig other) {
+        hudMode = other.hudMode;
+        hudCorner = other.hudCorner;
+        welcomeShown = other.welcomeShown;
+        changed();
+    }
+
     /** Incremented on every change; lets caches and UI detect edits cheaply. */
     public int getRevision() {
         return revision;
@@ -191,9 +236,11 @@ public final class DistanceConfig {
     public DistanceConfig copy() {
         DistanceConfig c = new DistanceConfig(path);
         c.copyFrom(this);
+        c.copyInterfaceFrom(this);
         return c;
     }
 
+    /** Copies the sound settings (everything a server profile holds), not the interface. */
     public void copyFrom(DistanceConfig other) {
         model = other.model;
         attenuationFactor = other.attenuationFactor;
@@ -246,6 +293,9 @@ public final class DistanceConfig {
             return;
         }
         readFrom(props, "");
+        hudMode = HudMode.fromId(props.getProperty("hud_mode"), DEFAULT_HUD_MODE);
+        hudCorner = HudCorner.fromId(props.getProperty("hud_corner"), DEFAULT_HUD_CORNER);
+        welcomeShown = parseBoolean(props, "welcome_shown", false);
 
         LOGGER.info("Configuration loaded: model={}, rolloff={}, floor={}, reference={}, whisper={}, walls={} ({})",
                 model.getId(), attenuationFactor, minVolumeFraction, openalReferenceRatio, whisperMultiplier,
@@ -273,6 +323,15 @@ public final class DistanceConfig {
         w.section("Walls", "Стены");
         writeWalls(w, "");
         writeMaterials(w, "");
+        w.section("Interface", "Интерфейс");
+        w.comment("Voice HUD on screen: off, talking (while someone nearby or you talk), always. Default talking.",
+                        "HUD голоса на экране: off (выкл.), talking (пока кто-то рядом или вы говорите), always (всегда). По умолчанию talking.")
+                .value("hud_mode", hudMode.getId())
+                .comment("Corner of the voice HUD: top_left, top_right, bottom_left, bottom_right. Default top_left.",
+                        "Угол экрана для HUD: top_left, top_right, bottom_left, bottom_right. По умолчанию top_left.")
+                .value("hud_corner", hudCorner.getId())
+                .comment("The first-join hint was shown. / Подсказка при первом входе уже показана.")
+                .value("welcome_shown", welcomeShown);
         w.save(getPath());
     }
 

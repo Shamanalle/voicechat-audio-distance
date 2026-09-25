@@ -1,6 +1,7 @@
 package com.kasper.vcdistance.client;
 
 import com.kasper.vcdistance.AudioDistancePlugin;
+import com.kasper.vcdistance.Bearing;
 import com.kasper.vcdistance.DistanceConfig;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.world.phys.Vec3;
@@ -73,6 +74,7 @@ public final class SpeakerTicker {
 
         boolean tracing = AudioDistancePlugin.occlusionStatus() == AudioDistancePlugin.OcclusionStatus.ACTIVE;
         Vec3 listener = access.listenerPosition();
+        double yaw = access.listenerYaw();
         updateNearby(listener);
         int budget = MAX_TRACES_PER_TICK;
 
@@ -87,6 +89,7 @@ public final class SpeakerTicker {
                     continue;
                 }
                 s.setDistance(listener.distanceTo(source));
+                s.setBearing(Bearing.relative(source.x - listener.x, source.z - listener.z, yaw));
 
                 if (!tracing) {
                     s.clearOcclusion();
