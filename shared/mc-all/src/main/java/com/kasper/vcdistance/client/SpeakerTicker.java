@@ -55,7 +55,8 @@ public final class SpeakerTicker {
         SpeakerRegistry registry = AudioDistancePlugin.SPEAKERS;
         registry.prune(now);
 
-        int revision = AudioDistancePlugin.CONFIG.getRevision();
+        DistanceConfig config = AudioDistancePlugin.config();
+        int revision = System.identityHashCode(config) * 31 + config.getRevision();
         boolean configChanged = revision != lastMaterialRevision;
         lastMaterialRevision = revision;
 
@@ -88,7 +89,7 @@ public final class SpeakerTicker {
                     s.clearOcclusion();
                 } else if (budget > 0 && (configChanged || !s.isOcclusionKnown()
                         || now - s.getLastTraceNanos() >= TRACE_INTERVAL_NANOS)) {
-                    s.setOcclusion(OcclusionTracer.trace(access, listener, source), now);
+                    s.setOcclusion(OcclusionTracer.trace(access::traceRay, listener, source), now);
                     budget--;
                 }
             } catch (Throwable t) {

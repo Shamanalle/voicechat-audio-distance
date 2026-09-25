@@ -27,11 +27,14 @@ public class AudioDistanceClient implements ClientModInitializer {
     public static KeyMapping.Category CATEGORY;
     public static KeyMapping OPEN_SETTINGS_KEY;
     private static SpeakerTicker ticker;
+    private static Object lastConnection;
+    private static boolean helloSent;
 
     @Override
     public void onInitializeClient() {
         AudioDistancePlugin.CONFIG.ensureLoaded();
         ticker = new SpeakerTicker(new ModernWorldAccess());
+        ModClientNetworking.register();
 
         CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("vc-audio-distance", "general"));
         OPEN_SETTINGS_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
@@ -42,6 +45,7 @@ public class AudioDistanceClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ticker.tick();
+            tickServerLink(client);
             while (OPEN_SETTINGS_KEY.consumeClick()) {
                 if (client.gui != null) {
                     client.gui.setScreen(new AudioDistanceScreen(client.gui.screen()));
@@ -49,6 +53,27 @@ public class AudioDistanceClient implements ClientModInitializer {
             }
         });
         ScreenEvents.AFTER_INIT.register(AudioDistanceClient::onScreenInit);
+    }
+
+    /** Says hello to servers that have the addon and announces their profile once. */
+    private static void tickServerLink(Minecraft client) {
+        try {
+            Object connection = client.getConnection();
+            if (connection != lastConnection) {
+                lastConnection = connection;
+                helloSent = false;
+                AudioDistancePlugin.LINK.reset();
+            }
+            if (connection != null && !helloSent) {
+                helloSent = ModClientNetworking.trySendHello(BuildInfo.version());
+            }
+            if (client.player != null && AudioDistancePlugin.LINK.consumeNotice()) {
+                String mode = AudioDistancePlugin.LINK.isEnforced() ? "enforce" : "suggest";
+                client.player.displayClientMessage(Component.translatable("message.vc-audio-distance.server_profile." + mode), false);
+            }
+        } catch (Throwable t) {
+            DistanceConfig.LOGGER.debug("Server link tick failed: {}", t.toString());
+        }
     }
 
     /** Adds a button to Simple Voice Chat's own settings screen. */

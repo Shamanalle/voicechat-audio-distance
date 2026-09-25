@@ -38,6 +38,13 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+processResources {
+    inputs.property "version", project.mod_version
+    filesMatching("vc-audio-distance-build.properties") {
+        expand "version": project.mod_version
+    }
+}
+
 test {
     useJUnitPlatform()
 }

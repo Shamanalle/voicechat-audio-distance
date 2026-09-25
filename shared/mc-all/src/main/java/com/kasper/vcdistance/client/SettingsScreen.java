@@ -5,6 +5,7 @@ import com.kasper.vcdistance.AttenuationModel;
 import com.kasper.vcdistance.AudioDistancePlugin;
 import com.kasper.vcdistance.AudioPhysics;
 import com.kasper.vcdistance.DistanceConfig;
+import com.kasper.vcdistance.LinkProtocol;
 import com.kasper.vcdistance.OcclusionModel;
 import com.kasper.vcdistance.Preset;
 import com.kasper.vcdistance.SpeakerRegistry;
@@ -33,8 +34,6 @@ public abstract class SettingsScreen extends Screen {
     private static final int MAX_WIDTH = 420;
     private static final int ROW = 24;
     private static final int GAP = 4;
-    /** Simple Voice Chat's default whisper range is half of the voice range. */
-    private static final double WHISPER_SHARE = 0.5;
 
     private static Tab lastTab = Tab.DISTANCE;
 
@@ -85,6 +84,9 @@ public abstract class SettingsScreen extends Screen {
     private int activeTabX2;
     private int tabsBottom;
     private RangeSlider strengthSlider;
+    /** Widgets that change settings; disabled while the server enforces its profile. */
+    private final List<AbstractWidget> editWidgets = new ArrayList<>();
+    private boolean serverChip;
 
     protected SettingsScreen(Screen parent) {
         super(Component.translatable(K + "title"));
@@ -108,7 +110,9 @@ public abstract class SettingsScreen extends Screen {
         presetButtons.clear();
         presetOrder.clear();
         presetBounds.clear();
+        editWidgets.clear();
         strengthSlider = null;
+        serverChip = false;
 
         int w = Math.min(this.width - 16, MAX_WIDTH);
         left = (this.width - w) / 2;
@@ -133,7 +137,7 @@ public abstract class SettingsScreen extends Screen {
         int footerY = this.height - 26;
         contentBottom = footerY - 6;
         int fw = (w - GAP * 2) / 3;
-        addRenderableWidget(Button.builder(tr("reset"), b -> {
+        edit(Button.builder(tr("reset"), b -> {
             config.applyDefaults();
             rebuild();
         }).bounds(left, footerY, fw, 20).tooltip(tip("reset.tooltip")).build());
@@ -149,6 +153,41 @@ public abstract class SettingsScreen extends Screen {
             case MONITOR -> {
             }
         }
+
+        initServerChip(w);
+        if (AudioDistancePlugin.LINK.isEnforced()) {
+            for (AbstractWidget widget : editWidgets) {
+                widget.active = false;
+            }
+        }
+    }
+
+    /** Top-right corner: what the server offers, when it has the addon. */
+    private void initServerChip(int w) {
+        LinkProtocol.ServerProfile profile = AudioDistancePlugin.LINK.profile();
+        if (profile == null || profile.mode() == com.kasper.vcdistance.ServerSettings.ProfileMode.OFF) {
+            return;
+        }
+        serverChip = true;
+        if (AudioDistancePlugin.LINK.isSuggested()) {
+            Component label = tr("server.apply");
+            int bw = Math.min(this.font.width(label) + 16, w / 2);
+            addRenderableWidget(Button.builder(label, b -> {
+                config.copyFrom(profile.config());
+                rebuild();
+            }).bounds(right - bw, 2, bw, 16).tooltip(tip("server.apply.tooltip")).build());
+        }
+    }
+
+    private <T extends AbstractWidget> T edit(T widget) {
+        editWidgets.add(widget);
+        addRenderableWidget(widget);
+        return widget;
+    }
+
+    /** What is heard right now: the server's profile while it is enforced, otherwise the player's settings. */
+    private static DistanceConfig shown() {
+        return AudioDistancePlugin.config();
     }
 
     private void initDistance() {
@@ -168,7 +207,7 @@ public abstract class SettingsScreen extends Screen {
             presetButtons.add(b);
             presetOrder.add(p);
             presetBounds.add(new int[]{x, x + pw, contentTop + 20});
-            addRenderableWidget(b);
+            edit(b);
         }
         refreshPresetButtons();
 
@@ -176,30 +215,30 @@ public abstract class SettingsScreen extends Screen {
         graphTop = contentTop + ROW + 2;
         graphBottom = rows - 6;
 
-        addRenderableWidget(Button.builder(modelLabel(), b -> {
+        edit(Button.builder(modelLabel(), b -> {
             config.setModel(config.getModel().next());
             b.setMessage(modelLabel());
             b.setTooltip(Tooltip.create(Component.translatable(config.getModel().getTooltipKey())));
-        }).bounds(left, rows, colW, 20).tooltip(Tooltip.create(Component.translatable(config.getModel().getTooltipKey()))).build());
+        }).bounds(left, rows, colW, 20).tooltip(Tooltip.create(Component.translatable(shown().getModel().getTooltipKey()))).build());
 
-        addRenderableWidget(withTip(new RangeSlider(col2, rows, colW, 20,
+        edit(withTip(new RangeSlider(col2, rows, colW, 20,
                 DistanceConfig.ROLLOFF_MIN, DistanceConfig.ROLLOFF_MAX, 0.01,
-                config::getAttenuationFactor, config::setAttenuationFactor,
+                () -> shown().getAttenuationFactor(), config::setAttenuationFactor,
                 v -> tr("falloff", pct(v))), "falloff.tooltip"));
 
-        addRenderableWidget(withTip(new RangeSlider(left, rows + ROW, colW, 20,
+        edit(withTip(new RangeSlider(left, rows + ROW, colW, 20,
                 DistanceConfig.REFERENCE_MIN, DistanceConfig.REFERENCE_MAX, 0.01,
-                config::getOpenalReferenceRatio, config::setOpenalReferenceRatio,
+                () -> shown().getOpenalReferenceRatio(), config::setOpenalReferenceRatio,
                 v -> tr("reference", blocks(v * AudioDistancePlugin.getServerMaxDistance()))), "reference.tooltip"));
 
-        addRenderableWidget(withTip(new RangeSlider(col2, rows + ROW, colW, 20,
+        edit(withTip(new RangeSlider(col2, rows + ROW, colW, 20,
                 DistanceConfig.MIN_VOLUME_MIN, DistanceConfig.MIN_VOLUME_MAX, 0.01,
-                config::getMinVolumeFraction, config::setMinVolumeFraction,
+                () -> shown().getMinVolumeFraction(), config::setMinVolumeFraction,
                 v -> tr("floor", pct(v))), "floor.tooltip"));
 
-        addRenderableWidget(withTip(new RangeSlider(left, rows + ROW * 2, w, 20,
+        edit(withTip(new RangeSlider(left, rows + ROW * 2, w, 20,
                 DistanceConfig.WHISPER_MIN, DistanceConfig.WHISPER_MAX, 0.05,
-                config::getWhisperMultiplier, config::setWhisperMultiplier,
+                () -> shown().getWhisperMultiplier(), config::setWhisperMultiplier,
                 v -> tr("whisper", String.format(Locale.ROOT, "×%.2f", v))), "whisper.tooltip"));
     }
 
@@ -207,7 +246,7 @@ public abstract class SettingsScreen extends Screen {
         int w = right - left;
         int colW = (w - GAP) / 2;
 
-        addRenderableWidget(Button.builder(wallsLabel(), b -> {
+        edit(Button.builder(wallsLabel(), b -> {
             config.setOcclusionEnabled(!config.isOcclusionEnabled());
             b.setMessage(wallsLabel());
             if (strengthSlider != null) {
@@ -217,10 +256,10 @@ public abstract class SettingsScreen extends Screen {
 
         strengthSlider = new RangeSlider(right - colW, contentTop, colW, 20,
                 DistanceConfig.STRENGTH_MIN, DistanceConfig.STRENGTH_MAX, 0.01,
-                config::getOcclusionStrength, config::setOcclusionStrength,
+                () -> shown().getOcclusionStrength(), config::setOcclusionStrength,
                 v -> tr("strength", pct(v)));
-        strengthSlider.active = config.isOcclusionEnabled();
-        addRenderableWidget(withTip(strengthSlider, "strength.tooltip"));
+        strengthSlider.active = shown().isOcclusionEnabled();
+        edit(withTip(strengthSlider, "strength.tooltip"));
 
         panelTop = contentTop + ROW + 2;
     }
@@ -235,14 +274,14 @@ public abstract class SettingsScreen extends Screen {
             int x = i % 2 == 0 ? left : right - colW;
             int y = top + (i / 2) * ROW;
             RangeSlider slider = new RangeSlider(x, y, colW, 20, 0.0, AcousticMaterial.MAX_WEIGHT, 0.05,
-                    () -> config.getMaterialWeight(m), v -> config.setMaterialWeight(m, v),
+                    () -> shown().getMaterialWeight(m), v -> config.setMaterialWeight(m, v),
                     v -> tr("material.value", Component.translatable(m.getTranslationKey()), pct(v)));
             slider.setTooltip(Tooltip.create(Component.translatable(m.getTooltipKey())));
-            addRenderableWidget(slider);
+            edit(slider);
         }
         int resetY = top + ((materials.length + 1) / 2) * ROW;
         if (resetY + 20 <= contentBottom) {
-            addRenderableWidget(Button.builder(tr("materials.reset"), b -> {
+            edit(Button.builder(tr("materials.reset"), b -> {
                 config.resetMaterials();
                 rebuild();
             }).bounds(left, resetY, colW, 20).build());
@@ -261,8 +300,9 @@ public abstract class SettingsScreen extends Screen {
     }
 
     private void refreshPresetButtons() {
+        boolean enforced = AudioDistancePlugin.LINK.isEnforced();
         for (int i = 0; i < presetButtons.size(); i++) {
-            presetButtons.get(i).active = !presetOrder.get(i).matches(config);
+            presetButtons.get(i).active = !enforced && !presetOrder.get(i).matches(config);
         }
     }
 
@@ -293,10 +333,17 @@ public abstract class SettingsScreen extends Screen {
     /** Draws everything that is not a widget. Called by the version subclass after the widgets. */
     protected void paint(Canvas c, int mouseX, int mouseY) {
         refreshPresetButtons();
-        c.centered(this.title, this.width / 2, 8, Palette.TEXT);
+        if (serverChip) {
+            c.text(this.title, left, 8, Palette.TEXT);
+            if (AudioDistancePlugin.LINK.isEnforced()) {
+                c.right(tr("server.enforced"), right, 8, Palette.WARN);
+            }
+        } else {
+            c.centered(this.title, this.width / 2, 8, Palette.TEXT);
+        }
         c.fill(activeTabX1 + 2, tabsBottom + 1, activeTabX2 - 2, tabsBottom + 3, Palette.ACCENT);
         for (int i = 0; i < presetBounds.size(); i++) {
-            if (!presetButtons.get(i).active) {
+            if (presetOrder.get(i).matches(shown())) {
                 int[] b = presetBounds.get(i);
                 c.fill(b[0] + 2, b[2] + 1, b[1] - 2, b[2] + 3, Palette.ACCENT);
             }
@@ -322,10 +369,11 @@ public abstract class SettingsScreen extends Screen {
         c.frame(x1, y1, x2, y2, Palette.PANEL, Palette.PANEL_BORDER);
 
         double maxDist = AudioDistancePlugin.getServerMaxDistance();
-        AttenuationModel model = config.getModel();
-        double rolloff = config.getAttenuationFactor();
-        double floor = config.getMinVolumeFraction();
-        double ref = config.getOpenalReferenceRatio();
+        DistanceConfig shown = shown();
+        AttenuationModel model = shown.getModel();
+        double rolloff = shown.getAttenuationFactor();
+        double floor = shown.getMinVolumeFraction();
+        double ref = shown.getOpenalReferenceRatio();
 
         // Header: plain-language summary + legend
         Component summary = rolloff <= 0.001
@@ -381,7 +429,7 @@ public abstract class SettingsScreen extends Screen {
 
         // Whisper curve (dashed) over the whisper range
         double whisperRolloff = AudioDistancePlugin.effectiveRolloff(true);
-        int whisperEnd = (int) Math.round(WHISPER_SHARE * pw);
+        int whisperEnd = Math.max(1, (int) Math.round(AudioDistancePlugin.LINK.whisperShare() * pw));
         prevY = -1;
         for (int i = 0; i <= whisperEnd; i++) {
             double g = AudioPhysics.calculateGain((double) i / whisperEnd, model, whisperRolloff, floor, ref);
@@ -468,7 +516,8 @@ public abstract class SettingsScreen extends Screen {
             return;
         }
 
-        boolean on = config.isOcclusionEnabled();
+        DistanceConfig shown = shown();
+        boolean on = shown.isOcclusionEnabled();
         c.frame(left, y, right, contentBottom, Palette.PANEL, Palette.PANEL_BORDER);
         Component header = on ? tr("walls.preview") : tr("walls.preview_off");
         c.text(fit(c, header, right - left - 12), left + 6, y + 5, on ? Palette.TEXT_DIM : Palette.TEXT_MUTED);
@@ -486,13 +535,13 @@ public abstract class SettingsScreen extends Screen {
             valueW = 0;
         }
 
-        double strength = config.getOcclusionStrength();
+        double strength = shown.getOcclusionStrength();
         int rowY = y + 20;
         for (Example e : EXAMPLES) {
             if (rowY + 10 > contentBottom - 4) {
                 break;
             }
-            double thickness = e.blocks * config.getMaterialWeight(e.material);
+            double thickness = e.blocks * shown.getMaterialWeight(e.material);
             double muffle = OcclusionModel.muffle(thickness, strength);
             double loss = OcclusionModel.lossDb(thickness, strength);
             double gain = OcclusionModel.dbToGain(-loss);
@@ -530,6 +579,12 @@ public abstract class SettingsScreen extends Screen {
         c.text(tr("monitor.walls", tr("monitor.status." + status.name().toLowerCase(Locale.ROOT))), left + 6, y,
                 wallsActive ? Palette.GOOD : Palette.TEXT_MUTED);
         c.right(tr("monitor.range", blocks(maxDist)), right - 6, y, Palette.TEXT_MUTED);
+        LinkProtocol.ServerProfile serverProfile = AudioDistancePlugin.LINK.profile();
+        Component serverLine = serverProfile == null
+                ? tr("monitor.server.none")
+                : tr("monitor.server.addon", tr("monitor.server.mode." + serverProfile.mode().getId()));
+        y += 11;
+        c.text(fit(c, serverLine, right - left - 12), left + 6, y, Palette.TEXT_MUTED);
 
         long now = System.nanoTime();
         List<SpeakerRegistry.Speaker> speakers = AudioDistancePlugin.SPEAKERS.active(now);
@@ -615,11 +670,11 @@ public abstract class SettingsScreen extends Screen {
     }
 
     private Component modelLabel() {
-        return tr("model.label", Component.translatable(config.getModel().getTranslationKey()));
+        return tr("model.label", Component.translatable(shown().getModel().getTranslationKey()));
     }
 
     private Component wallsLabel() {
-        return tr("walls.toggle", tr(config.isOcclusionEnabled() ? "on" : "off"));
+        return tr("walls.toggle", tr(shown().isOcclusionEnabled() ? "on" : "off"));
     }
 
     private static Component speakerName(SpeakerRegistry.Speaker s) {

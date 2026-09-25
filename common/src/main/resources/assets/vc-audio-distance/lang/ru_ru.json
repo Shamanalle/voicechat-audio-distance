@@ -102,5 +102,15 @@
   "key.categories.vc-audio-distance": "Дальность голоса",
   "key.category.vc-audio-distance.general": "Дальность голоса",
   "key.vc-audio-distance.open_settings": "Открыть настройки дальности голоса",
-  "message.vc-audio-distance.button": "Дальность голоса и стены…"
+  "message.vc-audio-distance.button": "Дальность голоса и стены…",
+  "gui.vc-audio-distance.server.apply": "Применить профиль сервера",
+  "gui.vc-audio-distance.server.apply.tooltip": "Этот сервер рекомендует свой профиль звука.\n«Применить» скопирует его в ваши настройки; их можно изменить или отменить.",
+  "gui.vc-audio-distance.server.enforced": "Действует профиль сервера",
+  "gui.vc-audio-distance.monitor.server.none": "Сервер: без аддона (стены глушатся только у вас)",
+  "gui.vc-audio-distance.monitor.server.addon": "Сервер: аддон есть, %s",
+  "gui.vc-audio-distance.monitor.server.mode.off": "ваши настройки",
+  "gui.vc-audio-distance.monitor.server.mode.suggest": "профиль рекомендован",
+  "gui.vc-audio-distance.monitor.server.mode.enforce": "профиль закреплён",
+  "message.vc-audio-distance.server_profile.suggest": "[Дальность голоса] Сервер рекомендует профиль звука. Откройте настройки голосового чата (V) → «Дальность голоса и стены…», чтобы применить его.",
+  "message.vc-audio-distance.server_profile.enforce": "[Дальность голоса] На этом сервере действует его профиль звука. Ваши настройки вернутся, когда вы выйдете."
 }

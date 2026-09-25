@@ -98,6 +98,11 @@ public class LangConsistencyTest {
         for (AudioDistancePlugin.OcclusionStatus s : AudioDistancePlugin.OcclusionStatus.values()) {
             used.add(PREFIX + "monitor.status." + s.name().toLowerCase(Locale.ROOT));
         }
+        for (ServerSettings.ProfileMode m : ServerSettings.ProfileMode.values()) {
+            used.add(PREFIX + "monitor.server.mode." + m.getId());
+        }
+        used.add("message.vc-audio-distance.server_profile.suggest");
+        used.add("message.vc-audio-distance.server_profile.enforce");
         for (String s : new String[]{"status.sound_physics", "status.unavailable"}) {
             used.add(PREFIX + s);
             used.add(PREFIX + s + ".detail");

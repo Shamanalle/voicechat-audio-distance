@@ -1,37 +1,22 @@
 package com.kasper.vcdistance.client;
 
-import com.kasper.vcdistance.AcousticMaterial;
 import com.kasper.vcdistance.AudioDistancePlugin;
-import com.kasper.vcdistance.DistanceConfig;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.block.IronBarsBlock;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- * World access for Minecraft 1.20 - 1.21.x.
- * <p>
- * A block only counts when the ray actually crosses its collision shape, so slabs, open doors,
- * fences and carpets are treated by their real geometry rather than as full cubes.
+ * Client world access for Minecraft 1.20 - 1.21.x.
  */
 public final class MinecraftWorldAccess implements WorldAccess {
 
     private static final long ENTITY_SEARCH_INTERVAL = TimeUnit.SECONDS.toNanos(1);
-
-    private final Map<BlockState, AcousticMaterial> materials = new ConcurrentHashMap<>();
 
     @Override
     public boolean inWorld() {
@@ -92,58 +77,11 @@ public final class MinecraftWorldAccess implements WorldAccess {
 
     @Override
     public double traceRay(Vec3 from, Vec3 to) {
-        ClientLevel level = Minecraft.getInstance().level;
-        if (level == null) {
-            return 0.0;
-        }
-        DistanceConfig config = AudioDistancePlugin.CONFIG;
-        double[] thickness = {0.0};
-        BlockGetter.traverseBlocks(from, to, thickness, (acc, pos) -> {
-            BlockState state = level.getBlockState(pos);
-            if (!state.getFluidState().isEmpty()) {
-                acc[0] += config.getMaterialWeight(AcousticMaterial.LIQUID);
-            }
-            if (!state.isAir()) {
-                VoxelShape shape = state.getCollisionShape(level, pos);
-                if (!shape.isEmpty() && shape.clip(from, to, pos) != null) {
-                    acc[0] += config.getMaterialWeight(materials.computeIfAbsent(state, MinecraftWorldAccess::classify));
-                }
-            }
-            return acc[0] >= MAX_RAY_THICKNESS ? Boolean.TRUE : null;
-        }, acc -> null);
-        return thickness[0];
+        return BlockAcoustics.traceRay(Minecraft.getInstance().level, from, to, AudioDistancePlugin.config());
     }
 
     @Override
     public void reset() {
-        materials.clear();
-    }
-
-    static AcousticMaterial classify(BlockState state) {
-        if (state.is(BlockTags.WOOL) || state.is(BlockTags.WOOL_CARPETS)) {
-            return AcousticMaterial.WOOL;
-        }
-        if (state.is(BlockTags.LEAVES)) {
-            return AcousticMaterial.LEAVES;
-        }
-        if (state.is(BlockTags.DOORS) || state.is(BlockTags.TRAPDOORS)) {
-            return AcousticMaterial.DOOR;
-        }
-        if (state.is(BlockTags.FENCES) || state.is(BlockTags.FENCE_GATES)) {
-            return AcousticMaterial.THIN;
-        }
-        SoundType sound = state.getSoundType();
-        if (sound == SoundType.GLASS) {
-            return AcousticMaterial.GLASS;
-        }
-        if (state.getBlock() instanceof IronBarsBlock) {
-            return AcousticMaterial.THIN;
-        }
-        if (state.is(BlockTags.LOGS) || state.is(BlockTags.PLANKS)
-                || sound == SoundType.WOOD || sound == SoundType.NETHER_WOOD
-                || sound == SoundType.BAMBOO_WOOD || sound == SoundType.CHERRY_WOOD) {
-            return AcousticMaterial.WOOD;
-        }
-        return AcousticMaterial.STONE;
+        BlockAcoustics.clearCache();
     }
 }

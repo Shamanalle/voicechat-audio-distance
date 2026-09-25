@@ -26,7 +26,7 @@ repositories {
 sourceSets {
     main {
         java {
-            srcDir "${rootDir}/shared/client-all/src/main/java"
+            srcDir "${rootDir}/shared/mc-all/src/main/java"
         }
     }
 }

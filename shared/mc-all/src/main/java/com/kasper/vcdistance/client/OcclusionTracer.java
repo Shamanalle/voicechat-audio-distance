@@ -9,13 +9,19 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class OcclusionTracer {
 
+    /** Acoustic thickness (in stone blocks) along one straight ray. */
+    @FunctionalInterface
+    public interface RayCaster {
+        double cast(Vec3 from, Vec3 to);
+    }
+
     private static final double SPREAD = 0.4;
     private static final double MIN_DISTANCE = 0.5;
 
     private OcclusionTracer() {
     }
 
-    public static double trace(WorldAccess access, Vec3 from, Vec3 to) {
+    public static double trace(RayCaster access, Vec3 from, Vec3 to) {
         double dx = to.x - from.x;
         double dy = to.y - from.y;
         double dz = to.z - from.z;
@@ -45,7 +51,7 @@ public final class OcclusionTracer {
         double uy = sz * dx - sx * dz;
         double uz = sx * dy - sy * dx;
 
-        double total = access.traceRay(from, to);
+        double total = access.cast(from, to);
         total += offsetRay(access, from, to, sx * SPREAD, sy * SPREAD, sz * SPREAD);
         total += offsetRay(access, from, to, -sx * SPREAD, -sy * SPREAD, -sz * SPREAD);
         total += offsetRay(access, from, to, ux * SPREAD, uy * SPREAD, uz * SPREAD);
@@ -53,8 +59,8 @@ public final class OcclusionTracer {
         return total / 5.0;
     }
 
-    private static double offsetRay(WorldAccess access, Vec3 from, Vec3 to, double ox, double oy, double oz) {
-        return access.traceRay(
+    private static double offsetRay(RayCaster access, Vec3 from, Vec3 to, double ox, double oy, double oz) {
+        return access.cast(
                 new Vec3(from.x + ox, from.y + oy, from.z + oz),
                 new Vec3(to.x + ox, to.y + oy, to.z + oz));
     }

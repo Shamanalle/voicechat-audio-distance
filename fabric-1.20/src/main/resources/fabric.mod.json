@@ -4,7 +4,7 @@
   "version": "${version}",
   "name": "VoiceChat Audio Distance",
   "icon": "assets/vc-audio-distance/icon.png",
-  "description": "Shapes how Simple Voice Chat voices fade with distance and muffles them through walls. Live curve, wall preview and a monitor of who you hear.",
+  "description": "Shapes how Simple Voice Chat voices fade with distance and muffles them through walls. Client: live curve, wall preview, monitor. Server (optional): walls for players without the addon and a shared sound profile.",
   "authors": [
     "Kasper"
   ],
@@ -14,8 +14,11 @@
     "issues": "https://github.com/Shamanalle/voicechat-audio-distance/issues"
   },
   "license": "MIT",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
+    "main": [
+      "com.kasper.vcdistance.AudioDistanceMod"
+    ],
     "client": [
       "com.kasper.vcdistance.AudioDistanceClient"
     ],
