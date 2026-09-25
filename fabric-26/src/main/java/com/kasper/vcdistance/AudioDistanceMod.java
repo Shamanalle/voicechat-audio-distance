@@ -4,6 +4,7 @@ import com.kasper.vcdistance.server.ServerThickness;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -24,6 +25,8 @@ public class AudioDistanceMod implements ModInitializer {
         ModNetworking.registerServer();
         ServerLifecycleEvents.SERVER_STARTING.register(server -> AudioDistancePlugin.ensureServerSettings());
         ServerTickEvents.END_SERVER_TICK.register(this::onServerTick);
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+                AudioDistancePlugin.SERVER_WALLS.forgetPlayer(handler.player.getUUID()));
     }
 
     private void onServerTick(MinecraftServer server) {

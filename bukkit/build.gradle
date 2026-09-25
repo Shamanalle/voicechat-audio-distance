@@ -1,0 +1,57 @@
+plugins {
+    id 'java'
+}
+
+// This build script reads common's source set, and ':bukkit' is configured before ':common'
+evaluationDependsOn(':common')
+
+// Bukkit, Spigot, Paper and Purpur 1.20.1+: the server side only (there is no client on Bukkit).
+// Compiled against the 1.20.1 API and uses only API that later versions still have.
+version = project.mod_version
+
+base {
+    archivesName = "voicechat-audio-distance-bukkit"
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "papermc"
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+    maven {
+        name = "henkelmax.public"
+        url = 'https://maven.maxhenkel.de/repository/public'
+    }
+}
+
+dependencies {
+    implementation project(':common')
+
+    compileOnly "io.papermc.paper:paper-api:${project.bukkit_api_version}"
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:${project.voicechat_api_version}"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("plugin.yml") {
+        expand "version": project.version
+    }
+}
+
+jar {
+    // The common code goes into the plugin jar; client assets (translations, icon) are not needed
+    from(project(':common').sourceSets.main.output) {
+        exclude 'assets/**'
+    }
+}

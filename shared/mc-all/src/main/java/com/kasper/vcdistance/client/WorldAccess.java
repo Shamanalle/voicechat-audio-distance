@@ -1,5 +1,6 @@
 package com.kasper.vcdistance.client;
 
+import com.kasper.vcdistance.RayBundle;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.world.phys.Vec3;
 
@@ -10,7 +11,7 @@ import net.minecraft.world.phys.Vec3;
 public interface WorldAccess {
 
     /** Maximum acoustic thickness a single ray accumulates before it stops tracing. */
-    double MAX_RAY_THICKNESS = 8.0;
+    double MAX_RAY_THICKNESS = RayBundle.MAX_RAY_THICKNESS;
 
     boolean inWorld();
 

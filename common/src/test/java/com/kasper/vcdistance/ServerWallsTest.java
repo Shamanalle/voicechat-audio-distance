@@ -267,6 +267,9 @@ public class ServerWallsTest {
         assertFalse(fireFrame(1));
         assertTrue(sent.isEmpty());
         assertTrue(walls.hasAddon(listener));
+        // Reconnecting voice chat keeps the addon marker; leaving the game drops it
+        walls.releaseListener(listener);
+        assertTrue(walls.hasAddon(listener));
         walls.forgetPlayer(listener);
         assertFalse(walls.hasAddon(listener));
     }

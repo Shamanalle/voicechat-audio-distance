@@ -1,8 +1,10 @@
 package com.kasper.vcdistance;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Properties;
 
@@ -15,6 +17,8 @@ import java.util.Properties;
  *     server's real voice and whisper distances.</li>
  * </ul>
  * Payloads are plain {@link Properties} text, so both sides tolerate unknown or missing keys.
+ * On the wire each payload is one Minecraft string (VarInt byte length, then UTF-8), which is what
+ * the Fabric builds write and what {@link #encode} / {@link #decode} produce for Bukkit plugin messages.
  */
 public final class LinkProtocol {
 
@@ -84,6 +88,48 @@ public final class LinkProtocol {
                 DistanceConfig.parseDouble(p, "voice_distance", 0.0),
                 DistanceConfig.parseDouble(p, "whisper_distance", 0.0),
                 DistanceConfig.parseBoolean(p, "server_walls", false));
+    }
+
+    /** Wire form of a payload: VarInt length in bytes, then the UTF-8 text (Minecraft's string encoding). */
+    public static byte[] encode(String text) {
+        byte[] utf8 = text.getBytes(StandardCharsets.UTF_8);
+        if (text.length() > MAX_LENGTH) {
+            throw new IllegalArgumentException("Payload too long: " + text.length());
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream(utf8.length + 3);
+        int value = utf8.length;
+        while ((value & ~0x7F) != 0) {
+            out.write((value & 0x7F) | 0x80);
+            value >>>= 7;
+        }
+        out.write(value);
+        out.write(utf8, 0, utf8.length);
+        return out.toByteArray();
+    }
+
+    /** @return the text of a payload in wire form, or {@code null} when it is malformed or too long */
+    public static String decode(byte[] data) {
+        if (data == null) {
+            return null;
+        }
+        int length = 0;
+        int index = 0;
+        for (int shift = 0; ; shift += 7) {
+            if (index >= data.length || shift > 28) {
+                return null;
+            }
+            byte b = data[index++];
+            length |= (b & 0x7F) << shift;
+            if ((b & 0x80) == 0) {
+                break;
+            }
+        }
+        // Same bound Minecraft applies: at most 3 bytes per character
+        if (length < 0 || length > MAX_LENGTH * 3 || data.length - index < length) {
+            return null;
+        }
+        String text = new String(data, index, length, StandardCharsets.UTF_8);
+        return text.length() > MAX_LENGTH ? null : text;
     }
 
     private static String write(Properties p) {
