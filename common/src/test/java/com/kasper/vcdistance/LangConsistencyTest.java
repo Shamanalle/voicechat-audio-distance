@@ -32,13 +32,18 @@ public class LangConsistencyTest {
     private static final Path LANG = ROOT.resolve("common/src/main/resources/assets/vc-audio-distance/lang");
 
     private static Map<String, String> english;
-    private static Map<String, String> russian;
+    /** Every other language, by file name. */
+    private static final Map<String, Map<String, String>> others = new java.util.TreeMap<>();
     private static String sources;
 
     @BeforeAll
     static void load() throws IOException {
         english = readLang(LANG.resolve("en_us.json"));
-        russian = readLang(LANG.resolve("ru_ru.json"));
+        try (Stream<Path> files = Files.list(LANG)) {
+            for (Path f : files.filter(f -> f.toString().endsWith(".json") && !f.endsWith("en_us.json")).toList()) {
+                others.put(f.getFileName().toString(), readLang(f));
+            }
+        }
         StringBuilder all = new StringBuilder();
         for (String dir : new String[]{"common/src/main", "shared", "fabric-1.20/src", "fabric-1.21/src", "fabric-26/src"}) {
             Path p = ROOT.resolve(dir);
@@ -57,14 +62,20 @@ public class LangConsistencyTest {
     @Test
     @DisplayName("All language files contain the same keys")
     void sameKeys() {
-        assertEquals(new TreeSet<>(english.keySet()), new TreeSet<>(russian.keySet()));
+        assertTrue(others.containsKey("ru_ru.json"), "Russian is required");
+        for (Map.Entry<String, Map<String, String>> lang : others.entrySet()) {
+            assertEquals(new TreeSet<>(english.keySet()), new TreeSet<>(lang.getValue().keySet()), lang.getKey());
+        }
     }
 
     @Test
     @DisplayName("Placeholders match between languages")
     void samePlaceholders() {
-        for (String key : english.keySet()) {
-            assertEquals(placeholders(english.get(key)), placeholders(russian.get(key)), "Placeholder count differs for " + key);
+        for (Map.Entry<String, Map<String, String>> lang : others.entrySet()) {
+            for (String key : english.keySet()) {
+                assertEquals(placeholders(english.get(key)), placeholders(lang.getValue().get(key)),
+                        "Placeholder count differs for " + key + " in " + lang.getKey());
+            }
         }
     }
 
