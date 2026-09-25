@@ -1,6 +1,6 @@
 # 🎙️ VoiceChat Audio Distance Addon
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21%2B%20%7C%2026.x-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.x%20%7C%2026.x-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-lightgrey.svg?logo=fabric&logoColor=white)](https://fabricmc.net/)
 [![NeoForge](https://img.shields.io/badge/Loader-NeoForge-orange.svg)](https://neoforged.net/)
 [![Forge](https://img.shields.io/badge/Loader-Forge-red.svg)](https://files.minecraftforge.net/)
@@ -93,6 +93,8 @@
 
 | Загрузчик (Loader) | Версия игры | Файл аддона (Release JAR) | Java | Требуемый Simple Voice Chat |
 |---|---|---|---|---|
+| **Fabric / Quilt** | **1.20.1** | `voicechat-audio-distance-fabric-1.1.0+mc1.20.1.jar` | Java 17+ | `>=2.4.0` |
+| **Forge** | **1.20.1** | `voicechat-audio-distance-forge-1.1.0+mc1.20.1.jar` | Java 17+ | `>=2.4.0` |
 | **Fabric / Quilt** | **1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-fabric-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
 | **NeoForge** | **1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
 | **Forge** | **1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
@@ -111,20 +113,26 @@
 
 ## 🛠️ Сборка из исходников / Building from Source
 
-Требуется **JDK 25** (поддерживает сборку обоих модулей):
+Требуется **JDK 25** (поддерживает сборку всех модулей под Java 17, 21 и 25):
 
 ```bash
 # Клонируйте репозиторий
 git clone https://github.com/Shamanalle/voicechat-audio-distance.git
 cd voicechat-audio-distance
 
-# Полная сборка всех поддерживаемых версий (1.21.x и 26.x)
+# Полная сборка всех поддерживаемых версий (1.20.1, 1.21.x и 26.x)
 ./gradlew build
 ```
 
 Собранные JAR-архивы для всех версий появятся в `build/libs/`:
-- `voicechat-audio-distance-addon-1.1.0+mc1.21.x.jar`
-- `voicechat-audio-distance-addon-1.1.0+mc26.3.jar`
+- `voicechat-audio-distance-fabric-1.1.0+mc1.20.1.jar`
+- `voicechat-audio-distance-forge-1.1.0+mc1.20.1.jar`
+- `voicechat-audio-distance-fabric-1.1.0+mc1.21.x.jar`
+- `voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar`
+- `voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar`
+- `voicechat-audio-distance-fabric-1.1.0+mc26.x.jar`
+- `voicechat-audio-distance-neoforge-1.1.0+mc26.x.jar`
+- `voicechat-audio-distance-forge-1.1.0+mc26.x.jar`
 
 ---
 

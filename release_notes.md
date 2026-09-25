@@ -6,6 +6,8 @@
 
 | Загрузчик (Loader) | Версия игры | Файл аддона (Download File) | Требования |
 |---|---|---|---|
+| **Fabric / Quilt** | **Minecraft 1.20.1** | `voicechat-audio-distance-fabric-1.1.0+mc1.20.1.jar` | Fabric Loader >=0.14.21, Java 17+, Simple Voice Chat >=2.4.0 |
+| **Forge** | **Minecraft 1.20.1** | `voicechat-audio-distance-forge-1.1.0+mc1.20.1.jar` | Minecraft Forge >=47.0, Java 17+, Simple Voice Chat >=2.4.0 |
 | **Fabric / Quilt** | **Minecraft 1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-fabric-1.1.0+mc1.21.x.jar` | Fabric Loader >=0.16.0, Java 21+, Simple Voice Chat >=2.4.0 |
 | **NeoForge** | **Minecraft 1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar` | NeoForge >=21.0, Java 21+, Simple Voice Chat >=2.4.0 |
 | **Forge** | **Minecraft 1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar` | Minecraft Forge >=51.0, Java 21+, Simple Voice Chat >=2.4.0 |
@@ -17,10 +19,11 @@
 
 ### 🌟 New Features & Enhancements
 
-- **Complete Multi-Loader Coverage (Fabric, NeoForge, Forge)**:
+- **Complete Multi-Loader Coverage (Fabric, NeoForge, Forge) & Backports**:
   - Unified naming schema across all loaders and game versions.
+  - Native support for **1.20.1** on **Fabric** and **Forge** (Java 17, `mods.toml`, `fabric.mod.json`, `@ForgeVoicechatPlugin`, legacy screen and block API mappings).
   - Native support for **NeoForge** and **Forge** across both **1.21.x** (`1.21` – `1.21.11`) and **26.x** (`26.1` – `26.3+`) via `neoforge.mods.toml`, `mods.toml`, and `@ForgeVoicechatPlugin` annotation.
-  - Native support for **Fabric / Quilt** on Minecraft 1.21.x (Java 21) and Minecraft 26.x (Java 25).
+  - Native support for **Fabric / Quilt** on Minecraft 1.20.1 (Java 17), 1.21.x (Java 21) and Minecraft 26.x (Java 25).
 - **Physical Sound Occlusion & Acoustic Muffling**: Physical sound absorption through solid obstacles (walls, doors, floors, caves). Voices are muffled via real-time digital low-pass filtering when behind barriers.
 - **DSP Low-Pass Filter Engine (`OcclusionFilter`)**:
   - High-performance 1-pole IIR filter: `y[n] = y[n-1] + α · (x[n] - y[n-1])`.

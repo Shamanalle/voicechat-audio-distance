@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Multi-Loader & Multi-Version Standardized Release Architecture**:
+  - **Fabric / Quilt 1.20.1**: `voicechat-audio-distance-fabric-1.1.0+mc1.20.1.jar` (Minecraft 1.20.1, Java 17, `HalfTransparentBlock` legacy compatibility, 1.20.1 screen rendering).
+  - **Forge 1.20.1**: `voicechat-audio-distance-forge-1.1.0+mc1.20.1.jar` (Minecraft 1.20.1, Java 17, includes `META-INF/mods.toml` and `@ForgeVoicechatPlugin`).
   - **Fabric / Quilt 1.21.x**: `voicechat-audio-distance-fabric-1.1.0+mc1.21.x.jar` (Minecraft 1.21 – 1.21.11).
   - **NeoForge 1.21.x**: `voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar` (includes `META-INF/neoforge.mods.toml` and `@ForgeVoicechatPlugin`, Minecraft 1.21 – 1.21.11).
   - **Forge 1.21.x**: `voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar` (includes `META-INF/mods.toml` and `@ForgeVoicechatPlugin`, Minecraft 1.21 – 1.21.11).
