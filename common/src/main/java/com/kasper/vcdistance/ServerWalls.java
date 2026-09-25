@@ -135,9 +135,10 @@ public final class ServerWalls {
     // Packet events (Simple Voice Chat server thread)
     // -------------------------------------------------------------------------
 
-    // The builders start as a copy of the original packet (channel, sender, sequence, category);
-    // the fields are still set explicitly so nothing depends on that. There is no sender(...)
-    // call: it is missing from the published 2.6.0 API.
+    // Simple Voice Chat's builders start as a copy of the original packet (channel, sender,
+    // sequence number, category, entity, whisper flag, distance, position), so only the audio is
+    // replaced. Only opusEncodedData(...) and build() are called: the published 2.6.0 API has no
+    // setters for the other fields.
 
     public void onEntitySound(EntitySoundPacketEvent event) {
         EntitySoundPacket p = event.getPacket();
@@ -151,13 +152,7 @@ public final class ServerWalls {
         }
         resend(event, () -> event.getVoicechat().sendEntitySoundPacketTo(event.getReceiverConnection(),
                 p.entitySoundPacketBuilder()
-                        .channelId(p.getChannelId())
                         .opusEncodedData(processed)
-                        .sequenceNumber(p.getSequenceNumber())
-                        .category(p.getCategory())
-                        .entityUuid(p.getEntityUuid())
-                        .whispering(p.isWhispering())
-                        .distance(p.getDistance())
                         .build()));
     }
 
@@ -173,12 +168,7 @@ public final class ServerWalls {
         }
         resend(event, () -> event.getVoicechat().sendLocationalSoundPacketTo(event.getReceiverConnection(),
                 p.locationalSoundPacketBuilder()
-                        .channelId(p.getChannelId())
                         .opusEncodedData(processed)
-                        .sequenceNumber(p.getSequenceNumber())
-                        .category(p.getCategory())
-                        .position(p.getPosition())
-                        .distance(p.getDistance())
                         .build()));
     }
 
