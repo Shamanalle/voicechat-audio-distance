@@ -1,0 +1,106 @@
+name: Paper plugin compatibility
+
+# Checks the Paper / Purpur / Spigot plugin on every Minecraft release from 1.20.1 on. The plugin is
+# built against gradle.properties' bukkit_api_version; LinkCheck.java then checks that every class,
+# method, field and override it uses resolves on each later Paper API the same way. The versions come
+# from Mojang's release list and the Paper API versions from PaperMC's maven.
+
+on:
+  pull_request:
+    paths:
+      - 'bukkit/**'
+      - 'common/src/main/**'
+      - 'gradle.properties'
+      - '.github/scripts/LinkCheck.java'
+      - '.github/workflows/compat-bukkit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  versions:
+    name: List Paper API releases
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.list.outputs.matrix }}
+    steps:
+      - name: Minecraft releases with a Paper API
+        id: list
+        run: |
+          releases=$(curl -fsSL https://piston-meta.mojang.com/mc/game/version_manifest_v2.json \
+            | jq -r '.versions[] | select(.type == "release") | .id')
+          meta=$(curl -fsSL https://repo.papermc.io/repository/maven-public/io/papermc/paper/paper-api/maven-metadata.xml)
+          entries=()
+          for mc in $(printf '%s\n' ${releases} | sort -V); do
+            # Only 1.20.1 and later
+            [ "$(printf '%s\n%s\n' 1.20.1 "${mc}" | sort -V | head -1)" = "1.20.1" ] || continue
+            esc="${mc//./\\.}"
+            api=$(grep -oP "<version>\K${esc}-R0\.1-SNAPSHOT(?=</version>)" <<< "${meta}" | tail -1 || true)
+            if [ -z "${api}" ]; then
+              api=$(grep -oP "<version>\K${esc}\.build\.[0-9]+-[A-Za-z0-9]+(?=</version>)" <<< "${meta}" | sort -V | tail -1 || true)
+            fi
+            if [ -z "${api}" ]; then
+              echo "Minecraft ${mc}: no Paper API"
+              continue
+            fi
+            echo "Minecraft ${mc}: Paper API ${api}"
+            entries+=("$(jq -cn --arg mc "${mc}" --arg api "${api}" '{mc: $mc, api: $api}')")
+          done
+          [ "${#entries[@]}" -gt 0 ] || { echo "::error::No Paper API found"; exit 1; }
+          echo "matrix=$(printf '%s\n' "${entries[@]}" | jq -cs '{include: .}')" >> "$GITHUB_OUTPUT"
+
+  check:
+    name: Paper ${{ matrix.mc }}
+    needs: versions
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.versions.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Build the plugin and its reference classpath
+        run: |
+          ./gradlew :bukkit:jar :bukkit:writeCompatClasspath --no-daemon
+          version=$(grep '^mod_version=' gradle.properties | cut -d= -f2)
+          cp "bukkit/build/libs/voicechat-audio-distance-bukkit-${version}.jar" "${RUNNER_TEMP}/plugin.jar"
+          cp bukkit/build/compat-classpath.txt "${RUNNER_TEMP}/reference-classpath.txt"
+
+      - name: Classpath of Paper ${{ matrix.mc }}
+        run: |
+          ./gradlew :bukkit:writeCompatClasspath --no-daemon -PcompatPaperApi=${{ matrix.api }}
+          cp bukkit/build/compat-classpath.txt "${RUNNER_TEMP}/target-classpath.txt"
+
+      - name: Check the plugin links against Paper ${{ matrix.mc }}
+        run: |
+          set -o pipefail
+          java .github/scripts/LinkCheck.java "${RUNNER_TEMP}/plugin.jar" \
+            "${RUNNER_TEMP}/reference-classpath.txt" "${RUNNER_TEMP}/target-classpath.txt" | tee "${RUNNER_TEMP}/link.txt"
+
+      - name: Summary
+        if: always()
+        env:
+          MC: ${{ matrix.mc }}
+          API: ${{ matrix.api }}
+        run: |
+          {
+            echo "### Paper ${MC} (paper-api ${API})"
+            echo '```'
+            tail -200 "${RUNNER_TEMP}/link.txt" 2>/dev/null || echo "no LinkCheck output"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

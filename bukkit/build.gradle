@@ -55,3 +55,37 @@ jar {
         exclude 'assets/**'
     }
 }
+
+// The Paper API the plugin is checked against by .github/workflows/compat-bukkit.yml: the plugin jar,
+// built against bukkit_api_version, must link against every later Paper release the same way.
+// -PcompatPaperApi=<paper-api version> picks the version; newer ones need Java 21 or 25, so the
+// configuration asks for the newest Java instead of the plugin's own 17.
+configurations {
+    compatPaper {
+        canBeConsumed = false
+        canBeResolved = true
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_API))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+            attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements, LibraryElements.JAR))
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.EXTERNAL))
+            attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
+        }
+    }
+}
+
+dependencies {
+    compatPaper "io.papermc.paper:paper-api:${project.findProperty('compatPaperApi') ?: project.bukkit_api_version}"
+    compatPaper "de.maxhenkel.voicechat:voicechat-api:${project.voicechat_api_version}"
+}
+
+tasks.register('writeCompatClasspath') {
+    def out = layout.buildDirectory.file('compat-classpath.txt')
+    def files = configurations.compatPaper
+    outputs.file out
+    outputs.upToDateWhen { false }
+    doLast {
+        out.get().asFile.text = files.files.join('\n') + '\n'
+    }
+}
+
