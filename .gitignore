@@ -1,0 +1,22 @@
+# Gradle & Build Artifacts
+.gradle/
+build/
+bin/
+out/
+
+# IDE & Editor files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# Minecraft runtime run directories
+run/
+
+# OS specific files
+.DS_Store
+Thumbs.db

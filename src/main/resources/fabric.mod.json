@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "vc-audio-distance",
+  "version": "${version}",
+  "name": "VoiceChat Audio Distance Addon",
+  "description": "Advanced 3D audio distance attenuation models, hardware OpenAL volume floor, and real-time audibility curves for Simple Voice Chat.",
+  "authors": ["Kasper"],
+  "contact": {
+    "homepage": "https://github.com/Shamanalle/voicechat-audio-distance",
+    "sources": "https://github.com/Shamanalle/voicechat-audio-distance"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.kasper.vcdistance.AudioDistanceClient"
+    ],
+    "voicechat": [
+      "com.kasper.vcdistance.AudioDistancePlugin"
+    ],
+    "modmenu": [
+      "com.kasper.vcdistance.ModMenuIntegration"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "fabric-api": "*",
+    "minecraft": ">=1.21",
+    "voicechat": ">=2.4.0"
+  }
+}
