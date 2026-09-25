@@ -93,9 +93,9 @@
 
 | Загрузчик (Loader) | Версия игры | Файл аддона (Release JAR) | Java | Требуемый Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | **1.21.x** (`1.21` – `1.21.8`) | `voicechat-audio-distance-fabric-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
-| **NeoForge** | **1.21.x** (`1.21` – `1.21.8`) | `voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
-| **Forge** | **1.21.x** (`1.21` – `1.21.8`) | `voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
+| **Fabric / Quilt** | **1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-fabric-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
+| **NeoForge** | **1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-neoforge-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
+| **Forge** | **1.21.x** (`1.21` – `1.21.11`) | `voicechat-audio-distance-forge-1.1.0+mc1.21.x.jar` | Java 21+ | `>=2.4.0` |
 | **Fabric** | **26.x** (`26.1`, `26.2`, `26.3+`) | `voicechat-audio-distance-fabric-1.1.0+mc26.x.jar` | Java 25+ | `>=2.6.0` |
 | **NeoForge** | **26.x** (`26.1`, `26.2`, `26.3+`) | `voicechat-audio-distance-neoforge-1.1.0+mc26.x.jar` | Java 25+ | `>=2.6.0` |
 | **Forge** | **26.x** (`26.1`, `26.2`, `26.3+`) | `voicechat-audio-distance-forge-1.1.0+mc26.x.jar` | Java 25+ | `>=2.6.0` |

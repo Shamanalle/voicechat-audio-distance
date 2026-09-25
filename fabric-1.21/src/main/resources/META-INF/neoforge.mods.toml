@@ -24,7 +24,7 @@ side = "BOTH"
 [[dependencies.vc_audio_distance]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21,1.21.8]"
+versionRange = "[1.21,1.21.11]"
 ordering = "NONE"
 side = "BOTH"
 
