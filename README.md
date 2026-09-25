@@ -15,13 +15,13 @@
 
 ### 1. Физические модели распространения звука (OpenAL Distance Models)
 * **Линейная (Linear / Vanilla SVC)**: Стандартная модель Simple Voice Chat. Громкость держится на 100% до заданной дистанции, затем линейно спадает.
-* **Реалистичная акустическая (Realistic Inverse $1/r$)**: Реальное физическое затухание звуковых волн в воздухе по закону обратных квадратов. Голос вблизи звучит естественно и объемно, плавно растворяясь на расстоянии.
+* **Реалистичная акустическая (Realistic Inverse 1/r)**: Реальное физическое затухание звуковых волн в воздухе по закону обратных квадратов. Голос вблизи звучит естественно и объемно, плавно растворяясь на расстоянии.
 * **Экспоненциальная (Exponential)**: Быстрый спад звука, создающий напряженную атмосферу. Идеально для хоррор-карт, стелс-миссий и приключений.
 * **Безопасность слуха (Clamped Bounds)**: Использование нативных Clamped-моделей OpenAL 1.1 предотвращает акустические удары в упор.
 
 ### 2. Физическое приглушение через стены (Sound Occlusion & Muffling)
 * **Акустическое поглощение препятствиями**: Когда между говорящим и слушателем находятся твердые блоки (стены домов, двери, полы, своды пещер), звук динамически фильтруется низкочастотным фильтром (Low-Pass Filter) прямо на уровне PCM-фреймов.
-* **DSP 1-pole IIR Фильтр**: Срезает звонкие высокочастотные согласные, оставляя мягкие басовые гармоники (эффект «голоса из соседней комнаты»). Сохраняет непрерывность фазы между фреймами (без щелчков и артефактов).
+* **DSP 1-pole IIR Фильтр**: Срезает звонкие высокочастотные согласные по формуле `y[n] = y[n-1] + α · (x[n] - y[n-1])`, оставляя мягкие басовые гармоники (эффект «голоса из соседней комнаты»). Сохраняет непрерывность фазы между фреймами (без щелчков и артефактов).
 * **3D Воксельный Raycast (`BlockGetter.traverseBlocks`)**: Мгновенно трассирует луч через блоки с учетом физики материалов:
   - Шерсть и ковры — сильная звукоизоляция (0.45).
   - Сплошной камень, кирпич, обсидиан — полное перекрытие (0.35).
@@ -45,7 +45,7 @@
 
 ### 6. Быстрые пресеты в 1 клик
 * **Ваниль (Vanilla)**: Сброс к поведению чистого Simple Voice Chat (100% спад, 0% мин. громкость, 50% старт, приглушение стен выкл).
-* **Мягкий (Realistic)**: Акустическая модель $1/r$, комфортный естественный баланс для выживания, мягкое приглушение за стенами (65%).
+* **Мягкий (Realistic)**: Акустическая модель 1/r, комфортный естественный баланс для выживания, мягкое приглушение за стенами (65%).
 * **Чёткий (Audible)**: Повышенная слышимость на дальних расстояниях для серверов, стримов и мини-игр.
 * **Стелс (Stealth)**: Резкое затухание и глубокое глушение за препятствиями (85%) для игр в прятки и хорроров.
 
@@ -59,9 +59,9 @@
 
 ## 🇬🇧 Features Overview
 
-* **Physical Sound Occlusion & Muffling**: Real-time DSP low-pass filter (IIR 1-pole) dynamically muffles voice through walls, doors, and caves.
+* **Physical Sound Occlusion & Muffling**: Real-time DSP low-pass filter (IIR 1-pole `y[n] = y[n-1] + α · (x[n] - y[n-1])`) dynamically muffles voice through walls, doors, and caves.
 * **3D Voxel Raycasting**: Fast traversal via Minecraft's internal DDA engine with material-based absorption (wool = soundproofing, stone, wood, glass, water).
-* **Physical Acoustic Attenuation**: Switch between *Linear (Vanilla)*, *Realistic Inverse ($1/r$)*, and *Exponential* falloff curves with OpenAL 1.1 clamped bounds.
+* **Physical Acoustic Attenuation**: Switch between *Linear (Vanilla)*, *Realistic Inverse (1/r)*, and *Exponential* falloff curves with OpenAL 1.1 clamped bounds.
 * **Native OpenAL Hardware Floor**: Uses `AL_MIN_GAIN` hardware clamping — zero clipping, zero latency, pure audio quality, fully respecting mute & volume levels.
 * **Whisper Falloff Multiplier**: Dedicated in-GUI slider (`0.50x – 2.00x`) to control whisper decay distance.
 * **Live Curve Visualizer**: Real-time acoustic audibility graph with built-in block & volume inspector.
@@ -76,7 +76,7 @@
 
 | Возможность | Обычный Simple Voice Chat | VoiceChat Audio Distance Addon |
 |---|---|---|
-| **Модель затухания** | Только линейная (Linear) | **Linear, Realistic Inverse ($1/r$), Exponential** |
+| **Модель затухания** | Только линейная (Linear) | **Linear, Realistic Inverse (1/r), Exponential** |
 | **Кривая слышимости** | Нельзя изменить | **Настраиваемый спад и старт затухания (10% - 100%)** |
 | **Минимальная громкость на максимуме** | Всегда 0% (полная тишина) | **Настраиваемый аппаратный порог (0% - 100%)** |
 | **Визуализация кривой** | Отсутствует | **Интерактивный рендерер кривой громкости в GUI** |
@@ -90,7 +90,7 @@
 1. Установите **Minecraft** (версии `1.21` – `1.21.8+`).
 2. Установите **Fabric Loader** и **Fabric API**.
 3. Установите мод **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)** (версии `2.4.0` или новее).
-4. Поместите файл `voicechat-audio-distance-addon-1.0.0.jar` в папку `.minecraft/mods/`.
+4. Поместите файл `voicechat-audio-distance-addon-1.1.0.jar` в папку `.minecraft/mods/`.
 5. *(Опционально)* Установите **Mod Menu** для быстрого доступа к настройкам из списка модов.
 
 ---

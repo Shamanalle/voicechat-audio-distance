@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Sound Occlusion & Acoustic Muffling**: Physical sound absorption through solid obstacles (walls, doors, floors, caves). Voices are muffled via real-time digital low-pass filtering when behind barriers.
 - **DSP Low-Pass Filter Engine (`OcclusionFilter`)**:
-  - High-performance 1-pole IIR filter ($y[n] = y[n-1] + \alpha(x[n] - y[n-1])$).
+  - High-performance 1-pole IIR filter: `y[n] = y[n-1] + α · (x[n] - y[n-1])`.
   - Dynamic exponential frequency sweep from 18,000 Hz down to 500 Hz depending on barrier density and thickness.
   - Per-stream state tracking maintaining continuous audio between 20ms frames, eliminating pops and clicks.
   - Smooth parameter interpolation ensuring natural acoustic transitions when walking around corners.
