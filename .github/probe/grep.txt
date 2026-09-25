@@ -1,0 +1,8 @@
+net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback register|error
+net.minecraft.commands.CommandSourceStack hasPermission|permissions|sendSuccess|sendFailure|sendSystemMessage|getServer\(|getPlayer\(|error
+net.minecraft.commands.Commands literal|argument|hasPermission|LEVEL_|error
+net.minecraft.server.MinecraftServer getServerModName|getPlayerList|getPlayerCount|error
+net.minecraft.resources.ResourceKey location|identifier|toString|error
+net.minecraft.world.level.Level public .*dimension\(|error
+net.minecraft.server.level.ServerPlayer public .*level\(|serverLevel|getUUID|error
+net.minecraft.network.chat.Component literal|error
