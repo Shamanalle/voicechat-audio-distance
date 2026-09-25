@@ -6,6 +6,9 @@ import com.kasper.vcdistance.AudioDistancePlugin;
 import com.kasper.vcdistance.AudioPhysics;
 import com.kasper.vcdistance.Bearing;
 import com.kasper.vcdistance.DistanceConfig;
+import com.kasper.vcdistance.EnvironmentEffects;
+import com.kasper.vcdistance.ListenerEnvironment;
+import com.kasper.vcdistance.RoomEstimate;
 import com.kasper.vcdistance.HudMode;
 import com.kasper.vcdistance.LinkProtocol;
 import com.kasper.vcdistance.NearbyPlayers;
@@ -51,6 +54,7 @@ public abstract class SettingsScreen extends Screen {
         DISTANCE("tab.distance"),
         WALLS("tab.walls"),
         MATERIALS("tab.materials"),
+        EFFECTS("tab.effects"),
         MONITOR("tab.monitor");
 
         private final String key;
@@ -94,6 +98,7 @@ public abstract class SettingsScreen extends Screen {
     private int activeTabX2;
     private int tabsBottom;
     private RangeSlider strengthSlider;
+    private RangeSlider reverbSlider;
     /** Widgets that change settings; disabled while the server enforces its profile. */
     private final List<AbstractWidget> editWidgets = new ArrayList<>();
     private boolean serverChip;
@@ -130,6 +135,7 @@ public abstract class SettingsScreen extends Screen {
         presetBounds.clear();
         editWidgets.clear();
         strengthSlider = null;
+        reverbSlider = null;
         listenButton = null;
         serverChip = false;
 
@@ -169,6 +175,7 @@ public abstract class SettingsScreen extends Screen {
             case DISTANCE -> initDistance();
             case WALLS -> initWalls();
             case MATERIALS -> initMaterials();
+            case EFFECTS -> initEffects();
             case MONITOR -> initMonitor();
         }
 
@@ -313,6 +320,38 @@ public abstract class SettingsScreen extends Screen {
         }
     }
 
+    private void initEffects() {
+        int w = right - left;
+        int colW = (w - GAP) / 2;
+        edit(Button.builder(onOff("effects.reverb", shown().isReverbEnabled()), b -> {
+            config.setReverbEnabled(!config.isReverbEnabled());
+            b.setMessage(onOff("effects.reverb", config.isReverbEnabled()));
+            if (reverbSlider != null) {
+                reverbSlider.active = config.isReverbEnabled();
+            }
+        }).bounds(left, contentTop, colW, 20).tooltip(tip("effects.reverb.tooltip")).build());
+        reverbSlider = new RangeSlider(right - colW, contentTop, colW, 20,
+                DistanceConfig.REVERB_MIN, DistanceConfig.REVERB_MAX, 0.01,
+                () -> shown().getReverbStrength(), config::setReverbStrength,
+                v -> tr("effects.reverb.strength", pct(v)));
+        reverbSlider.active = shown().isReverbEnabled();
+        edit(withTip(reverbSlider, "effects.reverb.strength.tooltip"));
+
+        edit(Button.builder(onOff("effects.water", shown().isUnderwaterEnabled()), b -> {
+            config.setUnderwaterEnabled(!config.isUnderwaterEnabled());
+            b.setMessage(onOff("effects.water", config.isUnderwaterEnabled()));
+        }).bounds(left, contentTop + ROW, colW, 20).tooltip(tip("effects.water.tooltip")).build());
+        edit(Button.builder(onOff("effects.weather", shown().isWeatherEnabled()), b -> {
+            config.setWeatherEnabled(!config.isWeatherEnabled());
+            b.setMessage(onOff("effects.weather", config.isWeatherEnabled()));
+        }).bounds(right - colW, contentTop + ROW, colW, 20).tooltip(tip("effects.weather.tooltip")).build());
+        panelTop = contentTop + ROW * 2 + 2;
+    }
+
+    private static Component onOff(String key, boolean on) {
+        return tr(key, tr(on ? "on" : "off"));
+    }
+
     private void initMonitor() {
         int w = right - left;
         int bw = (w - GAP * 2) / 3;
@@ -442,6 +481,7 @@ public abstract class SettingsScreen extends Screen {
             case DISTANCE -> paintDistance(c, mouseX, mouseY);
             case WALLS -> paintWalls(c);
             case MATERIALS -> c.text(fit(c, tr("materials.hint"), right - left), left, contentTop, Palette.TEXT_MUTED);
+            case EFFECTS -> paintEffects(c);
             case MONITOR -> paintMonitor(c, mouseX, mouseY);
         }
     }
@@ -665,6 +705,69 @@ public abstract class SettingsScreen extends Screen {
         }
         if (rowY + 22 <= contentBottom - 4) {
             c.text(fit(c, tr("walls.hint"), right - left - 16), left + 8, contentBottom - 14, Palette.TEXT_MUTED);
+        }
+    }
+
+    // ---- Effects ------------------------------------------------------------
+
+    /** What the surroundings do to voices right now. */
+    private void paintEffects(Canvas c) {
+        int y = panelTop;
+        AudioDistancePlugin.OcclusionStatus status = AudioDistancePlugin.occlusionStatus();
+        if (status == AudioDistancePlugin.OcclusionStatus.SOUND_PHYSICS || status == AudioDistancePlugin.OcclusionStatus.UNAVAILABLE) {
+            String key = status == AudioDistancePlugin.OcclusionStatus.SOUND_PHYSICS ? "effects.sound_physics" : "status.unavailable";
+            c.frame(left, y, right, y + 26, 0x30F6C453, Palette.withAlpha(Palette.WARN, 0x90));
+            c.text(fit(c, tr(key), right - left - 12), left + 6, y + 4, Palette.WARN);
+            c.text(fit(c, tr(key + ".detail"), right - left - 12), left + 6, y + 14, Palette.TEXT_DIM);
+            y += 30;
+        }
+        if (contentBottom - y < 40) {
+            return;
+        }
+        c.frame(left, y, right, contentBottom, Palette.PANEL, Palette.PANEL_BORDER);
+        int x = left + 8;
+        int w = right - left - 16;
+        if (!inWorld()) {
+            c.centered(tr("effects.no_world"), (left + right) / 2, (y + contentBottom) / 2 - 4, Palette.TEXT_DIM);
+            return;
+        }
+        DistanceConfig shown = shown();
+        ListenerEnvironment env = AudioDistancePlugin.ENVIRONMENT;
+        c.text(tr("effects.now"), x, y + 5, Palette.TEXT_DIM);
+        int rowY = y + 20;
+
+        // Echo: the room around you
+        RoomEstimate room = env.room();
+        boolean reverbOn = shown.isReverbEnabled() && status != AudioDistancePlugin.OcclusionStatus.SOUND_PHYSICS;
+        double level = room.wet() * shown.getReverbStrength();
+        Component roomText = room.wet() < 0.02
+                ? tr("effects.room.open")
+                : tr("effects.room.closed", pct(room.enclosure()), blocks(room.meanFree()),
+                String.format(Locale.ROOT, "%.1f", room.decaySeconds()));
+        c.text(fit(c, roomText, w), x, rowY, reverbOn ? Palette.TEXT : Palette.TEXT_MUTED);
+        rowY += 12;
+        int barRight = right - 8 - c.width(Component.literal("100%")) - 4;
+        c.fill(x, rowY + 1, barRight, rowY + 7, 0x22FFFFFF);
+        c.fill(x, rowY + 1, x + (int) Math.round(Math.min(1.0, reverbOn ? level : 0.0) * (barRight - x)), rowY + 7,
+                Palette.withAlpha(Palette.ACCENT, reverbOn ? 0xFF : 0x70));
+        c.right(Component.literal(pct(reverbOn ? level : 0.0)), right - 8, rowY, Palette.TEXT_DIM);
+        rowY += 16;
+
+        // Water
+        boolean waterOn = shown.isUnderwaterEnabled() && status != AudioDistancePlugin.OcclusionStatus.SOUND_PHYSICS;
+        c.text(fit(c, tr(env.isUnderWater() ? "effects.water.under" : "effects.water.dry"), w), x, rowY,
+                env.isUnderWater() && waterOn ? Palette.ACCENT_LINE : Palette.TEXT_MUTED);
+        rowY += 14;
+
+        // Weather
+        EnvironmentEffects.Weather weather = env.weather();
+        String weatherKey = "effects.weather." + weather.name().toLowerCase(Locale.ROOT);
+        c.text(fit(c, tr(weatherKey), w), x, rowY,
+                weather != EnvironmentEffects.Weather.CLEAR && shown.isWeatherEnabled() ? Palette.WARN : Palette.TEXT_MUTED);
+        rowY += 14;
+
+        if (rowY + 22 <= contentBottom - 4) {
+            c.text(fit(c, tr("effects.hint"), w), x, contentBottom - 14, Palette.TEXT_MUTED);
         }
     }
 

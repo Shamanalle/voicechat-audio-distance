@@ -19,8 +19,8 @@ public final class DistanceConfig {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("VC-AudioDistance");
 
-    /** 3: the file is written with a comment for every key; 4: interface section. */
-    private static final int CONFIG_VERSION = 4;
+    /** 3: the file is written with a comment for every key; 4: interface section; 5: echo, water, weather. */
+    private static final int CONFIG_VERSION = 5;
     private static final String FILE_NAME = "vc-audio-distance.properties";
 
     // -------------------------------------------------------------------------
@@ -36,6 +36,8 @@ public final class DistanceConfig {
     public static final double WHISPER_MAX = 2.0;
     public static final double STRENGTH_MIN = 0.0;
     public static final double STRENGTH_MAX = 1.0;
+    public static final double REVERB_MIN = 0.0;
+    public static final double REVERB_MAX = 1.0;
 
     // -------------------------------------------------------------------------
     // Defaults (first launch and the "Reset" button):
@@ -48,6 +50,10 @@ public final class DistanceConfig {
     public static final double DEFAULT_WHISPER_MULTIPLIER = 1.0;
     public static final boolean DEFAULT_OCCLUSION_ENABLED = true;
     public static final double DEFAULT_OCCLUSION_STRENGTH = 0.60;
+    public static final boolean DEFAULT_REVERB_ENABLED = true;
+    public static final double DEFAULT_REVERB_STRENGTH = 0.60;
+    public static final boolean DEFAULT_UNDERWATER_ENABLED = true;
+    public static final boolean DEFAULT_WEATHER_ENABLED = true;
 
     private volatile AttenuationModel model = DEFAULT_MODEL;
     private volatile double attenuationFactor = DEFAULT_ATTENUATION_FACTOR;
@@ -56,6 +62,10 @@ public final class DistanceConfig {
     private volatile double whisperMultiplier = DEFAULT_WHISPER_MULTIPLIER;
     private volatile boolean occlusionEnabled = DEFAULT_OCCLUSION_ENABLED;
     private volatile double occlusionStrength = DEFAULT_OCCLUSION_STRENGTH;
+    private volatile boolean reverbEnabled = DEFAULT_REVERB_ENABLED;
+    private volatile double reverbStrength = DEFAULT_REVERB_STRENGTH;
+    private volatile boolean underwaterEnabled = DEFAULT_UNDERWATER_ENABLED;
+    private volatile boolean weatherEnabled = DEFAULT_WEATHER_ENABLED;
     private final double[] materialWeights = new double[AcousticMaterial.values().length];
 
     // Interface: only ever read from the player's own file, never part of a server profile
@@ -152,6 +162,45 @@ public final class DistanceConfig {
         changed();
     }
 
+    /** Echo in caves and halls. */
+    public boolean isReverbEnabled() {
+        return reverbEnabled;
+    }
+
+    public void setReverbEnabled(boolean value) {
+        reverbEnabled = value;
+        changed();
+    }
+
+    public double getReverbStrength() {
+        return reverbStrength;
+    }
+
+    public void setReverbStrength(double value) {
+        reverbStrength = clamp(value, REVERB_MIN, REVERB_MAX);
+        changed();
+    }
+
+    /** Dull, quiet voices under water. */
+    public boolean isUnderwaterEnabled() {
+        return underwaterEnabled;
+    }
+
+    public void setUnderwaterEnabled(boolean value) {
+        underwaterEnabled = value;
+        changed();
+    }
+
+    /** Rain and thunder cover far voices. */
+    public boolean isWeatherEnabled() {
+        return weatherEnabled;
+    }
+
+    public void setWeatherEnabled(boolean value) {
+        weatherEnabled = value;
+        changed();
+    }
+
     public double getMaterialWeight(AcousticMaterial material) {
         synchronized (materialWeights) {
             return materialWeights[material.ordinal()];
@@ -230,6 +279,10 @@ public final class DistanceConfig {
         whisperMultiplier = DEFAULT_WHISPER_MULTIPLIER;
         occlusionEnabled = DEFAULT_OCCLUSION_ENABLED;
         occlusionStrength = DEFAULT_OCCLUSION_STRENGTH;
+        reverbEnabled = DEFAULT_REVERB_ENABLED;
+        reverbStrength = DEFAULT_REVERB_STRENGTH;
+        underwaterEnabled = DEFAULT_UNDERWATER_ENABLED;
+        weatherEnabled = DEFAULT_WEATHER_ENABLED;
         resetMaterials();
     }
 
@@ -249,6 +302,10 @@ public final class DistanceConfig {
         whisperMultiplier = other.whisperMultiplier;
         occlusionEnabled = other.occlusionEnabled;
         occlusionStrength = other.occlusionStrength;
+        reverbEnabled = other.reverbEnabled;
+        reverbStrength = other.reverbStrength;
+        underwaterEnabled = other.underwaterEnabled;
+        weatherEnabled = other.weatherEnabled;
         for (AcousticMaterial m : AcousticMaterial.values()) {
             double w = other.getMaterialWeight(m);
             synchronized (materialWeights) {
@@ -323,6 +380,8 @@ public final class DistanceConfig {
         w.section("Walls", "Стены");
         writeWalls(w, "");
         writeMaterials(w, "");
+        w.section("Echo, water and weather", "Эхо, вода и погода");
+        writeEffects(w, "");
         w.section("Interface", "Интерфейс");
         w.comment("Voice HUD on screen: off, talking (while someone nearby or you talk), always. Default talking.",
                         "HUD голоса на экране: off (выкл.), talking (пока кто-то рядом или вы говорите), always (всегда). По умолчанию talking.")
@@ -365,6 +424,22 @@ public final class DistanceConfig {
                 .value(prefix + "occlusion_strength", occlusionStrength);
     }
 
+    /** Echo, water and weather keys with their explanations (shared by the client and server files). */
+    void writeEffects(ConfigWriter w, String prefix) {
+        w.comment("Echo in caves and halls: true / false. Default true.",
+                        "Эхо в пещерах и залах: true / false. По умолчанию true.")
+                .value(prefix + "reverb_enabled", reverbEnabled)
+                .comment("How strong the echo is, 0 - 1. Default 0.6.",
+                        "Сила эха, 0 - 1. По умолчанию 0.6.")
+                .value(prefix + "reverb_strength", reverbStrength)
+                .comment("Voices are dull and quiet when you or the speaker are under water: true / false. Default true.",
+                        "Голоса глухие и тихие, когда вы или говорящий под водой: true / false. По умолчанию true.")
+                .value(prefix + "underwater_enabled", underwaterEnabled)
+                .comment("Rain and thunder cover far voices under the open sky: true / false. Default true.",
+                        "Дождь и гроза заглушают дальние голоса под открытым небом: true / false. По умолчанию true.")
+                .value(prefix + "weather_enabled", weatherEnabled);
+    }
+
     /** Per-material weights with their explanations (shared by the client and server files). */
     void writeMaterials(ConfigWriter w, String prefix) {
         w.comment("How much one block of each material muffles, 0 - 3. Stone = 1.0; 2.0 = like two stone blocks.",
@@ -384,6 +459,10 @@ public final class DistanceConfig {
         props.setProperty(prefix + "whisper_multiplier", format(whisperMultiplier));
         props.setProperty(prefix + "occlusion_enabled", String.valueOf(occlusionEnabled));
         props.setProperty(prefix + "occlusion_strength", format(occlusionStrength));
+        props.setProperty(prefix + "reverb_enabled", String.valueOf(reverbEnabled));
+        props.setProperty(prefix + "reverb_strength", format(reverbStrength));
+        props.setProperty(prefix + "underwater_enabled", String.valueOf(underwaterEnabled));
+        props.setProperty(prefix + "weather_enabled", String.valueOf(weatherEnabled));
         for (AcousticMaterial m : AcousticMaterial.values()) {
             props.setProperty(prefix + "material." + m.getId(), format(getMaterialWeight(m)));
         }
@@ -398,6 +477,10 @@ public final class DistanceConfig {
         whisperMultiplier = clamp(parseDouble(props, prefix + "whisper_multiplier", DEFAULT_WHISPER_MULTIPLIER), WHISPER_MIN, WHISPER_MAX);
         occlusionEnabled = parseBoolean(props, prefix + "occlusion_enabled", DEFAULT_OCCLUSION_ENABLED);
         occlusionStrength = clamp(parseDouble(props, prefix + "occlusion_strength", DEFAULT_OCCLUSION_STRENGTH), STRENGTH_MIN, STRENGTH_MAX);
+        reverbEnabled = parseBoolean(props, prefix + "reverb_enabled", DEFAULT_REVERB_ENABLED);
+        reverbStrength = clamp(parseDouble(props, prefix + "reverb_strength", DEFAULT_REVERB_STRENGTH), REVERB_MIN, REVERB_MAX);
+        underwaterEnabled = parseBoolean(props, prefix + "underwater_enabled", DEFAULT_UNDERWATER_ENABLED);
+        weatherEnabled = parseBoolean(props, prefix + "weather_enabled", DEFAULT_WEATHER_ENABLED);
         synchronized (materialWeights) {
             for (AcousticMaterial m : AcousticMaterial.values()) {
                 materialWeights[m.ordinal()] = clamp(parseDouble(props, prefix + "material." + m.getId(), m.getDefaultWeight()), 0.0, AcousticMaterial.MAX_WEIGHT);

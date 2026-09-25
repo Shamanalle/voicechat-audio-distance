@@ -120,6 +120,10 @@ public class LangConsistencyTest {
             used.add(PREFIX + "hud." + k + "_whisper");
         }
         used.add("key.vc-audio-distance.toggle_hud");
+        for (EnvironmentEffects.Weather w : EnvironmentEffects.Weather.values()) {
+            used.add(PREFIX + "effects.weather." + w.name().toLowerCase(Locale.ROOT));
+        }
+        used.add(PREFIX + "effects.sound_physics.detail");
         used.add("message.vc-audio-distance.server_profile.suggest");
         used.add("message.vc-audio-distance.server_profile.enforce");
         for (String s : new String[]{"status.sound_physics", "status.unavailable"}) {

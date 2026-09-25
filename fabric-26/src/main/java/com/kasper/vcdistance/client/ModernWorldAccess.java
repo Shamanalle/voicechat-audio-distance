@@ -2,11 +2,17 @@ package com.kasper.vcdistance.client;
 
 import com.kasper.vcdistance.AudioDistancePlugin;
 import com.kasper.vcdistance.Bearing;
+import com.kasper.vcdistance.EnvironmentEffects;
 import com.kasper.vcdistance.NearbyPlayers;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -90,6 +96,32 @@ public final class ModernWorldAccess implements WorldAccess {
             }
         }
         return list;
+    }
+
+    @Override
+    public double rayDistance(Vec3 from, double dx, double dy, double dz, double maxDistance) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null || mc.player == null) {
+            return -1.0;
+        }
+        Vec3 to = from.add(dx * maxDistance, dy * maxDistance, dz * maxDistance);
+        BlockHitResult hit = mc.level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
+        return hit.getType() == HitResult.Type.MISS ? -1.0 : hit.getLocation().distanceTo(from);
+    }
+
+    @Override
+    public boolean isUnderWater(Vec3 point) {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.level != null && mc.level.getFluidState(BlockPos.containing(point)).is(FluidTags.WATER);
+    }
+
+    @Override
+    public EnvironmentEffects.Weather weatherAt(Vec3 point) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null || !mc.level.isRainingAt(BlockPos.containing(point))) {
+            return EnvironmentEffects.Weather.CLEAR;
+        }
+        return mc.level.isThundering() ? EnvironmentEffects.Weather.THUNDER : EnvironmentEffects.Weather.RAIN;
     }
 
     @Override

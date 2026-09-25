@@ -54,6 +54,8 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     public static final ServerLink LINK = new ServerLink();
     /** Players within voice range of the listener (client). */
     public static final NearbyPlayers NEARBY = new NearbyPlayers();
+    /** Echo, water and weather around the listener (client). */
+    public static final ListenerEnvironment ENVIRONMENT = new ListenerEnvironment();
     /** Server-side settings and wall muffling. */
     public static final ServerSettings SERVER_SETTINGS = new ServerSettings();
     public static final ServerWalls SERVER_WALLS = new ServerWalls(SERVER_SETTINGS);
@@ -432,22 +434,52 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         muffle(event, speaker, raw);
     }
 
+    /**
+     * Everything done to a voice's audio on the client: walls, water and weather as one filter,
+     * then the echo of the room the listener is in. Never throws; on a failure the voice plays as it came.
+     */
     private static void muffle(ClientReceiveSoundEvent event, SpeakerRegistry.Speaker speaker, short[] raw) {
         try {
-            double muffle = 0.0;
-            double lossDb = 0.0;
-            if (occlusionStatus() == OcclusionStatus.ACTIVE && speaker.isOcclusionKnown()) {
-                double strength = config().getOcclusionStrength();
-                muffle = OcclusionModel.muffle(speaker.getThickness(), strength);
-                lossDb = OcclusionModel.lossDb(speaker.getThickness(), strength);
+            DistanceConfig c = config();
+            OcclusionStatus status = occlusionStatus();
+            EnvironmentEffects.Effect effect = EnvironmentEffects.Effect.NONE;
+            if (status == OcclusionStatus.ACTIVE && speaker.isOcclusionKnown()) {
+                double strength = c.getOcclusionStrength();
+                effect = new EnvironmentEffects.Effect(OcclusionModel.muffle(speaker.getThickness(), strength),
+                        OcclusionModel.lossDb(speaker.getThickness(), strength));
             }
+            // Sound Physics Remastered does its own water and echo; weather is ours either way
+            boolean ownPhysics = status != OcclusionStatus.SOUND_PHYSICS && status != OcclusionStatus.UNAVAILABLE;
+            ListenerEnvironment env = ENVIRONMENT;
+            if (ownPhysics && c.isUnderwaterEnabled()) {
+                effect = effect.plus(EnvironmentEffects.water(env.isUnderWater(), speaker.isUnderWater()));
+            }
+            if (c.isWeatherEnabled() && speaker.getDistance() >= 0.0) {
+                double range = speaker.getMaxDistance() > 0.0F ? speaker.getMaxDistance() : getServerMaxDistance();
+                effect = effect.plus(EnvironmentEffects.weather(
+                        ListenerEnvironment.worse(env.weather(), speaker.getWeather()), speaker.getDistance() / range));
+            }
+
+            // Both stages work on the frame in place
+            boolean changed = false;
             VoiceFilter filter = speaker.getFilter();
             // Zero targets let an engaged filter glide back open instead of cutting off
-            if (muffle > 0.0 || lossDb > 0.0 || filter.isEngaged()) {
-                event.setRawAudio(filter.process(raw, muffle, lossDb));
+            if (effect.muffle() > 0.0 || effect.lossDb() > 0.0 || filter.isEngaged()) {
+                filter.process(raw, effect.muffle(), effect.lossDb());
+                changed = true;
+            }
+            Reverb reverb = speaker.getReverb();
+            RoomEstimate room = env.room();
+            double wet = ownPhysics && c.isReverbEnabled() ? room.wet() * c.getReverbStrength() : 0.0;
+            if (wet > 0.0 || reverb.isActive()) {
+                reverb.process(raw, wet, room.decaySeconds());
+                changed = true;
+            }
+            if (changed) {
+                event.setRawAudio(raw);
             }
         } catch (Throwable t) {
-            DistanceConfig.LOGGER.debug("Wall muffling failed for {}: {}", speaker.getChannelId(), t.toString());
+            DistanceConfig.LOGGER.debug("Voice processing failed for {}: {}", speaker.getChannelId(), t.toString());
         }
     }
 }
