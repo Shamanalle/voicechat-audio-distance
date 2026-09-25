@@ -50,6 +50,12 @@ All documentation (README, CHANGELOG, this file, issue and pull request template
 
 GitHub release notes are generated from `CHANGELOG.md` by `.github/scripts/release-notes.sh`. When the changelog changes on `main`, the *Sync release notes* workflow updates the notes of already published releases.
 
+The repository description and topics live in `.github/about.json`. The *Repository about* workflow validates the file in pull requests and applies it when it changes on `main`. Applying needs the `REPO_ADMIN_TOKEN` secret, because the built-in workflow token cannot change repository settings. It is set up once:
+1. GitHub → *Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token*.
+2. *Repository access*: *Only select repositories* → this repository. *Permissions → Repository permissions → Administration*: *Read and write*. Nothing else is needed.
+3. In this repository: *Settings → Secrets and variables → Actions → New repository secret*, name `REPO_ADMIN_TOKEN`, value: the token.
+4. Run *Actions → Repository about → Run workflow* once, or change `.github/about.json`. When the token expires, generate a new one and update the secret.
+
 ### Pull requests
 
 1. Branch off `main` (`feature/…`, `fix/…`).
@@ -104,6 +110,12 @@ cd voicechat-audio-distance
 Вся документация (README, CHANGELOG, этот файл, шаблоны issue и pull request) пишется сначала на английском, затем идёт полный перевод на русский.
 
 Описания релизов на GitHub собираются из `CHANGELOG.md` скриптом `.github/scripts/release-notes.sh`. Когда журнал изменений меняется в `main`, workflow *Sync release notes* обновляет описания уже опубликованных релизов.
+
+Описание и темы (topics) репозитория лежат в `.github/about.json`. Workflow *Repository about* проверяет этот файл в pull request и применяет его, когда файл меняется в `main`. Для применения нужен секрет `REPO_ADMIN_TOKEN`, потому что встроенный токен workflow не может менять настройки репозитория. Настраивается один раз:
+1. GitHub → *Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token*.
+2. *Repository access*: *Only select repositories* → этот репозиторий. *Permissions → Repository permissions → Administration*: *Read and write*. Больше ничего не нужно.
+3. В этом репозитории: *Settings → Secrets and variables → Actions → New repository secret*, имя `REPO_ADMIN_TOKEN`, значение — токен.
+4. Один раз запустите *Actions → Repository about → Run workflow* или измените `.github/about.json`. Когда срок токена истечёт, создайте новый и обновите секрет.
 
 ### Pull request
 
