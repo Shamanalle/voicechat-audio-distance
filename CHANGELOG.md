@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 #### Added
 - Releases are also uploaded to Modrinth and CurseForge.
 - **Minecraft 26.1, 26.1.1, 26.1.2 and 26.2** with the same 26.x jar (it was 26.3 only). Screens moved from `Minecraft` to `Gui` in 26.2 and input switched to SDL in 26.3; the jar now picks the right API at runtime. It needs Fabric API 0.145.1 or newer.
-- A CI check runs the 26.x jar against every 26.x release: the sources compile against each one, and every class, method, field and override the jar uses must resolve the same way as on 26.3.
+- A CI check runs the 26.x jar against every 26.x release: every class, method, field and override the jar uses must resolve the same way as on 26.3, and the screen methods it finds by name must exist.
 
 ### Русский
 
@@ -26,7 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 #### Добавлено
 - Релизы также загружаются на Modrinth и CurseForge.
 - **Minecraft 26.1, 26.1.1, 26.1.2 и 26.2** с тем же JAR для 26.x (раньше только 26.3). В 26.2 экраны переехали из `Minecraft` в `Gui`, а в 26.3 ввод перешёл на SDL; теперь JAR выбирает нужный API во время работы. Нужен Fabric API 0.145.1 или новее.
-- Проверка в CI запускает JAR для 26.x на каждом релизе 26.x: исходники должны собираться под каждую версию, а каждый класс, метод, поле и переопределение, которые использует JAR, должны разрешаться так же, как на 26.3.
+- Проверка в CI запускает JAR для 26.x на каждом релизе 26.x: каждый класс, метод, поле и переопределение, которые использует JAR, должны разрешаться так же, как на 26.3, а методы экранов, которые он ищет по имени, должны существовать.
 
 ## [1.2.1] - 2026-09-25
 

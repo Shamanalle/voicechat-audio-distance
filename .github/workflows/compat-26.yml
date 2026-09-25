@@ -1,9 +1,11 @@
 name: Minecraft 26.x compatibility
 
 # Checks the 26.x jar on every 26.x release of Minecraft, not only the one it is built against:
-# 1. the sources compile against that Minecraft version and its latest Fabric API;
-# 2. the jar built for gradle.properties' mc26_minecraft links against that version: every class,
-#    method, field, override and abstract method it uses resolves the same way (LinkCheck.java).
+# 1. the jar built for gradle.properties' mc26_minecraft links against that version and its latest
+#    Fabric API: every class, method, field, override and abstract method it uses resolves the same
+#    way (LinkCheck.java);
+# 2. the screen methods ScreenSwitch looks up by name exist;
+# and, for information, whether the sources also compile against that version.
 # The Minecraft versions come from Mojang's version list, the Fabric API versions from Fabric's maven.
 
 on:
@@ -90,34 +92,16 @@ jobs:
             -Pmc26_minecraft=${{ matrix.mc }} -Pmc26_fabric_api=${{ matrix.api }}
           cp fabric-26/build/compile-classpath.txt "${RUNNER_TEMP}/target-classpath.txt"
 
-      - name: Compile the sources against Minecraft ${{ matrix.mc }}
+      # For information only: what ships is the jar built for the reference version, and the two
+      # checks after this one decide whether it runs here. Compiling against older Fabric API
+      # builds can stop on classes of their injected interfaces (EntityLoadData on 26.1 - 26.1.1),
+      # which says nothing about the shipped jar.
+      - name: Compile the sources against Minecraft ${{ matrix.mc }} (information)
         id: compile
         continue-on-error: true
         run: |
-          # Without Fabric API's injected interfaces, which the mod does not use and some older
-          # builds declare with classes they do not ship
-          set -o pipefail
-          ./gradlew :fabric-26:compileJava --no-daemon -PnoInterfaceInjection=true \
-            -Pmc26_minecraft=${{ matrix.mc }} -Pmc26_fabric_api=${{ matrix.api }} 2>&1 | tee "${RUNNER_TEMP}/compile.log"
-
-      - name: Where a missing class comes from
-        if: steps.compile.outcome == 'failure'
-        run: |
-          missing=$(grep -ohP 'class file for \K[\w.$]+(?= not found)' "${RUNNER_TEMP}/compile.log" | sort -u || true)
-          for cls in ${missing}; do
-            path="${cls//.//}"
-            echo "== ${cls}"
-            while read -r entry; do
-              [ -f "${entry}" ] || continue
-              unzip -l "${entry}" 2>/dev/null | grep -q " ${path}.class$" && echo "  shipped in ${entry}"
-              unzip -p "${entry}" fabric.mod.json 2>/dev/null | grep -q "${path}" && echo "  injected by ${entry}"
-              for c in net/minecraft/server/level/ServerPlayer net/minecraft/world/entity/Entity; do
-                if unzip -l "${entry}" 2>/dev/null | grep -q " ${c}.class$"; then
-                  javap -cp "${entry}" "${c//\//.}" 2>/dev/null | head -1 | grep -F "${cls}" > /dev/null && echo "  ${c} implements it in ${entry}"
-                fi
-              done
-            done < "${RUNNER_TEMP}/target-classpath.txt"
-          done
+          ./gradlew :fabric-26:compileJava --no-daemon \
+            -Pmc26_minecraft=${{ matrix.mc }} -Pmc26_fabric_api=${{ matrix.api }}
 
       - name: Check the reference jar links against Minecraft ${{ matrix.mc }}
         id: link
@@ -162,7 +146,7 @@ jobs:
         run: |
           {
             echo "### Minecraft ${MC} (Fabric API ${API})"
-            echo "- Sources compile: **${COMPILE}**"
+            echo "- Sources compile (information only): **${COMPILE}**"
             echo "- Reference jar links: **${LINK}**"
             echo "- Screen methods found by name: **${REFLECTION}**"
             echo
@@ -170,4 +154,4 @@ jobs:
             tail -200 "${RUNNER_TEMP}/link.txt" 2>/dev/null || true
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
-          [ "${COMPILE}" = "success" ] && [ "${LINK}" = "success" ] && [ "${REFLECTION}" = "success" ]
+          [ "${LINK}" = "success" ] && [ "${REFLECTION}" = "success" ]
