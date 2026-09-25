@@ -1,67 +1,113 @@
-name: Bug Report
-description: Report a problem or unexpected behavior in VoiceChat Audio Distance Addon
-labels: ["bug", "triage"]
+name: "🐞 Bug report / Ошибка"
+description: "Something is broken or the game crashes / Что-то работает не так или игра падает"
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for reporting an issue! Please provide as much detail as possible to help us reproduce and resolve the problem.
+        Thanks for the report! Exact versions and steps make it much faster to fix.
+        Спасибо за отчёт! Чем точнее версии и шаги, тем быстрее получится исправить.
+
+  - type: dropdown
+    id: side
+    attributes:
+      label: "Where is the addon installed? / Где установлен аддон?"
+      options:
+        - "Client only / Только клиент"
+        - "Server only / Только сервер"
+        - "Client and server / Клиент и сервер"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: loader
+    attributes:
+      label: "Loader / Загрузчик"
+      options:
+        - Fabric
+        - Quilt
+        - NeoForge (lite)
+        - Forge (lite)
+        - Paper / Purpur / Spigot / Bukkit (server plugin / серверный плагин)
+    validations:
+      required: true
+
   - type: input
     id: mc_version
     attributes:
-      label: Minecraft Version
-      placeholder: e.g. 1.21, 1.21.8
+      label: "Minecraft version / Версия Minecraft"
+      placeholder: "1.21.8"
     validations:
       required: true
-  - type: input
-    id: fabric_version
-    attributes:
-      label: Fabric Loader & Fabric API Versions
-      placeholder: e.g. Loader 0.16.13, Fabric API 0.136.1+1.21.8
-    validations:
-      required: true
-  - type: input
-    id: svc_version
-    attributes:
-      label: Simple Voice Chat Version
-      placeholder: e.g. 2.6.13
-    validations:
-      required: true
+
   - type: input
     id: addon_version
     attributes:
-      label: Addon Version
-      placeholder: e.g. 1.0.0
+      label: "Addon version / Версия аддона"
+      description: "The file name from your mods or plugins folder / Имя файла из папки mods или plugins"
+      placeholder: "voicechat-audio-distance-fabric-1.2.0+mc1.21.x.jar"
     validations:
       required: true
+
+  - type: input
+    id: svc_version
+    attributes:
+      label: "Simple Voice Chat version / Версия Simple Voice Chat"
+      placeholder: "1.21.8-2.6.24"
+    validations:
+      required: true
+
+  - type: input
+    id: fabric_version
+    attributes:
+      label: "Fabric Loader and Fabric API / Fabric Loader и Fabric API"
+      description: "Fabric/Quilt only / Только для Fabric/Quilt"
+      placeholder: "Loader 0.16.13, Fabric API 0.136.1+1.21.8"
+
+  - type: input
+    id: server_software
+    attributes:
+      label: "Server software / Серверное ядро"
+      description: "Paper, Purpur, Spigot or Bukkit only / Только для Paper, Purpur, Spigot или Bukkit"
+      placeholder: "Paper 1.21.8 build 60"
+
+  - type: checkboxes
+    id: other_mods
+    attributes:
+      label: "Other audio mods / Другие моды на звук"
+      options:
+        - label: "Sound Physics Remastered"
+        - label: "Other Simple Voice Chat addons / Другие аддоны Simple Voice Chat"
+
   - type: textarea
     id: description
     attributes:
-      label: Description of the Bug
-      description: A clear and concise description of what happened.
+      label: "What happened / Что случилось"
+      description: "What you expected and what actually happened / Что вы ожидали и что произошло на самом деле"
     validations:
       required: true
+
   - type: textarea
     id: reproduction
     attributes:
-      label: Steps to Reproduce
-      description: Steps to reproduce the behavior.
+      label: "Steps to reproduce / Как воспроизвести"
       placeholder: |
-        1. Open audio distance settings via keybind or SVC settings.
-        2. Set distance model to Realistic Inverse.
-        3. Listen to remote voice...
+        1. Open the voice chat settings (V) → "Voice distance & walls…" / Открыть настройки голосового чата (V) → «Дальность голоса и стены…»
+        2. Walls tab, strength 100% / Вкладка «Стены», сила 100%
+        3. Stand behind a stone wall from the speaker… / Встать за каменной стеной от говорящего…
     validations:
       required: true
+
   - type: textarea
-    id: expected
+    id: config
     attributes:
-      label: Expected Behavior
-      description: What you expected to happen.
-    validations:
-      required: true
+      label: "Config / Конфиг"
+      description: "Contents of config/vc-audio-distance.properties (and config/vc-audio-distance-server.properties on the server) / Содержимое config/vc-audio-distance.properties (и config/vc-audio-distance-server.properties на сервере)"
+      render: properties
+
   - type: textarea
     id: logs
     attributes:
-      label: Relevant Logs / Crash Reports
-      description: Paste any crash reports or logs from `.minecraft/logs/latest.log`.
+      label: "Log or crash report / Лог или краш-репорт"
+      description: "logs/latest.log or crash-reports/…; a mclo.gs link is fine / logs/latest.log или crash-reports/…; можно ссылкой на mclo.gs"
       render: text

@@ -2,17 +2,23 @@
   "schemaVersion": 1,
   "id": "vc-audio-distance",
   "version": "${version}",
-  "name": "VoiceChat Audio Distance Addon",
+  "name": "VoiceChat Audio Distance",
   "icon": "assets/vc-audio-distance/icon.png",
-  "description": "Advanced 3D audio distance attenuation models, hardware OpenAL volume floor, and real-time audibility curves for Simple Voice Chat.",
-  "authors": ["Kasper"],
+  "description": "Shapes how Simple Voice Chat voices fade with distance and muffles them through walls. Client: live curve, wall preview, monitor. Server (optional): walls for players without the addon and a shared sound profile.",
+  "authors": [
+    "Kasper"
+  ],
   "contact": {
     "homepage": "https://github.com/Shamanalle/voicechat-audio-distance",
-    "sources": "https://github.com/Shamanalle/voicechat-audio-distance"
+    "sources": "https://github.com/Shamanalle/voicechat-audio-distance",
+    "issues": "https://github.com/Shamanalle/voicechat-audio-distance/issues"
   },
   "license": "MIT",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
+    "main": [
+      "com.kasper.vcdistance.AudioDistanceMod"
+    ],
     "client": [
       "com.kasper.vcdistance.AudioDistanceClient"
     ],
@@ -27,6 +33,10 @@
     "fabricloader": ">=0.16.0",
     "fabric-api": "*",
     "minecraft": ">=1.21 <=1.21.11",
-    "voicechat": ">=2.4.0"
+    "java": ">=21",
+    "voicechat": ">=1.21-2.5.0"
+  },
+  "suggests": {
+    "modmenu": "*"
   }
 }
