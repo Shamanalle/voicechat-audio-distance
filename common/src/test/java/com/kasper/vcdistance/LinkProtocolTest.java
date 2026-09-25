@@ -189,7 +189,8 @@ public class LinkProtocolTest {
         assertEquals(1.2, s.profile().getMaterialWeight(AcousticMaterial.GLASS), 1e-9);
 
         String text = Files.readString(file);
-        assertTrue(text.contains("settings_version=2"));
+        assertTrue(text.contains("settings_version=3"));
+        assertTrue(text.contains("profile.reverb_enabled=true\n"));
         assertTrue(text.contains("walls_strength=0.85\n"));
         assertTrue(text.contains("material.glass=1.2\n"));
         assertTrue(text.contains("profile.distance_model=realistic_inverse\n"));

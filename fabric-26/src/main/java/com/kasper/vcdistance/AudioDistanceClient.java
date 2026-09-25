@@ -1,5 +1,7 @@
 package com.kasper.vcdistance;
 
+import com.kasper.vcdistance.client.ClientHints;
+import com.kasper.vcdistance.client.HudHook;
 import com.kasper.vcdistance.client.ModernWorldAccess;
 import com.kasper.vcdistance.client.ScreenSwitch;
 import com.kasper.vcdistance.client.SpeakerTicker;
@@ -29,6 +31,7 @@ public class AudioDistanceClient implements ClientModInitializer {
 
     public static KeyMapping.Category CATEGORY;
     public static KeyMapping OPEN_SETTINGS_KEY;
+    public static KeyMapping TOGGLE_HUD_KEY;
     private static SpeakerTicker ticker;
     private static Object lastConnection;
     private static boolean helloSent;
@@ -45,6 +48,16 @@ public class AudioDistanceClient implements ClientModInitializer {
                 InputConstants.UNKNOWN.getValue(),
                 CATEGORY
         ));
+        TOGGLE_HUD_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.vc-audio-distance.toggle_hud",
+                InputConstants.UNKNOWN.getValue(),
+                CATEGORY
+        ));
+        try {
+            HudHook.register();
+        } catch (Throwable t) {
+            DistanceConfig.LOGGER.warn("Could not add the voice HUD: {}", t.toString());
+        }
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ticker.tick();
@@ -52,6 +65,11 @@ public class AudioDistanceClient implements ClientModInitializer {
             while (OPEN_SETTINGS_KEY.consumeClick()) {
                 ScreenSwitch.open(client, new AudioDistanceScreen(ScreenSwitch.current(client)));
             }
+            while (TOGGLE_HUD_KEY.consumeClick()) {
+                ClientHints.cycleHud();
+            }
+            ClientHints.tickWelcome(client.player != null && client.level != null, OPEN_SETTINGS_KEY,
+                    message -> client.player.sendSystemMessage(message));
         });
         ScreenEvents.AFTER_INIT.register(AudioDistanceClient::onScreenInit);
     }

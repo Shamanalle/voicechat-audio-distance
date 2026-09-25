@@ -88,8 +88,34 @@ public class DistanceConfigTest {
         c.load();
         assertEquals(AttenuationModel.REALISTIC_INVERSE, c.getModel());
         String text = Files.readString(file);
-        assertTrue(text.contains("config_version=3"));
+        assertTrue(text.contains("config_version=5"));
+        assertTrue(text.contains("reverb_enabled=true"));
         assertTrue(text.contains("material.stone"));
+        assertTrue(text.contains("hud_mode=talking"));
+    }
+
+    @Test
+    @DisplayName("Interface settings persist and are not part of a server profile")
+    void interfaceSettings() throws IOException {
+        Path file = dir.resolve("vc.properties");
+        DistanceConfig c = new DistanceConfig(file);
+        c.setHudMode(HudMode.ALWAYS);
+        c.setHudCorner(HudCorner.BOTTOM_RIGHT);
+        c.setWelcomeShown(true);
+        c.save();
+
+        DistanceConfig loaded = new DistanceConfig(file);
+        loaded.load();
+        assertEquals(HudMode.ALWAYS, loaded.getHudMode());
+        assertEquals(HudCorner.BOTTOM_RIGHT, loaded.getHudCorner());
+        assertTrue(loaded.isWelcomeShown());
+
+        // Applying a (server) profile keeps the player's interface
+        loaded.copyFrom(new DistanceConfig(dir.resolve("other.properties")));
+        assertEquals(HudMode.ALWAYS, loaded.getHudMode());
+        java.util.Properties p = new java.util.Properties();
+        loaded.writeTo(p, "profile.");
+        assertFalse(p.stringPropertyNames().stream().anyMatch(k -> k.contains("hud")));
     }
 
     @Test
@@ -102,7 +128,8 @@ public class DistanceConfigTest {
         String text = Files.readString(file);
         String[] keys = {"config_version=", "distance_model=", "attenuation_factor=", "openal_reference_ratio=",
                 "min_volume_fraction=", "whisper_multiplier=", "occlusion_enabled=", "occlusion_strength=",
-                "material.stone=", "material.liquid="};
+                "material.stone=", "material.liquid=", "reverb_enabled=", "reverb_strength=", "underwater_enabled=",
+                "weather_enabled=", "hud_mode=", "hud_corner=", "welcome_shown="};
         int last = -1;
         for (String key : keys) {
             int at = text.indexOf("\n" + key);

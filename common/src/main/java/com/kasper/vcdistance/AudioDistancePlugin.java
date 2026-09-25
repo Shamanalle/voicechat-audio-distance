@@ -4,10 +4,14 @@ import de.maxhenkel.voicechat.api.ForgeVoicechatPlugin;
 import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.ServerPlayer;
 import de.maxhenkel.voicechat.api.VoicechatApi;
+import de.maxhenkel.voicechat.api.VoicechatClientApi;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
+import de.maxhenkel.voicechat.api.events.ClientEvent;
 import de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent;
+import de.maxhenkel.voicechat.api.events.ClientSoundEvent;
+import de.maxhenkel.voicechat.api.events.ClientVoicechatConnectionEvent;
 import de.maxhenkel.voicechat.api.events.EntitySoundPacketEvent;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.LocationalSoundPacketEvent;
@@ -23,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 
 /**
@@ -49,12 +54,21 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     public static final ServerLink LINK = new ServerLink();
     /** Players within voice range of the listener (client). */
     public static final NearbyPlayers NEARBY = new NearbyPlayers();
+    /** Echo, water and weather around the listener (client). */
+    public static final ListenerEnvironment ENVIRONMENT = new ListenerEnvironment();
     /** Server-side settings and wall muffling. */
     public static final ServerSettings SERVER_SETTINGS = new ServerSettings();
     public static final ServerWalls SERVER_WALLS = new ServerWalls(SERVER_SETTINGS);
 
     private static volatile VoicechatApi api;
     private static volatile VoicechatServerApi serverApi;
+    private static volatile VoicechatClientApi clientApi;
+    /** Set when the installed Simple Voice Chat is too old to report other players' state (before 2.6.1). */
+    private static volatile boolean clientStatesUnsupported;
+    private static volatile long selfTalkNanos = Long.MIN_VALUE;
+    private static volatile boolean selfWhispering;
+    /** How long after the last microphone frame you still count as talking. */
+    private static final long SELF_TALK_HOLD_NANOS = TimeUnit.MILLISECONDS.toNanos(400);
     private static volatile boolean serverSettingsLoaded;
     private static volatile boolean occlusionProviderAvailable;
 
@@ -91,6 +105,8 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         registration.registerEvent(OpenALSoundEvent.class, AudioDistancePlugin::onOpenALSound);
         registration.registerEvent(ClientReceiveSoundEvent.EntitySound.class, AudioDistancePlugin::onEntitySound);
         registration.registerEvent(ClientReceiveSoundEvent.LocationalSound.class, AudioDistancePlugin::onLocationalSound);
+        registration.registerEvent(ClientSoundEvent.class, AudioDistancePlugin::onOwnVoice);
+        registration.registerEvent(ClientVoicechatConnectionEvent.class, AudioDistancePlugin::captureClientApi);
         registerServerEvents(registration);
     }
 
@@ -185,6 +201,84 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         double dy = pa.getY() - pb.getY();
         double dz = pa.getZ() - pb.getZ();
         return dx * dx + dy * dy + dz * dz;
+    }
+
+    // -------------------------------------------------------------------------
+    // Your own voice and other players' voice chat state (client)
+    // -------------------------------------------------------------------------
+
+    private static void captureClientApi(ClientEvent event) {
+        if (clientApi == null) {
+            try {
+                clientApi = event.getVoicechat();
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    /** Microphone frame being sent: you are talking. Never changes the audio. */
+    private static void onOwnVoice(ClientSoundEvent event) {
+        captureClientApi(event);
+        selfWhispering = event.isWhispering();
+        selfTalkNanos = System.nanoTime();
+    }
+
+    /** {@code true} while your microphone is sending. */
+    public static boolean isSelfTalking(long nowNanos) {
+        long t = selfTalkNanos;
+        return t != Long.MIN_VALUE && nowNanos - t <= SELF_TALK_HOLD_NANOS;
+    }
+
+    /** Whether your last microphone frame was a whisper. */
+    public static boolean isSelfWhispering() {
+        return selfWhispering;
+    }
+
+    /**
+     * Voice chat state of a player: from the server when it has the addon (it also knows who has no
+     * voice chat and who is in a group), otherwise from your own Simple Voice Chat (2.6.1+), which
+     * knows who is disconnected or has the sound off.
+     *
+     * @return the state, or {@code null} when neither knows
+     */
+    public static VoiceState voiceState(UUID player, long nowNanos) {
+        VoiceState fromServer = LINK.voiceState(player, nowNanos);
+        return fromServer != null ? fromServer : clientVoiceState(player);
+    }
+
+    /** {@code true} when {@link #voiceState} can answer for nearby players. */
+    public static boolean hasVoiceStates(long nowNanos) {
+        return LINK.hasVoiceStates(nowNanos) || clientStatesAvailable();
+    }
+
+    private static boolean clientStatesAvailable() {
+        VoicechatClientApi c = clientApi;
+        if (c == null || clientStatesUnsupported) {
+            return false;
+        }
+        try {
+            // Your own voice chat must be connected for the others' state to mean anything
+            return !c.isDisconnected();
+        } catch (Throwable t) {
+            clientStatesUnsupported = true;
+            return false;
+        }
+    }
+
+    private static VoiceState clientVoiceState(UUID player) {
+        if (player == null || !clientStatesAvailable()) {
+            return null;
+        }
+        VoicechatClientApi c = clientApi;
+        try {
+            if (c.isDisconnected(player)) {
+                return VoiceState.DISCONNECTED;
+            }
+            return c.isDisabled(player) ? VoiceState.SOUND_OFF : VoiceState.CONNECTED;
+        } catch (Throwable t) {
+            clientStatesUnsupported = true;
+            return null;
+        }
     }
 
     /** Called by the client glue once it feeds occlusion data from the world. */
@@ -317,6 +411,7 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     // -------------------------------------------------------------------------
 
     private static void onEntitySound(ClientReceiveSoundEvent.EntitySound event) {
+        captureClientApi(event);
         short[] raw = event.getRawAudio();
         if (raw == null || raw.length == 0 || event.getId() == null) {
             return;
@@ -339,22 +434,52 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         muffle(event, speaker, raw);
     }
 
+    /**
+     * Everything done to a voice's audio on the client: walls, water and weather as one filter,
+     * then the echo of the room the listener is in. Never throws; on a failure the voice plays as it came.
+     */
     private static void muffle(ClientReceiveSoundEvent event, SpeakerRegistry.Speaker speaker, short[] raw) {
         try {
-            double muffle = 0.0;
-            double lossDb = 0.0;
-            if (occlusionStatus() == OcclusionStatus.ACTIVE && speaker.isOcclusionKnown()) {
-                double strength = config().getOcclusionStrength();
-                muffle = OcclusionModel.muffle(speaker.getThickness(), strength);
-                lossDb = OcclusionModel.lossDb(speaker.getThickness(), strength);
+            DistanceConfig c = config();
+            OcclusionStatus status = occlusionStatus();
+            EnvironmentEffects.Effect effect = EnvironmentEffects.Effect.NONE;
+            if (status == OcclusionStatus.ACTIVE && speaker.isOcclusionKnown()) {
+                double strength = c.getOcclusionStrength();
+                effect = new EnvironmentEffects.Effect(OcclusionModel.muffle(speaker.getThickness(), strength),
+                        OcclusionModel.lossDb(speaker.getThickness(), strength));
             }
+            // Sound Physics Remastered does its own water and echo; weather is ours either way
+            boolean ownPhysics = status != OcclusionStatus.SOUND_PHYSICS && status != OcclusionStatus.UNAVAILABLE;
+            ListenerEnvironment env = ENVIRONMENT;
+            if (ownPhysics && c.isUnderwaterEnabled()) {
+                effect = effect.plus(EnvironmentEffects.water(env.isUnderWater(), speaker.isUnderWater()));
+            }
+            if (c.isWeatherEnabled() && speaker.getDistance() >= 0.0) {
+                double range = speaker.getMaxDistance() > 0.0F ? speaker.getMaxDistance() : getServerMaxDistance();
+                effect = effect.plus(EnvironmentEffects.weather(
+                        ListenerEnvironment.worse(env.weather(), speaker.getWeather()), speaker.getDistance() / range));
+            }
+
+            // Both stages work on the frame in place
+            boolean changed = false;
             VoiceFilter filter = speaker.getFilter();
             // Zero targets let an engaged filter glide back open instead of cutting off
-            if (muffle > 0.0 || lossDb > 0.0 || filter.isEngaged()) {
-                event.setRawAudio(filter.process(raw, muffle, lossDb));
+            if (effect.muffle() > 0.0 || effect.lossDb() > 0.0 || filter.isEngaged()) {
+                filter.process(raw, effect.muffle(), effect.lossDb());
+                changed = true;
+            }
+            Reverb reverb = speaker.getReverb();
+            RoomEstimate room = env.room();
+            double wet = ownPhysics && c.isReverbEnabled() ? room.wet() * c.getReverbStrength() : 0.0;
+            if (wet > 0.0 || reverb.isActive()) {
+                reverb.process(raw, wet, room.decaySeconds());
+                changed = true;
+            }
+            if (changed) {
+                event.setRawAudio(raw);
             }
         } catch (Throwable t) {
-            DistanceConfig.LOGGER.debug("Wall muffling failed for {}: {}", speaker.getChannelId(), t.toString());
+            DistanceConfig.LOGGER.debug("Voice processing failed for {}: {}", speaker.getChannelId(), t.toString());
         }
     }
 }

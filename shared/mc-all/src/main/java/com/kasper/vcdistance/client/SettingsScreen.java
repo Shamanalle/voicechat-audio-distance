@@ -4,7 +4,12 @@ import com.kasper.vcdistance.AcousticMaterial;
 import com.kasper.vcdistance.AttenuationModel;
 import com.kasper.vcdistance.AudioDistancePlugin;
 import com.kasper.vcdistance.AudioPhysics;
+import com.kasper.vcdistance.Bearing;
 import com.kasper.vcdistance.DistanceConfig;
+import com.kasper.vcdistance.EnvironmentEffects;
+import com.kasper.vcdistance.ListenerEnvironment;
+import com.kasper.vcdistance.RoomEstimate;
+import com.kasper.vcdistance.HudMode;
 import com.kasper.vcdistance.LinkProtocol;
 import com.kasper.vcdistance.NearbyPlayers;
 import com.kasper.vcdistance.OcclusionModel;
@@ -38,11 +43,18 @@ public abstract class SettingsScreen extends Screen {
     private static final int GAP = 4;
 
     private static Tab lastTab = Tab.DISTANCE;
+    /** Monitor as a list (false) or a radar seen from above (true); kept while the game runs. */
+    private static boolean radarView;
+
+    /** Walk-away preview: where the voice is at each step, as a share of the range. */
+    private static final double[] PREVIEW_STEPS = {0.05, 0.25, 0.45, 0.65, 0.85, 1.0};
+    private static final int PREVIEW_STEP_TICKS = 14;
 
     public enum Tab {
         DISTANCE("tab.distance"),
         WALLS("tab.walls"),
         MATERIALS("tab.materials"),
+        EFFECTS("tab.effects"),
         MONITOR("tab.monitor");
 
         private final String key;
@@ -86,9 +98,15 @@ public abstract class SettingsScreen extends Screen {
     private int activeTabX2;
     private int tabsBottom;
     private RangeSlider strengthSlider;
+    private RangeSlider reverbSlider;
     /** Widgets that change settings; disabled while the server enforces its profile. */
     private final List<AbstractWidget> editWidgets = new ArrayList<>();
     private boolean serverChip;
+    /** Current walk-away preview step, or -1 when it is not playing. */
+    private int previewStep = -1;
+    private int previewTicks;
+    private Button listenButton;
+    private int monitorTop;
 
     protected SettingsScreen(Screen parent) {
         super(Component.translatable(K + "title"));
@@ -100,6 +118,9 @@ public abstract class SettingsScreen extends Screen {
 
     /** Shows another screen (the API for this differs between versions). */
     protected abstract void openScreen(Screen screen);
+
+    /** Plays the preview voice (a villager's "hmm") at {@code volume}, 0 - 1. */
+    protected abstract void playPreview(float volume);
 
     protected abstract boolean inWorld();
 
@@ -114,6 +135,8 @@ public abstract class SettingsScreen extends Screen {
         presetBounds.clear();
         editWidgets.clear();
         strengthSlider = null;
+        reverbSlider = null;
+        listenButton = null;
         serverChip = false;
 
         int w = Math.min(this.width - 16, MAX_WIDTH);
@@ -152,8 +175,8 @@ public abstract class SettingsScreen extends Screen {
             case DISTANCE -> initDistance();
             case WALLS -> initWalls();
             case MATERIALS -> initMaterials();
-            case MONITOR -> {
-            }
+            case EFFECTS -> initEffects();
+            case MONITOR -> initMonitor();
         }
 
         initServerChip(w);
@@ -216,6 +239,13 @@ public abstract class SettingsScreen extends Screen {
         int rows = contentBottom - ROW * 3 + GAP;
         graphTop = contentTop + ROW + 2;
         graphBottom = rows - 6;
+
+        // Not an edit widget: listening is allowed while the server enforces its profile
+        Component listen = tr("listen");
+        int lw = this.font.width(listen) + 12;
+        listenButton = Button.builder(listen, b -> startPreview())
+                .bounds(right - lw - 3, graphTop + 3, lw, 14).tooltip(tip("listen.tooltip")).build();
+        addRenderableWidget(listenButton);
 
         edit(Button.builder(modelLabel(), b -> {
             config.setModel(config.getModel().next());
@@ -290,7 +320,103 @@ public abstract class SettingsScreen extends Screen {
         }
     }
 
+    private void initEffects() {
+        int w = right - left;
+        int colW = (w - GAP) / 2;
+        edit(Button.builder(onOff("effects.reverb", shown().isReverbEnabled()), b -> {
+            config.setReverbEnabled(!config.isReverbEnabled());
+            b.setMessage(onOff("effects.reverb", config.isReverbEnabled()));
+            if (reverbSlider != null) {
+                reverbSlider.active = config.isReverbEnabled();
+            }
+        }).bounds(left, contentTop, colW, 20).tooltip(tip("effects.reverb.tooltip")).build());
+        reverbSlider = new RangeSlider(right - colW, contentTop, colW, 20,
+                DistanceConfig.REVERB_MIN, DistanceConfig.REVERB_MAX, 0.01,
+                () -> shown().getReverbStrength(), config::setReverbStrength,
+                v -> tr("effects.reverb.strength", pct(v)));
+        reverbSlider.active = shown().isReverbEnabled();
+        edit(withTip(reverbSlider, "effects.reverb.strength.tooltip"));
+
+        edit(Button.builder(onOff("effects.water", shown().isUnderwaterEnabled()), b -> {
+            config.setUnderwaterEnabled(!config.isUnderwaterEnabled());
+            b.setMessage(onOff("effects.water", config.isUnderwaterEnabled()));
+        }).bounds(left, contentTop + ROW, colW, 20).tooltip(tip("effects.water.tooltip")).build());
+        edit(Button.builder(onOff("effects.weather", shown().isWeatherEnabled()), b -> {
+            config.setWeatherEnabled(!config.isWeatherEnabled());
+            b.setMessage(onOff("effects.weather", config.isWeatherEnabled()));
+        }).bounds(right - colW, contentTop + ROW, colW, 20).tooltip(tip("effects.weather.tooltip")).build());
+        panelTop = contentTop + ROW * 2 + 2;
+    }
+
+    private static Component onOff(String key, boolean on) {
+        return tr(key, tr(on ? "on" : "off"));
+    }
+
+    private void initMonitor() {
+        int w = right - left;
+        int bw = (w - GAP * 2) / 3;
+        DistanceConfig prefs = config;
+        addRenderableWidget(Button.builder(HudOverlay.modeLabel(prefs.getHudMode()), b -> {
+            prefs.setHudMode(prefs.getHudMode().next());
+            b.setMessage(HudOverlay.modeLabel(prefs.getHudMode()));
+        }).bounds(left, contentTop, bw, 20).tooltip(tip("hud.mode.tooltip")).build());
+        addRenderableWidget(Button.builder(HudOverlay.cornerLabel(prefs.getHudCorner()), b -> {
+            prefs.setHudCorner(prefs.getHudCorner().next());
+            b.setMessage(HudOverlay.cornerLabel(prefs.getHudCorner()));
+        }).bounds(left + bw + GAP, contentTop, bw, 20).tooltip(tip("hud.corner.tooltip")).build());
+        addRenderableWidget(Button.builder(viewLabel(), b -> {
+            radarView = !radarView;
+            b.setMessage(viewLabel());
+        }).bounds(right - bw, contentTop, bw, 20).tooltip(tip("monitor.view.tooltip")).build());
+        monitorTop = contentTop + ROW + 2;
+    }
+
+    private static Component viewLabel() {
+        return tr("monitor.view", tr(radarView ? "monitor.view.radar" : "monitor.view.list"));
+    }
+
+    // =========================================================================
+    // Walk-away preview
+    // =========================================================================
+
+    private void startPreview() {
+        previewStep = 0;
+        previewTicks = 0;
+        playPreviewStep();
+    }
+
+    private void playPreviewStep() {
+        DistanceConfig shown = shown();
+        double gain = AudioPhysics.calculateGain(PREVIEW_STEPS[previewStep], shown.getModel(),
+                shown.getAttenuationFactor(), shown.getMinVolumeFraction(), shown.getOpenalReferenceRatio());
+        if (gain > 0.005) {
+            try {
+                playPreview((float) gain);
+            } catch (Throwable t) {
+                DistanceConfig.LOGGER.debug("Preview sound failed: {}", t.toString());
+            }
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (previewStep < 0) {
+            return;
+        }
+        if (++previewTicks >= PREVIEW_STEP_TICKS) {
+            previewTicks = 0;
+            previewStep++;
+            if (previewStep >= PREVIEW_STEPS.length) {
+                previewStep = -1;
+            } else {
+                playPreviewStep();
+            }
+        }
+    }
+
     private void switchTab(Tab t) {
+        previewStep = -1;
         tab = t;
         lastTab = t;
         rebuild();
@@ -314,6 +440,7 @@ public abstract class SettingsScreen extends Screen {
 
     private void cancel() {
         config.copyFrom(snapshot);
+        config.copyInterfaceFrom(snapshot);
         openScreen(parent);
     }
 
@@ -354,7 +481,8 @@ public abstract class SettingsScreen extends Screen {
             case DISTANCE -> paintDistance(c, mouseX, mouseY);
             case WALLS -> paintWalls(c);
             case MATERIALS -> c.text(fit(c, tr("materials.hint"), right - left), left, contentTop, Palette.TEXT_MUTED);
-            case MONITOR -> paintMonitor(c);
+            case EFFECTS -> paintEffects(c);
+            case MONITOR -> paintMonitor(c, mouseX, mouseY);
         }
     }
 
@@ -387,10 +515,12 @@ public abstract class SettingsScreen extends Screen {
         Component whisper = tr("legend.whisper");
         int legendW = c.width(voice) + c.width(whisper) + 36;
         int headerY = y1 + 5;
-        boolean legend = c.width(summary) + legendW + 20 <= x2 - x1;
-        c.text(fit(c, summary, x2 - x1 - 12), x1 + 6, headerY, Palette.TEXT_DIM);
+        // The header ends where the listen button starts
+        int headRight = listenButton != null ? listenButton.getX() - 6 : x2 - 6;
+        boolean legend = c.width(summary) + legendW + 14 <= headRight - x1;
+        c.text(fit(c, summary, (legend ? headRight - legendW : headRight) - x1 - 6), x1 + 6, headerY, Palette.TEXT_DIM);
         if (legend) {
-            int lx = x2 - 6 - c.width(whisper);
+            int lx = headRight - c.width(whisper);
             c.text(whisper, lx, headerY, Palette.TEXT_DIM);
             c.fill(lx - 11, headerY + 3, lx - 4, headerY + 5, Palette.WHISPER);
             lx -= 16 + c.width(voice);
@@ -400,7 +530,7 @@ public abstract class SettingsScreen extends Screen {
 
         int px1 = x1 + 8;
         int px2 = x2 - 8;
-        int py1 = y1 + 18;
+        int py1 = y1 + 20;
         int py2 = y2 - 13;
         int pw = px2 - px1;
         int ph = py2 - py1;
@@ -444,6 +574,18 @@ public abstract class SettingsScreen extends Screen {
                 c.fill(px1 + i, top, px1 + i + 1, bottom + 1, Palette.WHISPER);
             }
             prevY = y;
+        }
+
+        // Walk-away preview: where the voice is now
+        if (previewStep >= 0) {
+            double f = PREVIEW_STEPS[previewStep];
+            double g = AudioPhysics.calculateGain(f, model, rolloff, floor, ref);
+            int sx = px1 + (int) Math.round(f * pw);
+            int sy = py2 - (int) Math.round(g * ph);
+            c.vLine(sx, py1, py2, Palette.withAlpha(Palette.ACCENT, 0xA0));
+            c.fill(sx - 2, sy - 2, sx + 3, sy + 3, 0xFF000000);
+            c.fill(sx - 1, sy - 1, sx + 2, sy + 2, Palette.ACCENT_LINE);
+            badge(c, tr("listen.at", blocks(f * maxDist), pct(g)), sx, sy - 17 >= y1 + 15 ? sy - 17 : sy + 5);
         }
 
         if (floor > 0.0) {
@@ -566,20 +708,84 @@ public abstract class SettingsScreen extends Screen {
         }
     }
 
+    // ---- Effects ------------------------------------------------------------
+
+    /** What the surroundings do to voices right now. */
+    private void paintEffects(Canvas c) {
+        int y = panelTop;
+        AudioDistancePlugin.OcclusionStatus status = AudioDistancePlugin.occlusionStatus();
+        if (status == AudioDistancePlugin.OcclusionStatus.SOUND_PHYSICS || status == AudioDistancePlugin.OcclusionStatus.UNAVAILABLE) {
+            String key = status == AudioDistancePlugin.OcclusionStatus.SOUND_PHYSICS ? "effects.sound_physics" : "status.unavailable";
+            c.frame(left, y, right, y + 26, 0x30F6C453, Palette.withAlpha(Palette.WARN, 0x90));
+            c.text(fit(c, tr(key), right - left - 12), left + 6, y + 4, Palette.WARN);
+            c.text(fit(c, tr(key + ".detail"), right - left - 12), left + 6, y + 14, Palette.TEXT_DIM);
+            y += 30;
+        }
+        if (contentBottom - y < 40) {
+            return;
+        }
+        c.frame(left, y, right, contentBottom, Palette.PANEL, Palette.PANEL_BORDER);
+        int x = left + 8;
+        int w = right - left - 16;
+        if (!inWorld()) {
+            c.centered(tr("effects.no_world"), (left + right) / 2, (y + contentBottom) / 2 - 4, Palette.TEXT_DIM);
+            return;
+        }
+        DistanceConfig shown = shown();
+        ListenerEnvironment env = AudioDistancePlugin.ENVIRONMENT;
+        c.text(tr("effects.now"), x, y + 5, Palette.TEXT_DIM);
+        int rowY = y + 20;
+
+        // Echo: the room around you
+        RoomEstimate room = env.room();
+        boolean reverbOn = shown.isReverbEnabled() && status != AudioDistancePlugin.OcclusionStatus.SOUND_PHYSICS;
+        double level = room.wet() * shown.getReverbStrength();
+        Component roomText = room.wet() < 0.02
+                ? tr("effects.room.open")
+                : tr("effects.room.closed", pct(room.enclosure()), blocks(room.meanFree()),
+                String.format(Locale.ROOT, "%.1f", room.decaySeconds()));
+        c.text(fit(c, roomText, w), x, rowY, reverbOn ? Palette.TEXT : Palette.TEXT_MUTED);
+        rowY += 12;
+        int barRight = right - 8 - c.width(Component.literal("100%")) - 4;
+        c.fill(x, rowY + 1, barRight, rowY + 7, 0x22FFFFFF);
+        c.fill(x, rowY + 1, x + (int) Math.round(Math.min(1.0, reverbOn ? level : 0.0) * (barRight - x)), rowY + 7,
+                Palette.withAlpha(Palette.ACCENT, reverbOn ? 0xFF : 0x70));
+        c.right(Component.literal(pct(reverbOn ? level : 0.0)), right - 8, rowY, Palette.TEXT_DIM);
+        rowY += 16;
+
+        // Water
+        boolean waterOn = shown.isUnderwaterEnabled() && status != AudioDistancePlugin.OcclusionStatus.SOUND_PHYSICS;
+        c.text(fit(c, tr(env.isUnderWater() ? "effects.water.under" : "effects.water.dry"), w), x, rowY,
+                env.isUnderWater() && waterOn ? Palette.ACCENT_LINE : Palette.TEXT_MUTED);
+        rowY += 14;
+
+        // Weather
+        EnvironmentEffects.Weather weather = env.weather();
+        String weatherKey = "effects.weather." + weather.name().toLowerCase(Locale.ROOT);
+        c.text(fit(c, tr(weatherKey), w), x, rowY,
+                weather != EnvironmentEffects.Weather.CLEAR && shown.isWeatherEnabled() ? Palette.WARN : Palette.TEXT_MUTED);
+        rowY += 14;
+
+        if (rowY + 22 <= contentBottom - 4) {
+            c.text(fit(c, tr("effects.hint"), w), x, contentBottom - 14, Palette.TEXT_MUTED);
+        }
+    }
+
     // ---- Monitor ------------------------------------------------------------
 
-    private void paintMonitor(Canvas c) {
-        c.frame(left, contentTop, right, contentBottom, Palette.PANEL, Palette.PANEL_BORDER);
+    private void paintMonitor(Canvas c, int mouseX, int mouseY) {
+        int top = monitorTop;
+        c.frame(left, top, right, contentBottom, Palette.PANEL, Palette.PANEL_BORDER);
         int midX = (left + right) / 2;
         if (!inWorld()) {
-            c.centered(tr("monitor.no_world"), midX, (contentTop + contentBottom) / 2 - 4, Palette.TEXT_DIM);
+            c.centered(tr("monitor.no_world"), midX, (top + contentBottom) / 2 - 4, Palette.TEXT_DIM);
             return;
         }
 
         AudioDistancePlugin.OcclusionStatus status = AudioDistancePlugin.occlusionStatus();
         boolean wallsActive = status == AudioDistancePlugin.OcclusionStatus.ACTIVE;
         double maxDist = AudioDistancePlugin.getServerMaxDistance();
-        int y = contentTop + 6;
+        int y = top + 6;
         c.text(tr("monitor.walls", tr("monitor.status." + status.name().toLowerCase(Locale.ROOT))), left + 6, y,
                 wallsActive ? Palette.GOOD : Palette.TEXT_MUTED);
         c.right(tr("monitor.range", blocks(maxDist)), right - 6, y, Palette.TEXT_MUTED);
@@ -592,9 +798,18 @@ public abstract class SettingsScreen extends Screen {
 
         long now = System.nanoTime();
         List<NearbyPlayers.Row> rows = NearbyPlayers.rows(AudioDistancePlugin.SPEAKERS.active(now),
-                AudioDistancePlugin.NEARBY.players(), id -> AudioDistancePlugin.LINK.voiceState(id, now));
+                AudioDistancePlugin.NEARBY.players(), id -> AudioDistancePlugin.voiceState(id, now));
+        // Without any source of voice chat states only who is talking is known
+        int footer = AudioDistancePlugin.hasVoiceStates(now) ? 0 : 12;
+        if (footer > 0) {
+            c.text(fit(c, tr("monitor.states_unknown"), right - left - 12), left + 6, contentBottom - 13, Palette.TEXT_MUTED);
+        }
+        if (radarView) {
+            paintRadar(c, rows, y + 14, contentBottom - 4 - footer, maxDist, wallsActive, mouseX, mouseY);
+            return;
+        }
         if (rows.isEmpty()) {
-            int cy = (contentTop + contentBottom) / 2 - 8;
+            int cy = (y + contentBottom) / 2 - 4;
             c.centered(tr("monitor.empty"), midX, cy, Palette.TEXT_DIM);
             c.centered(fit(c, tr("monitor.empty_hint"), right - left - 12), midX, cy + 12, Palette.TEXT_MUTED);
             return;
@@ -606,7 +821,8 @@ public abstract class SettingsScreen extends Screen {
         int loudW = Math.max(60, Math.min(120, (right - left) / 4));
         int loudLeft = loudRight - loudW;
         int distRight = loudLeft - 10;
-        int distW = Math.max(c.width(tr("monitor.col.distance")), c.width(tr("blocks", "000")));
+        int arrowW = c.width(Component.literal("↗")) + 3;
+        int distW = Math.max(c.width(tr("monitor.col.distance")), c.width(tr("blocks", "000")) + arrowW);
         int nameLeft = left + 16;
         int nameW = distRight - distW - 10 - nameLeft;
 
@@ -617,8 +833,6 @@ public abstract class SettingsScreen extends Screen {
         c.right(tr("monitor.col.walls"), wallsRight, hy, Palette.TEXT_MUTED);
         c.hLine(left + 6, right - 6, hy + 11, Palette.PANEL_BORDER);
 
-        // Without the addon on the server nobody's voice chat state is known, only who is talking
-        int footer = AudioDistancePlugin.LINK.hasVoiceStates(now) ? 0 : 12;
         int rowY = hy + 16;
         int shown = 0;
         for (NearbyPlayers.Row row : rows) {
@@ -626,16 +840,97 @@ public abstract class SettingsScreen extends Screen {
                 c.text(tr("monitor.more", rows.size() - shown), nameLeft, rowY - 2, Palette.TEXT_MUTED);
                 break;
             }
+            // Distance and, after it, an arrow towards the player
+            String arrow = Bearing.arrow(row.bearing());
+            if (!arrow.isEmpty()) {
+                c.right(Component.literal(arrow), distRight, rowY, Palette.TEXT_DIM);
+            }
+            int numRight = distRight - arrowW;
             if (row.isTalking()) {
-                paintTalkingRow(c, row, rowY, wallsActive, nameLeft, nameW, distRight, loudLeft, loudRight, wallsRight);
+                paintTalkingRow(c, row, rowY, wallsActive, nameLeft, nameW, numRight, loudLeft, loudRight, wallsRight);
             } else {
-                paintSilentRow(c, row, rowY, nameLeft, nameW, distRight, loudLeft, wallsRight);
+                paintSilentRow(c, row, rowY, nameLeft, nameW, numRight, loudLeft, wallsRight);
             }
             rowY += 13;
             shown++;
         }
-        if (footer > 0) {
-            c.text(fit(c, tr("monitor.states_unknown"), right - left - 12), left + 6, contentBottom - 13, Palette.TEXT_MUTED);
+    }
+
+    /** Top-down view: you in the middle looking up, the voice and whisper ranges as rings. */
+    private void paintRadar(Canvas c, List<NearbyPlayers.Row> rows, int y1, int y2, double maxDist,
+                            boolean wallsActive, int mouseX, int mouseY) {
+        int size = Math.min(right - left - 16, y2 - y1 - 4);
+        if (size < 40) {
+            return;
+        }
+        int radius = size / 2 - 2;
+        int cx = (left + right) / 2;
+        int cy = y1 + size / 2 + 2;
+
+        ring(c, cx, cy, radius, Palette.withAlpha(Palette.ACCENT, 0x90));
+        ring(c, cx, cy, (int) Math.round(radius * AudioDistancePlugin.LINK.whisperShare()), Palette.withAlpha(Palette.WHISPER, 0x70));
+        c.hLine(cx - radius, cx + radius + 1, cy, Palette.GRID);
+        c.vLine(cx, cy - radius, cy + radius + 1, Palette.GRID);
+        c.right(tr("blocks", blocks(maxDist)), cx + radius, cy - radius, Palette.TEXT_MUTED);
+        // You, facing up
+        c.fill(cx - 2, cy - 2, cx + 3, cy + 3, Palette.TEXT);
+        c.centered(Component.literal("↑"), cx, cy - 12, Palette.TEXT_DIM);
+
+        NearbyPlayers.Row hovered = null;
+        int hoverX = 0;
+        int hoverY = 0;
+        for (NearbyPlayers.Row row : rows) {
+            if (row.distance() < 0.0 || Double.isNaN(row.bearing())) {
+                continue;
+            }
+            double r = Math.min(1.0, row.distance() / maxDist) * radius;
+            double a = Math.toRadians(row.bearing());
+            int px = cx + (int) Math.round(Math.sin(a) * r);
+            int py = cy - (int) Math.round(Math.cos(a) * r);
+            int color;
+            if (row.isTalking()) {
+                SpeakerRegistry.Speaker s = row.speaker();
+                color = s.isWhispering() ? Palette.WHISPER
+                        : (wallsActive && s.getFilter().getDisplayLossDb() > 1.0F ? Palette.MUFFLED : Palette.GOOD);
+                c.fill(px - 3, py - 3, px + 4, py + 4, 0xFF000000);
+                c.fill(px - 2, py - 2, px + 3, py + 3, color);
+            } else {
+                color = stateColor(row.state());
+                c.fill(px - 2, py - 2, px + 3, py + 3, 0xFF000000);
+                c.frame(px - 2, py - 2, px + 3, py + 3, 0x00000000, color);
+            }
+            Component name = row.isTalking() ? speakerName(row.speaker())
+                    : Component.literal(row.name() != null ? row.name() : "?");
+            c.text(fit(c, name, 70), px + 5, py - 4, row.isTalking() ? Palette.TEXT : Palette.TEXT_MUTED);
+            if (Math.abs(mouseX - px) <= 4 && Math.abs(mouseY - py) <= 4) {
+                hovered = row;
+                hoverX = px;
+                hoverY = py;
+            }
+        }
+        if (hovered != null) {
+            Component state = hovered.isTalking()
+                    ? tr(hovered.speaker().isWhispering() ? "monitor.whisper" : "monitor.talking")
+                    : tr("monitor.state." + (hovered.state() == null ? "silent" : hovered.state().getTranslationKey()));
+            Component name = hovered.isTalking() ? speakerName(hovered.speaker())
+                    : Component.literal(hovered.name() != null ? hovered.name() : "?");
+            badge(c, tr("monitor.radar.badge", name, blocks(hovered.distance()), state), hoverX, hoverY - 17);
+        }
+        if (rows.isEmpty()) {
+            c.centered(tr("monitor.empty"), cx, cy + radius / 2, Palette.TEXT_DIM);
+        }
+    }
+
+    private static void ring(Canvas c, int cx, int cy, int radius, int argb) {
+        if (radius < 2) {
+            return;
+        }
+        int steps = Math.max(24, (int) (radius * 6.3));
+        for (int i = 0; i < steps; i++) {
+            double a = 2.0 * Math.PI * i / steps;
+            int x = cx + (int) Math.round(Math.cos(a) * radius);
+            int y = cy + (int) Math.round(Math.sin(a) * radius);
+            c.fill(x, y, x + 1, y + 1, argb);
         }
     }
 
