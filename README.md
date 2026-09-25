@@ -177,7 +177,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### License
 
-[MIT](LICENSE). Author: **Kasper / Shamanalle**.
+[MIT](LICENSE). Author: **Shamanalle**.
 
 ---
 
@@ -340,4 +340,4 @@ cd voicechat-audio-distance
 
 ### Лицензия
 
-[MIT](LICENSE). Автор: **Kasper / Shamanalle**.
+[MIT](LICENSE). Автор: **Shamanalle**.
