@@ -94,7 +94,9 @@ jobs:
         id: compile
         continue-on-error: true
         run: |
-          ./gradlew :fabric-26:compileJava --no-daemon \
+          # Without Fabric API's injected interfaces, which the mod does not use and some older
+          # builds declare with classes they do not ship
+          ./gradlew :fabric-26:compileJava --no-daemon -PnoInterfaceInjection=true \
             -Pmc26_minecraft=${{ matrix.mc }} -Pmc26_fabric_api=${{ matrix.api }}
 
       - name: Check the reference jar links against Minecraft ${{ matrix.mc }}
