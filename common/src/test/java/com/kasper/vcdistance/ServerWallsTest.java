@@ -43,6 +43,7 @@ public class ServerWallsTest {
     private final UUID speaker = UUID.randomUUID();
     private final UUID listener = UUID.randomUUID();
     private final Object listenerPlayer = new Object();
+    private final Object listenerLevel = new Object();
     private Consumer<EntitySoundPacket> onSend = p -> { };
     private boolean failEncoding;
     private int encodersCreated;
@@ -181,6 +182,10 @@ public class ServerWallsTest {
         Map<String, java.util.function.Function<Object[], Object>> pm = new HashMap<>();
         pm.put("getUuid", a -> player);
         pm.put("getPlayer", a -> listenerPlayer);
+        Map<String, java.util.function.Function<Object[], Object>> lm = new HashMap<>();
+        lm.put("getServerLevel", a -> listenerLevel);
+        de.maxhenkel.voicechat.api.ServerLevel level = proxy(de.maxhenkel.voicechat.api.ServerLevel.class, lm);
+        pm.put("getServerLevel", a -> level);
         ServerPlayer sp = proxy(ServerPlayer.class, pm);
         Map<String, java.util.function.Function<Object[], Object>> m = new HashMap<>();
         m.put("getPlayer", a -> sp);
@@ -218,7 +223,7 @@ public class ServerWallsTest {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        walls.tick((player, entity, x, y, z) -> thickness);
+        walls.tick((player, level, entity, x, y, z) -> thickness);
     }
 
     // ---- tests --------------------------------------------------------------
