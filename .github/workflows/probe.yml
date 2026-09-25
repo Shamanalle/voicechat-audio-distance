@@ -1,0 +1,40 @@
+name: Probe (temporary)
+
+# Temporary: lists NeoForge builds for 26.x and prints the event classes a NeoForge entrypoint
+# would use. Removed before merging.
+
+on:
+  push:
+    branches: [ "claude/addon-analysis-improvement-4olq7u" ]
+    paths: [ '.github/probe-nf/**', '.github/workflows/probe.yml' ]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '25' }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Versions
+        run: |
+          echo "== NeoForge versions (last 30)"
+          curl -fsSL https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml | grep -oP '<version>\K[^<]+' | tail -30
+          echo "== ModDevGradle versions (last 10)"
+          curl -fsSL https://maven.neoforged.net/releases/net/neoforged/moddev/net.neoforged.moddev.gradle.plugin/maven-metadata.xml | grep -oP '<version>\K[^<]+' | tail -10
+          echo "== Simple Voice Chat neoforge artifacts"
+          curl -fsSL https://maven.maxhenkel.de/repository/public/de/maxhenkel/voicechat/voicechat-neoforge/maven-metadata.xml 2>/dev/null | grep -oP '<version>\K[^<]+' | tail -5 || true
+      - name: NeoForge classes
+        run: |
+          nf=$(curl -fsSL https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml | grep -oP '<version>\K26\.[^<]+' | grep -v beta | tail -1)
+          [ -n "$nf" ] || nf=$(curl -fsSL https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml | grep -oP '<version>\K26\.[^<]+' | tail -1)
+          echo "NeoForge ${nf}"
+          curl -fsSL -o nf.jar "https://maven.neoforged.net/releases/net/neoforged/neoforge/${nf}/neoforge-${nf}-universal.jar"
+          unzip -l nf.jar | grep -oE "net/neoforged/neoforge/(client/event|event/tick|network/event|network/registration|event|client/gui|common|client)/[A-Za-z$]+\.class" \
+            | grep -E "RegisterGuiLayers|RegisterKeyMappings|ClientTickEvent|ServerTickEvent|RegisterPayloadHandlers|PayloadRegistrar|RegisterCommandsEvent|IConfigScreenFactory|ScreenEvent|PlayerEvent|GuiLayer|VanillaGuiLayers|ClientPlayerNetworkEvent|PacketDistributor|ModContainer|NeoForge\.class|IPayloadContext|IPayloadHandler|HandlerThread" | sort -u
+          for c in net.neoforged.neoforge.client.event.RegisterGuiLayersEvent net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent net.neoforged.neoforge.client.event.ClientTickEvent\$Post net.neoforged.neoforge.event.tick.ServerTickEvent\$Post net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent net.neoforged.neoforge.network.registration.PayloadRegistrar net.neoforged.neoforge.network.PacketDistributor net.neoforged.neoforge.client.network.ClientPacketDistributor net.neoforged.neoforge.event.RegisterCommandsEvent net.neoforged.neoforge.client.gui.IConfigScreenFactory net.neoforged.neoforge.client.event.ScreenEvent\$Init\$Post net.neoforged.neoforge.event.entity.player.PlayerEvent\$PlayerLoggedOutEvent net.neoforged.neoforge.client.gui.VanillaGuiLayers net.neoforged.neoforge.network.handling.IPayloadContext; do
+            echo "-- $c"; javap -cp nf.jar -public "$c" 2>&1 | grep -vE "^Compiled|^}" | head -14
+          done
