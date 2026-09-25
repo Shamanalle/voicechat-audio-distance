@@ -222,7 +222,9 @@ public final class LinkCheck {
                     String owner = ref.owner().asInternalName();
                     String desc = ref.type().stringValue();
                     typesOf(desc, types);
-                    if (owner.startsWith("[") || own.contains(owner)) {
+                    // Inherited members are referenced through the mod's own class (javac writes the
+                    // receiver's type), so own owners are resolved too, up through their ancestors
+                    if (owner.startsWith("[")) {
                         continue;
                     }
                     String key = ref.name().stringValue() + (e instanceof FieldRefEntry ? ":" : "") + desc;
@@ -349,8 +351,13 @@ public final class LinkCheck {
             }
         }
         Map<String, Path> jdk = jdkIndex();
-        Classpath reference = new Classpath(readClasspath(Path.of(args[1])), jdk);
-        Classpath target = new Classpath(readClasspath(Path.of(args[2])), jdk);
+        // The mod's own classes come first on both sides, so its hierarchy can be walked
+        List<Path> referenceEntries = new ArrayList<>(List.of(Path.of(args[0])));
+        referenceEntries.addAll(readClasspath(Path.of(args[1])));
+        List<Path> targetEntries = new ArrayList<>(List.of(Path.of(args[0])));
+        targetEntries.addAll(readClasspath(Path.of(args[2])));
+        Classpath reference = new Classpath(referenceEntries, jdk);
+        Classpath target = new Classpath(targetEntries, jdk);
 
         Map<String, String> expected = resolve(mod, own, reference);
         Map<String, String> actual = resolve(mod, own, target);
