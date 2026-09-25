@@ -51,6 +51,8 @@
   "gui.vc-audio-distance.hud.nobody_whisper": "没有人近到能听到耳语",
   "gui.vc-audio-distance.hud.of": "%s / %s",
   "gui.vc-audio-distance.hud.walls": "隔着墙",
+  "gui.vc-audio-distance.hud.zone": "声音区域：%s",
+  "gui.vc-audio-distance.hud.zone_left": "已离开声音区域",
   "gui.vc-audio-distance.hz": "%s Hz",
   "gui.vc-audio-distance.inspect": "%s 格 · %s · %s",
   "gui.vc-audio-distance.inspect.speaker": "%s · %s 格 · %s",

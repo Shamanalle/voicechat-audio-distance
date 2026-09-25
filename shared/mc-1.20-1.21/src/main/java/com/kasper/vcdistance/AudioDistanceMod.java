@@ -1,7 +1,11 @@
 package com.kasper.vcdistance;
 
+import com.kasper.vcdistance.server.AdminPermission;
 import com.kasper.vcdistance.server.ServerThickness;
+import com.kasper.vcdistance.server.VcdCommand;
+import com.kasper.vcdistance.server.ServerZones;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -26,8 +30,12 @@ public class AudioDistanceMod implements ModInitializer {
         ModNetworking.registerServer();
         ServerLifecycleEvents.SERVER_STARTING.register(server -> AudioDistancePlugin.ensureServerSettings());
         ServerTickEvents.END_SERVER_TICK.register(this::onServerTick);
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
-                AudioDistancePlugin.SERVER_WALLS.forgetPlayer(handler.player.getUUID()));
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
+                VcdCommand.register(dispatcher, AdminPermission::isAdmin, AudioDistanceMod::resendProfiles));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            AudioDistancePlugin.SERVER_WALLS.forgetPlayer(handler.player.getUUID());
+            AudioDistancePlugin.ZONES.forget(handler.player.getUUID());
+        });
     }
 
     private void onServerTick(MinecraftServer server) {
@@ -37,14 +45,26 @@ public class AudioDistanceMod implements ModInitializer {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 if (AudioDistancePlugin.SERVER_WALLS.hasAddon(player.getUUID())) {
                     ModNetworking.sendNearby(player);
+                    // Went to another dimension with its own profile
+                    Zone zone = ServerZones.of(player);
+                    if (AudioDistancePlugin.ZONES.changed(player.getUUID(), zone)) {
+                        ModNetworking.sendProfile(player, zone);
+                    }
                 }
             }
         }
         if (ticks % RELOAD_CHECK_TICKS == 0 && AudioDistancePlugin.SERVER_SETTINGS.reloadIfChanged()) {
-            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                if (AudioDistancePlugin.SERVER_WALLS.hasAddon(player.getUUID())) {
-                    ModNetworking.sendProfile(player);
-                }
+            resendProfiles(server);
+        }
+    }
+
+    /** Every player with the addon gets their zone's profile again (after the settings changed). */
+    static void resendProfiles(MinecraftServer server) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (AudioDistancePlugin.SERVER_WALLS.hasAddon(player.getUUID())) {
+                Zone zone = ServerZones.of(player);
+                AudioDistancePlugin.ZONES.set(player.getUUID(), zone);
+                ModNetworking.sendProfile(player, zone);
             }
         }
     }

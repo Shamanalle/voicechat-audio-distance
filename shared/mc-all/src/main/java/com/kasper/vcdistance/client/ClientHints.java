@@ -43,6 +43,16 @@ public final class ClientHints {
         chat.accept(message);
     }
 
+    /** Shows the sound zone the server just put the player in (or that they left it). */
+    public static void tickZoneNotice() {
+        String zone = AudioDistancePlugin.LINK.consumeZoneNotice();
+        if (zone != null) {
+            HudOverlay.flash(zone.isEmpty()
+                    ? Component.translatable("gui.vc-audio-distance.hud.zone_left")
+                    : Component.translatable("gui.vc-audio-distance.hud.zone", zone));
+        }
+    }
+
     /** The "voice HUD" key: off, while talking, always. */
     public static void cycleHud() {
         DistanceConfig config = AudioDistancePlugin.CONFIG;

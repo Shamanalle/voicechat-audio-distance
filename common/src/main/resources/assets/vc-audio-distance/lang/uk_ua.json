@@ -51,6 +51,8 @@
   "gui.vc-audio-distance.hud.nobody_whisper": "Для шепоту поруч нікого",
   "gui.vc-audio-distance.hud.of": "%s з %s",
   "gui.vc-audio-distance.hud.walls": "за стіною",
+  "gui.vc-audio-distance.hud.zone": "Звукова зона: %s",
+  "gui.vc-audio-distance.hud.zone_left": "Ви вийшли зі звукової зони",
   "gui.vc-audio-distance.hz": "%s Гц",
   "gui.vc-audio-distance.inspect": "%s бл. · %s · %s",
   "gui.vc-audio-distance.inspect.speaker": "%s · %s бл. · %s",

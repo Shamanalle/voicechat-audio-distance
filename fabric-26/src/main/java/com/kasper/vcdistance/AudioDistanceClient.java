@@ -68,6 +68,7 @@ public class AudioDistanceClient implements ClientModInitializer {
             while (TOGGLE_HUD_KEY.consumeClick()) {
                 ClientHints.cycleHud();
             }
+            ClientHints.tickZoneNotice();
             ClientHints.tickWelcome(client.player != null && client.level != null, OPEN_SETTINGS_KEY,
                     message -> client.player.sendSystemMessage(message));
         });

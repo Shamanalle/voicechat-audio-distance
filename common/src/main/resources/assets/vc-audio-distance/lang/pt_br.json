@@ -51,6 +51,8 @@
   "gui.vc-audio-distance.hud.nobody_whisper": "Ninguém está perto o bastante para um sussurro",
   "gui.vc-audio-distance.hud.of": "%s de %s",
   "gui.vc-audio-distance.hud.walls": "atrás de uma parede",
+  "gui.vc-audio-distance.hud.zone": "Zona de som: %s",
+  "gui.vc-audio-distance.hud.zone_left": "Você saiu da zona de som",
   "gui.vc-audio-distance.hz": "%s Hz",
   "gui.vc-audio-distance.inspect": "%s bl. · %s · %s",
   "gui.vc-audio-distance.inspect.speaker": "%s · %s bl. · %s",
