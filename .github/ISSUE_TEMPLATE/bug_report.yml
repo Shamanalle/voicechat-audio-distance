@@ -1,67 +1,94 @@
-name: Bug Report
-description: Report a problem or unexpected behavior in VoiceChat Audio Distance Addon
-labels: ["bug", "triage"]
+name: "🐞 Ошибка / Bug report"
+description: "Что-то работает не так или игра падает / Something is broken or the game crashes"
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for reporting an issue! Please provide as much detail as possible to help us reproduce and resolve the problem.
+        Спасибо за отчёт! Чем точнее версии и шаги, тем быстрее получится исправить.
+        Thanks for the report! Exact versions and steps make it much faster to fix.
+
+  - type: dropdown
+    id: loader
+    attributes:
+      label: "Загрузчик / Loader"
+      options:
+        - Fabric
+        - Quilt
+        - NeoForge (lite)
+        - Forge (lite)
+    validations:
+      required: true
+
   - type: input
     id: mc_version
     attributes:
-      label: Minecraft Version
-      placeholder: e.g. 1.21, 1.21.8
+      label: "Версия Minecraft / Minecraft version"
+      placeholder: "1.21.8"
     validations:
       required: true
-  - type: input
-    id: fabric_version
-    attributes:
-      label: Fabric Loader & Fabric API Versions
-      placeholder: e.g. Loader 0.16.13, Fabric API 0.136.1+1.21.8
-    validations:
-      required: true
-  - type: input
-    id: svc_version
-    attributes:
-      label: Simple Voice Chat Version
-      placeholder: e.g. 2.6.13
-    validations:
-      required: true
+
   - type: input
     id: addon_version
     attributes:
-      label: Addon Version
-      placeholder: e.g. 1.0.0
+      label: "Версия аддона / Addon version"
+      description: "Имя файла из папки mods / The file name from your mods folder"
+      placeholder: "voicechat-audio-distance-fabric-1.2.0+mc1.21.x.jar"
     validations:
       required: true
+
+  - type: input
+    id: svc_version
+    attributes:
+      label: "Версия Simple Voice Chat / Simple Voice Chat version"
+      placeholder: "1.21.8-2.6.24"
+    validations:
+      required: true
+
+  - type: input
+    id: fabric_version
+    attributes:
+      label: "Fabric Loader и Fabric API / Fabric Loader and Fabric API"
+      description: "Только для Fabric/Quilt / Fabric/Quilt only"
+      placeholder: "Loader 0.16.13, Fabric API 0.136.1+1.21.8"
+
+  - type: checkboxes
+    id: other_mods
+    attributes:
+      label: "Другие моды на звук / Other audio mods"
+      options:
+        - label: "Sound Physics Remastered"
+        - label: "Другие аддоны Simple Voice Chat / Other Simple Voice Chat addons"
+
   - type: textarea
     id: description
     attributes:
-      label: Description of the Bug
-      description: A clear and concise description of what happened.
+      label: "Что случилось / What happened"
+      description: "Что вы ожидали и что произошло на самом деле / What you expected and what actually happened"
     validations:
       required: true
+
   - type: textarea
     id: reproduction
     attributes:
-      label: Steps to Reproduce
-      description: Steps to reproduce the behavior.
+      label: "Как воспроизвести / Steps to reproduce"
       placeholder: |
-        1. Open audio distance settings via keybind or SVC settings.
-        2. Set distance model to Realistic Inverse.
-        3. Listen to remote voice...
+        1. Открыть настройки голосового чата (V) → «Дальность голоса и стены…» / Open voice chat settings (V) → "Voice distance & walls…"
+        2. Вкладка «Стены», сила 100% / Walls tab, strength 100%
+        3. Встать за каменной стеной от говорящего… / Stand behind a stone wall from the speaker…
     validations:
       required: true
+
   - type: textarea
-    id: expected
+    id: config
     attributes:
-      label: Expected Behavior
-      description: What you expected to happen.
-    validations:
-      required: true
+      label: "Конфиг / Config"
+      description: "Содержимое config/vc-audio-distance.properties / Contents of config/vc-audio-distance.properties"
+      render: properties
+
   - type: textarea
     id: logs
     attributes:
-      label: Relevant Logs / Crash Reports
-      description: Paste any crash reports or logs from `.minecraft/logs/latest.log`.
+      label: "Лог или краш-репорт / Log or crash report"
+      description: "logs/latest.log или crash-reports/…; можно ссылкой на mclo.gs / logs/latest.log or crash-reports/…; a mclo.gs link is fine"
       render: text

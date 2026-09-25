@@ -1,13 +1,16 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+Все заметные изменения проекта описываются в этом файле.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.2.0] - 2026-09-25
 
-### Added
+### 🇬🇧 English
+
+#### Added
 - **New settings screen** with four tabs: *Distance* (live curve, whisper curve, hover readout in blocks / % / dB, dots for the people you hear right now), *Walls* (preview of how a voice sounds behind glass, wood, stone, wool and leaves), *Materials* (per-material absorption) and *Monitor* (live distance, loudness and wall loss of every voice you hear).
 - Active tab and matching preset are highlighted; long texts are shortened to fit; the layout works down to the smallest GUI size (320×240).
 - Per-material wall weights (stone, wood, wool, glass, doors, leaves, bars & fences, liquids), saved in the config.
@@ -15,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sound Physics Remastered detection: our wall muffling stands down so voices are not muffled twice.
 - Tests for the filter, the occlusion model, config round-trips/migration, the speaker registry and translation consistency (40 tests).
 
-### Changed
+#### Changed
 - **Audible wall muffling.** The old 1-pole filter changed a voice by less than 1 dB behind a stone wall. It is replaced by a 4th-order TPT state-variable low-pass plus broadband transmission loss: about −8 dB and ~2.5 kHz for one stone wall at default strength, about −18 dB and ~600 Hz for three.
 - Parameters glide with a ~90 ms time constant, and entering or leaving the bypass is crossfaded, so walls no longer cause clicks.
 - Rays only count blocks whose real collision shape they cross (slabs, open doors, fences, carpets), and 5 parallel rays give soft edges at corners and doorways.
@@ -26,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config is written atomically, validated on load and migrated from 1.1.x automatically.
 - Versions are defined once in `gradle.properties`.
 
-### Fixed
+#### Fixed
 - **Simple Voice Chat dependency.** SVC versions look like `1.21.8-2.6.24` (and `2.6.24+26.3` on 26.x), so the old `>=2.4.0` / `[2.6.0,)` constraints could not match on 1.20/1.21. Constraints now use the correct format per branch.
 - **1.21.x jar on other 1.21 releases:**
   - `GuiGraphics.drawString` changed its return type in 1.21.6, which crashed the screen on 1.21–1.21.5.
@@ -41,8 +44,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The release workflow used JDK 21, which cannot build the 26.x module.
 - `fabric.mod.json` and `mods.toml` disagreed on the supported 26.x versions.
 
-### Notes
+#### Notes
 - Forge / NeoForge jars are a lite build: distance curves configured through `config/vc-audio-distance.properties`. The settings screen, walls and monitor are Fabric-only.
+
+### 🇷🇺 По-русски
+
+#### Добавлено
+- **Новый экран настроек** из четырёх вкладок:
+  - *Дистанция* — живой график кривой, пунктиром кривая шёпота, при наведении значение в блоках / % / дБ, точками — люди, которых вы слышите прямо сейчас;
+  - *Стены* — как звучит голос за стеклом, деревом, камнем, шерстью и листвой;
+  - *Материалы* — поглощение звука каждым материалом;
+  - *Монитор* — дистанция, громкость и потери на стенах для каждого, кого вы слышите.
+- Активная вкладка и совпавший пресет подсвечиваются, длинные подписи сокращаются. Раскладка работает вплоть до минимального размера интерфейса 320×240.
+- Настройка поглощения по материалам (камень, дерево, шерсть, стекло, двери, листва, решётки и заборы, жидкости), сохраняется в конфиге.
+- Кнопка «Дальность голоса и стены…» в настройках Simple Voice Chat теперь есть и на 26.x.
+- Если установлен Sound Physics Remastered, наше приглушение стенами выключается, чтобы голос не глушился дважды.
+- 40 тестов: фильтр, модель приглушения, сохранение и миграция конфига, реестр говорящих, согласованность переводов.
+
+#### Изменено
+- **Приглушение стенами стало слышно.** Старый однополюсный фильтр менял голос за каменной стеной меньше чем на 1 дБ. Теперь фильтр 4-го порядка (TPT SVF) плюс общее ослабление:
+  - одна каменная стена при силе по умолчанию — около −8 дБ и срез ~2,5 кГц;
+  - три стены — около −18 дБ и ~600 Гц.
+- Параметры фильтра меняются плавно (~90 мс), включение и выключение фильтра идёт с перекрёстным затуханием — щелчков больше нет.
+- Луч учитывает только блоки, реальную форму которых пересекает (полублоки, открытые двери, заборы, ковры). 5 параллельных лучей дают мягкие края у углов и дверных проёмов.
+- Приглушение считается в игровом потоке каждый тик, аудиопотоки только читают готовый результат и не трогают мир.
+- Шёпот определяется по флагу самого Simple Voice Chat, а не угадывается по дистанции.
+- Плагин, конфиг, обработка звука и модель приглушения перенесены в `common` и общие для всех версий. Клиентский код тоже общий, на каждую версию остался небольшой адаптер.
+- `Esc` на экране настроек сохраняет изменения, как в ванильных настройках. «Отмена» возвращает всё как было.
+- Конфиг записывается атомарно, проверяется при загрузке и автоматически переносится с версии 1.1.x.
+- Все версии зависимостей задаются в одном месте — `gradle.properties`.
+
+#### Исправлено
+- **Зависимость от Simple Voice Chat.** Версии SVC имеют вид `1.21.8-2.6.24` (на 26.x — `2.6.24+26.3`), поэтому старые условия `>=2.4.0` / `[2.6.0,)` не выполнялись на 1.20/1.21. Теперь для каждой ветки своё условие в правильном формате.
+- **JAR для 1.21.x на других версиях 1.21:**
+  - `GuiGraphics.drawString` поменял тип возврата в 1.21.6 — экран падал на 1.21–1.21.5;
+  - конструктор `KeyMapping` изменился в 1.21.9 и 1.21.11 — игра падала при запуске;
+  - `Camera.getPosition` удалён в 1.21.11 — стены тихо выключались;
+  - `Entity.position` удалён в 1.21.9.
+
+  Каждый используемый метод Minecraft сверен с маппингами версий 1.21–1.21.11.
+- 26.x: 15 недостающих ключей перевода показывались как сырые ключи. Стекло, листва и двери не считались стенами.
+- Фильтр после первой стены так и не выключался, и голос оставался слегка приглушённым.
+- Кэши приглушения никогда не очищались. Теперь они сбрасываются при смене мира или сервера.
+- Релизный workflow использовал JDK 21, которым модуль 26.x не собирается.
+- `fabric.mod.json` и `mods.toml` расходились в списке поддерживаемых версий 26.x.
+
+#### Примечания
+- JAR для Forge / NeoForge — облегчённая версия: кривые громкости с настройкой через `config/vc-audio-distance.properties`. Экран настроек, стены и монитор есть только в версии для Fabric.
 
 ## [1.1.0] - 2026-09-25
 
