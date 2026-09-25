@@ -8,23 +8,30 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * Modern, interactive settings screen for VoiceChat Audio Distance Addon.
- * Includes real-time acoustic preview curve, model cycling, tooltips, presets, and action buttons.
+ * Ultra-clear, interactive configuration screen for VoiceChat Audio Distance Addon.
+ * Displays concrete distances in blocks, real-time audio physics curve with hover inspector,
+ * human-readable live scenario summary, presets, and tooltips.
  */
 public class AudioDistanceScreen extends Screen {
 
     private static final Component TITLE = Component.translatable("gui.vc-audio-distance.title");
 
     private final Screen parent;
+    private final double maxDistance;
     private final AttenuationModel initialModel;
     private final double initialAttenuation;
     private final double initialMinVolume;
     private final double initialRefRatio;
     private final double initialWhisperMult;
 
+    // Track mouse coordinates for the live curve hover inspector
+    private int lastMouseX = -1;
+    private int lastMouseY = -1;
+
     public AudioDistanceScreen(Screen parent) {
         super(TITLE);
-        this.parent = parent;
+        this.parent             = parent;
+        this.maxDistance        = AudioDistancePlugin.getServerMaxDistance();
         this.initialModel       = AudioDistancePlugin.CONFIG.model;
         this.initialAttenuation = AudioDistancePlugin.CONFIG.attenuationFactor;
         this.initialMinVolume   = AudioDistancePlugin.CONFIG.minVolumeFraction;
@@ -37,11 +44,11 @@ public class AudioDistanceScreen extends Screen {
         super.init();
 
         int centerX = this.width / 2;
-        int totalWidth = 220;
+        int totalWidth = 230;
         int startX = centerX - totalWidth / 2;
-        int y = this.height / 2 - 65;
 
-        // ── 1. Attenuation Model Selector Button ──────────────────────────────
+        // ── 1. Model Selector Button ─────────────────────────────────────────
+        int y = this.height / 2 - 50;
         Button modelButton = Button.builder(
                 Component.translatable("gui.vc-audio-distance.model.label", AudioDistancePlugin.CONFIG.model.getDisplayName()),
                 btn -> {
@@ -55,7 +62,7 @@ public class AudioDistanceScreen extends Screen {
         addRenderableWidget(modelButton);
         y += 23;
 
-        // ── 2. Attenuation Factor / Rolloff Slider (0% - 100%) ────────────────
+        // ── 2. Attenuation / Decay Rate Slider (0% - 100%) ───────────────────
         AbstractSliderButton attenuationSlider = new AbstractSliderButton(
                 startX, y, totalWidth, 20,
                 Component.empty(),
@@ -80,14 +87,15 @@ public class AudioDistanceScreen extends Screen {
         addRenderableWidget(attenuationSlider);
         y += 23;
 
-        // ── 3. Minimum Volume Floor Slider (0% - 100%) ───────────────────────
+        // ── 3. Far Volume Floor Slider (0% - 100%) ───────────────────────────
         AbstractSliderButton minVolumeSlider = new AbstractSliderButton(
                 startX, y, totalWidth, 20,
                 Component.empty(),
                 AudioDistancePlugin.CONFIG.minVolumeFraction
         ) {
             {
-                setTooltip(Tooltip.create(Component.translatable("gui.vc-audio-distance.min_volume.tooltip")));
+                int maxBlocks = (int) Math.round(maxDistance);
+                setTooltip(Tooltip.create(Component.translatable("gui.vc-audio-distance.min_volume.tooltip", maxBlocks)));
                 updateMessage();
             }
 
@@ -105,8 +113,7 @@ public class AudioDistanceScreen extends Screen {
         addRenderableWidget(minVolumeSlider);
         y += 23;
 
-        // ── 4. Attenuation Start Ratio Slider (10% - 100%) ───────────────────
-        // Mapped from normalized value (0.0 - 1.0) to ratio (0.10 - 1.00)
+        // ── 4. Falloff Start Ratio Slider (10% - 100%) ───────────────────────
         double initialRatioNorm = (AudioDistancePlugin.CONFIG.openalReferenceRatio - 0.10) / 0.90;
         AbstractSliderButton refDistanceSlider = new AbstractSliderButton(
                 startX, y, totalWidth, 20,
@@ -122,7 +129,8 @@ public class AudioDistanceScreen extends Screen {
             protected void updateMessage() {
                 double ratio = 0.10 + value * 0.90;
                 int pct = (int) Math.round(ratio * 100);
-                setMessage(Component.translatable("gui.vc-audio-distance.attenuation_start", pct));
+                int blocks = (int) Math.round(ratio * maxDistance);
+                setMessage(Component.translatable("gui.vc-audio-distance.attenuation_start", blocks, pct));
             }
 
             @Override
@@ -131,11 +139,11 @@ public class AudioDistanceScreen extends Screen {
             }
         };
         addRenderableWidget(refDistanceSlider);
-        y += 26;
+        y += 24;
 
         // ── 5. Presets Row (4 buttons) ───────────────────────────────────────
         int gap = 2;
-        int presetBtnWidth = (totalWidth - gap * 3) / 4; // ~53px each
+        int presetBtnWidth = (totalWidth - gap * 3) / 4;
 
         // Preset: Vanilla Default
         addRenderableWidget(Button.builder(
@@ -173,9 +181,9 @@ public class AudioDistanceScreen extends Screen {
         .tooltip(Tooltip.create(Component.translatable("gui.vc-audio-distance.preset.atmospheric.tooltip")))
         .build());
 
-        y += 25;
+        y += 24;
 
-        // ── 6. Bottom Action Row: Reset, Cancel, Save ────────────────────────
+        // ── 6. Bottom Actions: Reset, Cancel, Save ───────────────────────────
         int actionBtnWidth = (totalWidth - gap * 2) / 3;
 
         addRenderableWidget(Button.builder(
@@ -241,61 +249,38 @@ public class AudioDistanceScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+        this.lastMouseX = mouseX;
+        this.lastMouseY = mouseY;
+
         super.render(guiGraphics, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
-        int totalWidth = 220;
+        int totalWidth = 230;
         int startX = centerX - totalWidth / 2;
 
         // Title
-        guiGraphics.drawCenteredString(this.font, this.title, centerX, this.height / 2 - 105, 0xFFFFFF);
+        guiGraphics.drawCenteredString(this.font, this.title, centerX, this.height / 2 - 122, 0xFFFFFF);
 
-        // ── Real-Time Acoustic Curve Visualizer ──────────────────────────────
-        int previewY = this.height / 2 - 91;
-        int previewHeight = 20;
+        // ── 1. Interactive Acoustic Curve Box ────────────────────────────────
+        int previewY = this.height / 2 - 108;
+        int previewHeight = 28;
 
-        // Box border & dark translucent background
-        guiGraphics.fill(startX - 1, previewY - 1, startX + totalWidth + 1, previewY + previewHeight + 1, 0xFF555555);
-        guiGraphics.fill(startX, previewY, startX + totalWidth, previewY + previewHeight, 0xEE121212);
+        // Border and background
+        guiGraphics.fill(startX - 1, previewY - 1, startX + totalWidth + 1, previewY + previewHeight + 1, 0xFF666666);
+        guiGraphics.fill(startX, previewY, startX + totalWidth, previewY + previewHeight, 0xF0101014);
 
-        // Render physics curve according to selected OpenAL model
         AttenuationModel model = AudioDistancePlugin.CONFIG.model;
         double rolloff  = AudioDistancePlugin.CONFIG.attenuationFactor;
         double minVol   = AudioDistancePlugin.CONFIG.minVolumeFraction;
         double refRatio = AudioDistancePlugin.CONFIG.openalReferenceRatio;
 
+        // Draw volume fill columns across distance
         for (int i = 0; i < totalWidth; i++) {
             double distFraction = (double) i / (double) totalWidth;
-            double gain;
-
-            if (distFraction <= refRatio) {
-                gain = 1.0;
-            } else {
-                double excess = distFraction - refRatio;
-                double remaining = Math.max(0.001, 1.0 - refRatio);
-
-                switch (model) {
-                    case REALISTIC_INVERSE -> {
-                        // OpenAL Inverse Distance Model formula
-                        gain = refRatio / (refRatio + rolloff * excess);
-                    }
-                    case EXPONENTIAL -> {
-                        // OpenAL Exponential Distance Model formula
-                        gain = Math.pow(Math.max(0.0001, distFraction / Math.max(0.01, refRatio)), -rolloff * 1.5);
-                    }
-                    default -> {
-                        // Standard Linear Distance Model
-                        gain = 1.0 - rolloff * (excess / remaining);
-                    }
-                }
-            }
-
-            // Apply hardware min gain floor and clamp [0.0, 1.0]
-            gain = Math.max(minVol, Math.max(0.0, Math.min(1.0, gain)));
+            double gain = calculateGain(distFraction, model, rolloff, minVol, refRatio);
 
             int barHeight = (int) Math.round(gain * (previewHeight - 2));
             if (barHeight > 0) {
-                // Color ramp: Bright Lime (100%) -> Cyan / Yellow -> Soft Orange at low volume
                 int red   = (int) (Math.max(0.0, 1.0 - gain) * 220);
                 int green = (int) (160 + gain * 95);
                 int blue  = (int) (gain * 110 + (1.0 - gain) * 40);
@@ -306,12 +291,97 @@ public class AudioDistanceScreen extends Screen {
             }
         }
 
-        // Distance text indicators
+        // Reference distance vertical marker (where decay starts)
+        int refPixelX = startX + (int) Math.round(refRatio * totalWidth);
+        if (refPixelX > startX + 5 && refPixelX < startX + totalWidth - 5) {
+            guiGraphics.fill(refPixelX, previewY + 1, refPixelX + 1, previewY + previewHeight - 1, 0xAAFFFFFF);
+        }
+
+        // Horizontal min volume floor line (if > 0)
+        if (minVol > 0.0) {
+            int floorY = previewY + previewHeight - 1 - (int) Math.round(minVol * (previewHeight - 2));
+            guiGraphics.fill(startX, floorY, startX + totalWidth, floorY + 1, 0x8800FFFF);
+        }
+
+        // Distance text labels on the curve
         guiGraphics.drawString(this.font, Component.translatable("gui.vc-audio-distance.curve_close"),
-                startX + 4, previewY + 6, 0xEEEEEE, true);
-        Component farText = Component.translatable("gui.vc-audio-distance.curve_far");
+                startX + 4, previewY + 3, 0xFFEEEE, true);
+
+        int maxBlocks = (int) Math.round(maxDistance);
+        Component farText = Component.translatable("gui.vc-audio-distance.curve_far", maxBlocks);
         int farWidth = this.font.width(farText);
         guiGraphics.drawString(this.font, farText,
-                startX + totalWidth - farWidth - 4, previewY + 6, 0xEEEEEE, true);
+                startX + totalWidth - farWidth - 4, previewY + 3, 0xFFEEEE, true);
+
+        // Hover Inspector on the curve
+        boolean isHoveringCurve = (mouseX >= startX && mouseX < startX + totalWidth
+                && mouseY >= previewY && mouseY <= previewY + previewHeight);
+
+        if (isHoveringCurve) {
+            // Draw inspector cursor line
+            guiGraphics.fill(mouseX, previewY, mouseX + 1, previewY + previewHeight, 0xFFFFFFFF);
+
+            double inspectDistFraction = (double) (mouseX - startX) / (double) totalWidth;
+            int inspectBlock = (int) Math.round(inspectDistFraction * maxDistance);
+            double inspectGain = calculateGain(inspectDistFraction, model, rolloff, minVol, refRatio);
+            int inspectPct = (int) Math.round(inspectGain * 100);
+
+            Component inspectText = Component.translatable("gui.vc-audio-distance.curve_inspect", inspectBlock, inspectPct);
+            int badgeWidth = this.font.width(inspectText) + 8;
+            int badgeX = Math.max(startX, Math.min(startX + totalWidth - badgeWidth, mouseX - badgeWidth / 2));
+            int badgeY = previewY - 14;
+
+            guiGraphics.fill(badgeX - 1, badgeY - 1, badgeX + badgeWidth + 1, badgeY + 11, 0xFF333333);
+            guiGraphics.fill(badgeX, badgeY, badgeX + badgeWidth, badgeY + 10, 0xEE1A1A1A);
+            guiGraphics.drawString(this.font, inspectText, badgeX + 4, badgeY + 1, 0xFFFF55, false);
+        }
+
+        // ── 2. Live Human-Readable Scenario Summary ──────────────────────────
+        int summaryY = this.height / 2 - 76;
+        int summaryHeight = 22;
+
+        guiGraphics.fill(startX - 1, summaryY - 1, startX + totalWidth + 1, summaryY + summaryHeight + 1, 0xFF3D444D);
+        guiGraphics.fill(startX, summaryY, startX + totalWidth, summaryY + summaryHeight, 0xF0181D24);
+
+        int startBlock = (int) Math.round(refRatio * maxDistance);
+        int finalPct = (int) Math.round(calculateGain(1.0, model, rolloff, minVol, refRatio) * 100);
+
+        if (rolloff <= 0.001) {
+            Component flatText = Component.translatable("gui.vc-audio-distance.summary.flat", maxBlocks);
+            guiGraphics.drawString(this.font, flatText, startX + 5, summaryY + 7, 0x55FF55, false);
+        } else {
+            Component zoneText = Component.translatable("gui.vc-audio-distance.summary.zone100", startBlock);
+            guiGraphics.drawString(this.font, zoneText, startX + 5, summaryY + 2, 0x55FF55, false);
+
+            Component falloffText = Component.translatable("gui.vc-audio-distance.summary.falloff", finalPct, maxBlocks);
+            guiGraphics.drawString(this.font, falloffText, startX + 5, summaryY + 12, 0x55FFFF, false);
+        }
+    }
+
+    /**
+     * Calculates the normalized gain (0.0 - 1.0) according to OpenAL physical attenuation formulas.
+     */
+    public static double calculateGain(double distFraction, AttenuationModel model,
+                                      double rolloff, double minVol, double refRatio) {
+        double gain;
+        if (distFraction <= refRatio) {
+            gain = 1.0;
+        } else {
+            double excess = distFraction - refRatio;
+            double remaining = Math.max(0.001, 1.0 - refRatio);
+
+            switch (model) {
+                case REALISTIC_INVERSE -> {
+                    gain = refRatio / (refRatio + rolloff * excess);
+                }
+                case EXPONENTIAL -> {
+                    gain = Math.pow(Math.max(0.0001, distFraction / Math.max(0.01, refRatio)), -rolloff * 1.5);
+                }
+                default -> {
+                    gain = 1.0 - rolloff * (excess / remaining);
+                }
+            }
+        }
+        return Math.max(minVol, Math.max(0.0, Math.min(1.0, gain)));
     }
 }

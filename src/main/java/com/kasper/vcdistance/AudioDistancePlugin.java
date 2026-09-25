@@ -15,6 +15,7 @@ import org.lwjgl.openal.AL11;
 public class AudioDistancePlugin implements VoicechatPlugin {
 
     public static final DistanceConfig CONFIG = new DistanceConfig();
+    public static VoicechatApi VOICECHAT_API;
 
     @Override
     public String getPluginId() {
@@ -23,6 +24,7 @@ public class AudioDistancePlugin implements VoicechatPlugin {
 
     @Override
     public void initialize(VoicechatApi api) {
+        VOICECHAT_API = api;
         CONFIG.load();
         DistanceConfig.LOGGER.info("VoiceChat Audio Distance Addon initialized successfully.");
     }
@@ -30,6 +32,23 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     @Override
     public void registerEvents(EventRegistration registration) {
         registration.registerEvent(OpenALSoundEvent.class, this::onOpenALSound);
+    }
+
+    /**
+     * Returns the maximum voice distance configured on the connected server (in blocks).
+     * Defaults to 48 blocks if not connected or unavailable.
+     */
+    public static double getServerMaxDistance() {
+        if (VOICECHAT_API != null) {
+            try {
+                double dist = VOICECHAT_API.getVoiceChatDistance();
+                if (dist > 0.0) {
+                    return dist;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return 48.0;
     }
 
     /**
