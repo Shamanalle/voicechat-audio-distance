@@ -31,6 +31,17 @@ sourceSets {
     }
 }
 
+// The 26.x compatibility check compiles against older Fabric API builds, some of whose injected
+// interfaces name classes the build does not ship (EntityLoadData in 0.145.4+26.1.1). The mod calls
+// no injected interface, so the check compiles without them: -PnoInterfaceInjection=true
+if (project.findProperty('noInterfaceInjection') == 'true') {
+    loom {
+        interfaceInjection {
+            enableDependencyInterfaceInjection = false
+        }
+    }
+}
+
 dependencies {
     implementation project(':common')
 
