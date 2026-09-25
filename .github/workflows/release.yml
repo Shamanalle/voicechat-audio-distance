@@ -1,9 +1,14 @@
 name: Publish Release
 
+# Publishes the release for mod_version from gradle.properties: builds every jar, takes the notes
+# from CHANGELOG.md and attaches the jars. Starts either from a pushed tag (vX.Y.Z) or by hand
+# (Actions -> Publish Release -> Run workflow on main), in which case the tag is created too.
+
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -30,24 +35,42 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Check tag matches mod_version
+      - name: Resolve the release tag
+        id: meta
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version=$(grep '^mod_version=' gradle.properties | cut -d= -f2)
-          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match mod_version ${version}" >&2
-            exit 1
+          tag="v${version}"
+          if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            if [ "${tag}" != "${GITHUB_REF_NAME}" ]; then
+              echo "::error::Tag ${GITHUB_REF_NAME} does not match mod_version ${version}"
+              exit 1
+            fi
+          else
+            if [ "${GITHUB_REF_NAME}" != "main" ]; then
+              echo "::error::Run the release from main, not ${GITHUB_REF_NAME}"
+              exit 1
+            fi
+            if gh release view "${tag}" > /dev/null 2>&1; then
+              echo "::error::Release ${tag} already exists; raise mod_version first"
+              exit 1
+            fi
           fi
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
 
       - name: Test & build
         run: ./gradlew build --no-daemon
 
       - name: Release notes from CHANGELOG.md
-        run: bash .github/scripts/release-notes.sh "${GITHUB_REF_NAME}" > release_body.md
+        run: bash .github/scripts/release-notes.sh "${{ steps.meta.outputs.tag }}" > release_body.md
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ github.ref_name }}
+          tag_name: ${{ steps.meta.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ steps.meta.outputs.tag }}
           files: build/libs/*.jar
           body_path: release_body.md
         env:
