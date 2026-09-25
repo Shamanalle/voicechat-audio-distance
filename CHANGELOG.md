@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [1.4.0] - 2026-09-25
+
+### English
+
+#### Added
+- **Echo in caves and halls.** Rays from your head measure how closed and how big the space around you is; big caves and halls echo long, small rooms briefly, the open air not at all. The echo changes smoothly as you walk.
+- **Voices under water** are dull and quiet, whether your head or the speaker's is in the water.
+- **Rain and thunder** make far voices harder to hear under the open sky; close voices stay clear.
+- **Effects tab:** a switch for echo, water and weather, the echo strength, and a live view of your surroundings. A server can include these in its profile. With Sound Physics Remastered installed, our echo and water stay off.
+- **Voice HUD:** a small panel in a corner of the screen with who is talking nearby, how far and from which direction, and while you talk, how many players hear you (or your whisper) and how many cannot. Off, while talking or always; any corner; a key to switch it.
+- **Monitor:** an arrow towards every player, and a radar view seen from above with the voice and whisper range as rings.
+- **Voice chat state without the server addon:** with Simple Voice Chat 2.6.1+ the monitor and the HUD show who has voice chat disconnected or the sound off even on servers without the addon.
+- **Listen to the curve:** a button on the Distance tab plays a voice walking away from you along the curve.
+- **A hint in chat** the first time you join a world, on how to open the settings.
+- **Languages:** Ukrainian, German, Spanish, Brazilian Portuguese and Chinese (Simplified).
+
+### Русский
+
+#### Добавлено
+- **Эхо в пещерах и залах.** Лучи от вашей головы измеряют, насколько пространство вокруг закрытое и большое; в больших пещерах и залах эхо долгое, в маленьких комнатах — короткое, на открытом воздухе его нет. Эхо плавно меняется, пока вы идёте.
+- **Голоса под водой** глухие и тихие — неважно, под водой ваша голова или голова говорящего.
+- **Дождь и гроза** делают дальние голоса под открытым небом менее слышными; близкие голоса остаются чёткими.
+- **Вкладка «Эффекты»:** переключатели эха, воды и погоды, сила эха и живая панель того, что вокруг. Сервер может включить их в свой профиль. Если установлен Sound Physics Remastered, наши эхо и вода выключены.
+- **HUD голоса:** небольшая панель в углу экрана — кто рядом говорит, как далеко и с какой стороны, а пока говорите вы — сколько игроков вас (или ваш шёпот) слышат и сколько не слышат. Выкл., когда говорят или всегда; любой угол; клавиша для переключения.
+- **Монитор:** стрелка к каждому игроку и вид «радар» сверху, где кольца — дальность голоса и шёпота.
+- **Состояние голосового чата без аддона на сервере:** с Simple Voice Chat 2.6.1+ монитор и HUD показывают, у кого голосовой чат не подключён или выключен звук, даже на серверах без аддона.
+- **Прослушивание кривой:** кнопка на вкладке «Дистанция» проигрывает голос, который уходит от вас по кривой.
+- **Подсказка в чате** при первом входе в мир — как открыть настройки.
+- **Языки:** украинский, немецкий, испанский, португальский (Бразилия) и китайский (упрощённый).
+
 ## [1.3.0] - 2026-09-25
 
 ### English
