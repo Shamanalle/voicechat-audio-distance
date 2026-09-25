@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -105,6 +106,7 @@ public class AudioDistanceClient implements ClientModInitializer {
                 Component.translatable("message.vc-audio-distance.button"),
                 button -> ScreenSwitch.open(client, new AudioDistanceScreen(screen))
         ).bounds(SvcSettingsButton.x(scaledWidth), SvcSettingsButton.y(scaledHeight),
-                SvcSettingsButton.WIDTH, SvcSettingsButton.HEIGHT).build());
+                SvcSettingsButton.WIDTH, SvcSettingsButton.HEIGHT)
+                .tooltip(Tooltip.create(Component.translatable("message.vc-audio-distance.button.tooltip"))).build());
     }
 }

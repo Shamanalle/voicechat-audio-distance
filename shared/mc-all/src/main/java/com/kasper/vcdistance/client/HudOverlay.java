@@ -8,6 +8,7 @@ import com.kasper.vcdistance.HudCorner;
 import com.kasper.vcdistance.HudMode;
 import com.kasper.vcdistance.NearbyPlayers;
 import com.kasper.vcdistance.SpeakerRegistry;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -102,6 +103,11 @@ public final class HudOverlay {
         boolean selfRecent = lastSelfTalkNanos != Long.MIN_VALUE && now - lastSelfTalkNanos <= SELF_LINGER_NANOS;
         double voiceRange = AudioDistancePlugin.getServerMaxDistance();
         if (selfRecent) {
+            // In a voice chat group the group hears you wherever they are
+            String group = AudioDistancePlugin.selfGroupName();
+            if (group != null) {
+                lines.add(new Line(hud("group", group), Palette.WHISPER, Palette.TEXT));
+            }
             double range = lastSelfWhisper ? voiceRange * AudioDistancePlugin.LINK.whisperShare() : voiceRange;
             HearingEstimate e = HearingEstimate.of(AudioDistancePlugin.NEARBY.players(), range,
                     id -> AudioDistancePlugin.voiceState(id, now));
@@ -128,8 +134,8 @@ public final class HudOverlay {
         int h = lines.size() * LINE + PAD * 2 - 2;
         HudCorner corner = prefs.getHudCorner();
         int x = corner.isRight() ? screenW - MARGIN - w : MARGIN;
-        // Keep clear of the hotbar and chat at the bottom
-        int y = corner.isBottom() ? screenH - MARGIN - h - 42 : MARGIN;
+        // Keep clear of the hotbar and chat at the bottom, and of the effect icons at the top right
+        int y = corner.isBottom() ? screenH - MARGIN - h - 42 : MARGIN + (corner.isRight() ? effectIconsHeight() : 0);
         c.frame(x, y, x + w, y + h, 0x90101418, 0x60FFFFFF);
         int ty = y + PAD;
         for (Line l : lines) {
@@ -143,19 +149,29 @@ public final class HudOverlay {
         }
     }
 
+    /** Height of vanilla's status effect icons in the top right corner (two rows at most). */
+    private static int effectIconsHeight() {
+        try {
+            Minecraft mc = Minecraft.getInstance();
+            return mc.player != null && !mc.player.getActiveEffects().isEmpty() ? 52 : 0;
+        } catch (Throwable t) {
+            return 0;
+        }
+    }
+
     private static Line talkerLine(SpeakerRegistry.Speaker s, boolean wallsActive) {
         Component name = s.getDisplayName() != null && !s.getDisplayName().isEmpty()
                 ? Component.literal(s.getDisplayName())
                 : Component.translatable("gui.vc-audio-distance.monitor.source");
-        StringBuilder where = new StringBuilder();
+        Component text = Component.empty().append(name);
         if (s.getDistance() >= 0.0) {
-            where.append(' ').append(Math.round(s.getDistance()));
+            text = Component.empty().append(text).append(Component.literal(" "))
+                    .append(Component.translatable("gui.vc-audio-distance.blocks", Math.round(s.getDistance())));
         }
         String arrow = Bearing.arrow(s.getBearing());
         if (!arrow.isEmpty()) {
-            where.append(' ').append(arrow);
+            text = Component.empty().append(text).append(Component.literal(" " + arrow));
         }
-        Component text = Component.empty().append(name).append(Component.literal(where.toString()));
         int color = Palette.TEXT;
         if (s.isWhispering()) {
             text = Component.empty().append(text).append(Component.literal(" · ")).append(Component.translatable("gui.vc-audio-distance.monitor.whisper"));
@@ -171,7 +187,8 @@ public final class HudOverlay {
     private static Line hearingLine(HearingEstimate e, boolean whisper) {
         String suffix = whisper ? "_whisper" : "";
         if (e.inRange() == 0) {
-            return new Line(hud("nobody" + suffix), Palette.WARN, Palette.WARN);
+            // Talking with nobody around is normal (a group, a quiet moment): say it quietly
+            return new Line(hud("nobody" + suffix), Palette.withAlpha(Palette.TEXT_MUTED, 0xC0), Palette.TEXT_MUTED);
         }
         if (e.unknown() == e.inRange()) {
             // Nobody's voice chat state is known: only how many are close enough
@@ -199,5 +216,15 @@ public final class HudOverlay {
 
     static Component cornerLabel(HudCorner corner) {
         return Component.translatable(K + "corner", Component.translatable(corner.getTranslationKey()));
+    }
+
+    /** Short labels for the monitor's narrow buttons; the tooltips explain them. */
+    static Component shortModeLabel(HudMode mode) {
+        return Component.translatable(K + "mode.short", Component.translatable(mode.getTranslationKey()));
+    }
+
+    static Component shortCornerLabel(HudCorner corner) {
+        return Component.translatable(K + "corner.short", corner.getArrow() + " ",
+                Component.translatable(corner.getTranslationKey()));
     }
 }

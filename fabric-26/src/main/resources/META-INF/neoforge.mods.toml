@@ -6,7 +6,7 @@ issueTrackerURL = "https://github.com/Shamanalle/voicechat-audio-distance/issues
 [[mods]]
 modId = "vc_audio_distance"
 version = "${version}"
-displayName = "VoiceChat Audio Distance"
+displayName = "Voice Physics"
 displayURL = "https://github.com/Shamanalle/voicechat-audio-distance"
 logoFile = "assets/vc-audio-distance/icon.png"
 authors = "Shamanalle"

@@ -61,7 +61,11 @@ public class HudLogicTest {
         assertEquals(HudMode.ALWAYS, HudMode.fromId(" Always ", HudMode.OFF));
         assertEquals(HudMode.TALKING, HudMode.fromId("nope", HudMode.TALKING));
         assertEquals(HudMode.OFF, HudMode.ALWAYS.next());
-        assertEquals(HudCorner.TOP_LEFT, HudCorner.BOTTOM_RIGHT.next());
+        // Clockwise round the screen
+        assertEquals(HudCorner.TOP_RIGHT, HudCorner.TOP_LEFT.next());
+        assertEquals(HudCorner.BOTTOM_RIGHT, HudCorner.TOP_RIGHT.next());
+        assertEquals(HudCorner.BOTTOM_LEFT, HudCorner.BOTTOM_RIGHT.next());
+        assertEquals(HudCorner.TOP_LEFT, HudCorner.BOTTOM_LEFT.next());
         assertTrue(HudCorner.BOTTOM_RIGHT.isRight() && HudCorner.BOTTOM_RIGHT.isBottom());
     }
 }

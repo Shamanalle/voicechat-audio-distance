@@ -16,6 +16,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -76,7 +77,8 @@ final class NeoClient {
             e.addListener(Button.builder(Component.translatable("message.vc-audio-distance.button"),
                             b -> ScreenSwitch.open(client, new AudioDistanceScreen(e.getScreen())))
                     .bounds(SvcSettingsButton.x(e.getScreen().width), SvcSettingsButton.y(e.getScreen().height),
-                            SvcSettingsButton.WIDTH, SvcSettingsButton.HEIGHT).build());
+                            SvcSettingsButton.WIDTH, SvcSettingsButton.HEIGHT)
+                .tooltip(Tooltip.create(Component.translatable("message.vc-audio-distance.button.tooltip"))).build());
         });
     }
 

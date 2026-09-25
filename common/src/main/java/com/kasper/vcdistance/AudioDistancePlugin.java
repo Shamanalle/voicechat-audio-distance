@@ -256,6 +256,20 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         return t != Long.MIN_VALUE && nowNanos - t <= SELF_TALK_HOLD_NANOS;
     }
 
+    /** Name of the Simple Voice Chat group you are in, or {@code null}. */
+    public static String selfGroupName() {
+        VoicechatClientApi c = clientApi;
+        if (c == null) {
+            return null;
+        }
+        try {
+            de.maxhenkel.voicechat.api.Group group = c.getGroup();
+            return group == null ? null : group.getName();
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
     /** Whether your last microphone frame was a whisper. */
     public static boolean isSelfWhispering() {
         return selfWhispering;
