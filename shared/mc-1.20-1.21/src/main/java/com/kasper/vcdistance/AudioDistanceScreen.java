@@ -36,6 +36,17 @@ public class AudioDistanceScreen extends SettingsScreen {
     }
 
     @Override
+    protected String readClipboard() {
+        String text = Minecraft.getInstance().keyboardHandler.getClipboard();
+        return text == null ? "" : text;
+    }
+
+    @Override
+    protected void writeClipboard(String text) {
+        Minecraft.getInstance().keyboardHandler.setClipboard(text);
+    }
+
+    @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         Compat.renderBackground(this, graphics);
         super.render(graphics, mouseX, mouseY, delta);

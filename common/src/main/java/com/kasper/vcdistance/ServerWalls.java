@@ -58,6 +58,8 @@ public final class ServerWalls {
     private static final long TRACE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(100);
     private static final int MAX_TRACES_PER_TICK = 48;
 
+    private final PerfMeter perf = new PerfMeter();
+
     private record PairKey(UUID channel, UUID listener) {
     }
 
@@ -156,8 +158,10 @@ public final class ServerWalls {
         if (p == null) {
             return;
         }
+        long start = System.nanoTime();
         byte[] processed = process(event, p.getChannelId(), p.getSequenceNumber(), p.getOpusEncodedData(),
                 p.getEntityUuid(), null);
+        perf.add(System.nanoTime() - start);
         if (processed == null) {
             return;
         }
@@ -172,8 +176,10 @@ public final class ServerWalls {
         if (p == null || p.getPosition() == null) {
             return;
         }
+        long start = System.nanoTime();
         byte[] processed = process(event, p.getChannelId(), p.getSequenceNumber(), p.getOpusEncodedData(),
                 null, p.getPosition());
+        perf.add(System.nanoTime() - start);
         if (processed == null) {
             return;
         }
@@ -309,6 +315,21 @@ public final class ServerWalls {
 
     /** Measures walls for every active listener/speaker pair. */
     public void tick(ThicknessProvider provider) {
+        long start = System.nanoTime();
+        try {
+            tickUnmeasured(provider);
+        } finally {
+            perf.add(System.nanoTime() - start);
+            perf.endTick();
+        }
+    }
+
+    /** Time per server tick spent on wall rays and on filtering voices (both threads together). */
+    public PerfMeter perf() {
+        return perf;
+    }
+
+    private void tickUnmeasured(ThicknessProvider provider) {
         worldAvailable = true;
         if (!settings.isServerWalls() || !settings.profile().isOcclusionEnabled()) {
             return;

@@ -159,6 +159,18 @@ public class ServerToolsTest {
         assertEquals(List.of("preset", "profile"), AdminCommands.suggest("pr").stream().sorted().toList());
         assertEquals(List.of("stealth"), AdminCommands.suggest("preset st"));
         assertEquals(List.of("on", "off"), AdminCommands.suggest("serverwalls o"));
+        // Export and import the profile as a code; a code split by the chat box still works
+        AdminCommands.run("preset realistic", s, ctx);
+        List<String> export = AdminCommands.run("preset export", s, ctx);
+        String code = export.get(export.size() - 1);
+        assertTrue(code.startsWith(ProfileCode.PREFIX), export.toString());
+        AdminCommands.run("preset vanilla", s, ctx);
+        List<String> imported = AdminCommands.run("preset import " + code.substring(0, 20) + " " + code.substring(20), s, ctx);
+        assertTrue(imported.get(0).contains("custom"), imported.toString());
+        assertEquals(ServerSettings.CUSTOM_PRESET, s.getProfilePreset());
+        assertEquals(AttenuationModel.REALISTIC_INVERSE, s.profile().getModel());
+        assertTrue(AdminCommands.run("preset import nonsense", s, ctx).get(0).startsWith("Использование"));
+
         assertEquals(0.6, AdminCommands.parsePercent("60%"), 1e-9);
         assertEquals(0.6, AdminCommands.parsePercent("0.6"), 1e-9);
         assertNull(AdminCommands.parsePercent("-5"));

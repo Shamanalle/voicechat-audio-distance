@@ -50,6 +50,8 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     /** The player's own settings (client). */
     public static final DistanceConfig CONFIG = new DistanceConfig();
     public static final SpeakerRegistry SPEAKERS = new SpeakerRegistry();
+    /** Client time per tick spent on walls, ways round and the room's echo. */
+    public static final PerfMeter CLIENT_PERF = new PerfMeter();
     /** What the client knows about the server it is connected to. */
     public static final ServerLink LINK = new ServerLink();
     /** Players within voice range of the listener (client). */

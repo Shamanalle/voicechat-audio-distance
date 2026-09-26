@@ -38,8 +38,15 @@ public final class HudOverlay {
     private static long lastSelfTalkNanos = Long.MIN_VALUE;
     private static boolean lastSelfWhisper;
     private static boolean loggedFailure;
+    private static int lastScreenW;
+    private static int lastScreenH;
 
-    private record Line(Component text, int dotColor, int textColor) {
+    /** One HUD line: a colored mark (filled, or hollow for a quiet voice; 0 = none) and the text. */
+    private record Line(Component text, int dotColor, int textColor, boolean hollow) {
+
+        Line(Component text, int dotColor, int textColor) {
+            this(text, dotColor, textColor, false);
+        }
     }
 
     private HudOverlay() {
@@ -50,6 +57,8 @@ public final class HudOverlay {
      * @param hidden    F1 or another reason to draw no HUD
      */
     public static void paint(Canvas c, int screenW, int screenH, boolean inWorld, boolean hidden) {
+        lastScreenW = screenW;
+        lastScreenH = screenH;
         try {
             if (inWorld && !hidden) {
                 paintUnsafe(c, screenW, screenH);
@@ -70,6 +79,7 @@ public final class HudOverlay {
 
     private static void paintUnsafe(Canvas c, int screenW, int screenH) {
         DistanceConfig prefs = AudioDistancePlugin.CONFIG;
+        Palette.useColorblind(prefs.isColorblind());
         HudMode mode = prefs.getHudMode();
         long now = System.nanoTime();
         List<Line> lines = new ArrayList<>();
@@ -86,13 +96,24 @@ public final class HudOverlay {
         List<SpeakerRegistry.Speaker> talkers = AudioDistancePlugin.SPEAKERS.active(now);
         int shown = 0;
         boolean wallsActive = AudioDistancePlugin.occlusionStatus() == AudioDistancePlugin.OcclusionStatus.ACTIVE;
-        for (SpeakerRegistry.Speaker s : talkers) {
-            if (shown == MAX_TALKERS) {
-                lines.add(new Line(hud("more", talkers.size() - shown), 0, Palette.TEXT_MUTED));
-                break;
+        boolean compact = prefs.isHudCompact();
+        if (compact && !talkers.isEmpty()) {
+            // One line: the closest voice, and how many more
+            Line first = talkerLine(talkers.get(0), wallsActive);
+            if (talkers.size() > 1) {
+                first = new Line(Component.empty().append(first.text()).append(Component.literal("  "))
+                        .append(hud("more", talkers.size() - 1)), first.dotColor(), first.textColor(), first.hollow());
             }
-            lines.add(talkerLine(s, wallsActive));
-            shown++;
+            lines.add(first);
+        } else {
+            for (SpeakerRegistry.Speaker s : talkers) {
+                if (shown == MAX_TALKERS) {
+                    lines.add(new Line(hud("more", talkers.size() - shown), 0, Palette.TEXT_MUTED));
+                    break;
+                }
+                lines.add(talkerLine(s, wallsActive));
+                shown++;
+            }
         }
 
         // You
@@ -104,7 +125,7 @@ public final class HudOverlay {
         double voiceRange = AudioDistancePlugin.getServerMaxDistance();
         if (selfRecent) {
             // In a voice chat group the group hears you wherever they are
-            String group = AudioDistancePlugin.selfGroupName();
+            String group = compact ? null : AudioDistancePlugin.selfGroupName();
             if (group != null) {
                 lines.add(new Line(hud("group", group), Palette.WHISPER, Palette.TEXT));
             }
@@ -126,6 +147,21 @@ public final class HudOverlay {
         if (lines.isEmpty()) {
             return;
         }
+        float scale = (float) prefs.getHudScale();
+        boolean scaled = Math.abs(scale - 1.0F) > 0.01F && c.pushScale(scale);
+        try {
+            drawScaled(c, lines, scaled ? scale : 1.0F, prefs);
+        } finally {
+            if (scaled) {
+                c.popScale();
+            }
+        }
+    }
+
+    /** Lays the panel out in scaled units ({@code screen / scale}); vanilla's own HUD stays where it is. */
+    private static void drawScaled(Canvas c, List<Line> lines, float scale, DistanceConfig prefs) {
+        int screenW = Math.round(lastScreenW / scale);
+        int screenH = Math.round(lastScreenH / scale);
         int w = 0;
         for (Line l : lines) {
             w = Math.max(w, c.width(l.text()) + (l.dotColor() != 0 ? 7 : 0));
@@ -135,13 +171,21 @@ public final class HudOverlay {
         HudCorner corner = prefs.getHudCorner();
         int x = corner.isRight() ? screenW - MARGIN - w : MARGIN;
         // Keep clear of the hotbar and chat at the bottom, and of the effect icons at the top right
-        int y = corner.isBottom() ? screenH - MARGIN - h - 42 : MARGIN + (corner.isRight() ? effectIconsHeight() : 0);
-        c.frame(x, y, x + w, y + h, 0x90101418, 0x60FFFFFF);
+        int y = corner.isBottom() ? screenH - MARGIN - h - Math.round(42 / scale)
+                : MARGIN + (corner.isRight() ? Math.round(effectIconsHeight() / scale) : 0);
+        int alpha = (int) Math.round(prefs.getHudBackground() * 255.0);
+        if (alpha > 0) {
+            c.frame(x, y, x + w, y + h, Palette.withAlpha(0x101418, alpha), Palette.withAlpha(0xFFFFFF, alpha * 2 / 3));
+        }
         int ty = y + PAD;
         for (Line l : lines) {
             int tx = x + PAD;
             if (l.dotColor() != 0) {
-                c.fill(tx, ty + 2, tx + 4, ty + 6, l.dotColor());
+                if (l.hollow()) {
+                    c.frame(tx, ty + 2, tx + 4, ty + 6, 0x00000000, l.dotColor());
+                } else {
+                    c.fill(tx, ty + 2, tx + 4, ty + 6, l.dotColor());
+                }
                 tx += 7;
             }
             c.text(l.text(), tx, ty, l.textColor());
@@ -180,15 +224,16 @@ public final class HudOverlay {
             text = Component.empty().append(text).append(Component.literal(" · ")).append(hud("walls"));
             color = Palette.MUFFLED;
         }
+        // A filled mark while the voice is loud, a hollow one between words
         boolean loud = s.getLevelDb() > -50.0F;
-        return new Line(text, loud ? Palette.GOOD : Palette.withAlpha(Palette.TEXT_MUTED, 0xC0), color);
+        return new Line(text, loud ? Palette.GOOD : Palette.withAlpha(Palette.TEXT_MUTED, 0xC0), color, !loud);
     }
 
     private static Line hearingLine(HearingEstimate e, boolean whisper) {
         String suffix = whisper ? "_whisper" : "";
         if (e.inRange() == 0) {
             // Talking with nobody around is normal (a group, a quiet moment): say it quietly
-            return new Line(hud("nobody" + suffix), Palette.withAlpha(Palette.TEXT_MUTED, 0xC0), Palette.TEXT_MUTED);
+            return new Line(hud("nobody" + suffix), Palette.withAlpha(Palette.TEXT_MUTED, 0xC0), Palette.TEXT_MUTED, true);
         }
         if (e.unknown() == e.inRange()) {
             // Nobody's voice chat state is known: only how many are close enough
