@@ -148,7 +148,8 @@ public final class ServerSettings {
             presetName = CUSTOM_PRESET;
         }
         if (preset != null) {
-            preset.apply(profile);
+            // Fitted to the real voice range whenever the profile is sent (see profileIn)
+            preset.apply(profile, AudioDistancePlugin.FALLBACK_DISTANCE);
             presetName = nameOf(preset);
         }
         profilePreset = presetName;
@@ -283,16 +284,19 @@ public final class ServerSettings {
         return zone != null && zone.mode() != null ? zone.mode() : profileMode;
     }
 
-    /** The profile in a zone: the main profile with the zone's preset on top (walls stay as in section 1). */
-    public DistanceConfig profileIn(Zone zone) {
-        Preset preset = zone != null && zone.preset() != null ? presetByName(zone.preset()) : null;
+    /**
+     * The profile in a zone: the main profile with the zone's preset on top (walls stay as in
+     * section 1). Presets are fitted to {@code voiceRange}, the server's voice range in blocks.
+     */
+    public DistanceConfig profileIn(Zone zone, double voiceRange) {
+        Preset preset = zone != null && zone.preset() != null ? presetByName(zone.preset()) : presetByName(profilePreset);
         if (preset == null) {
             return profile;
         }
         DistanceConfig c = profile.copy();
         boolean walls = c.isOcclusionEnabled();
         double strength = c.getOcclusionStrength();
-        preset.apply(c);
+        preset.apply(c, voiceRange);
         c.setOcclusionEnabled(walls);
         c.setOcclusionStrength(strength);
         return c;
@@ -421,7 +425,7 @@ public final class ServerSettings {
         }
         boolean walls = profile.isOcclusionEnabled();
         double strength = profile.getOcclusionStrength();
-        preset.apply(profile);
+        preset.apply(profile, AudioDistancePlugin.FALLBACK_DISTANCE);
         profile.setOcclusionEnabled(walls);
         profile.setOcclusionStrength(strength);
         profilePreset = nameOf(preset);

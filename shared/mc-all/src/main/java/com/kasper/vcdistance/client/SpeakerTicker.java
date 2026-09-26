@@ -85,6 +85,8 @@ public final class SpeakerTicker {
             }
             return;
         }
+        // A server with another voice range: fit the chosen preset to it
+        AudioDistancePlugin.followServerRange();
 
         boolean tracing = AudioDistancePlugin.occlusionStatus() == AudioDistancePlugin.OcclusionStatus.ACTIVE;
         Vec3 listener = access.listenerPosition();

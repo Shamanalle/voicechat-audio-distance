@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The wall preview also shows a block of dirt and an iron block wall.
 
 #### Changed
+- **Presets fit the server's voice range:**
+  - Realistic, Clear and Stealth now set full volume in blocks: about 8, 24 and 5. Before, it was 60%, 80% and 35% of the range, so on a 48-block server Realistic stayed at full volume up to 29 blocks and Stealth up to 17.
+  - The zone is kept within limits of the server's range, so a voice at a given distance sounds the same on servers with different ranges.
+  - The preset you picked is fitted again when you join a server with another range, unless you changed the values yourself.
+  - Settings that still hold one of the old presets move to the new one; walls are kept.
+  - Server profiles set by preset name (`profile_preset`, zones) are fitted to the server's own range.
 - **The distance graph is more compact.** It no longer stretches to the window's full height, and the sliders sit right under it.
 - **The graph is easier to read:**
   - it has a volume scale on the left;
@@ -41,6 +47,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - В превью стен добавлены блок земли и стена из блоков железа.
 
 #### Изменено
+- **Пресеты подстраиваются под дальность голоса сервера:**
+  - «Реализм», «Чётко» и «Стелс» теперь задают полную громкость в блоках: примерно 8, 24 и 5. Раньше это было 60%, 80% и 35% от дальности, поэтому на сервере с 48 блоками «Реализм» держал полную громкость до 29 блоков, а «Стелс» — до 17.
+  - Зона не выходит за пределы, заданные от дальности сервера, поэтому голос на одном и том же расстоянии звучит одинаково на серверах с разной дальностью.
+  - Выбранный пресет подгоняется заново, когда вы заходите на сервер с другой дальностью, если вы не меняли значения сами.
+  - Настройки, в которых остался один из старых пресетов, переходят на новый; стены сохраняются.
+  - Профили сервера, заданные именем пресета (`profile_preset`, зоны), подгоняются под дальность самого сервера.
 - **График дальности стал компактнее.** Он больше не растягивается на всю высоту окна, а ползунки идут сразу под ним.
 - **График стало легче читать:**
   - слева появилась шкала громкости;

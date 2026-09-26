@@ -79,6 +79,9 @@ public final class DistanceConfig {
     private volatile HudMode hudMode = DEFAULT_HUD_MODE;
     private volatile HudCorner hudCorner = DEFAULT_HUD_CORNER;
     private volatile boolean welcomeShown;
+    /** The preset last picked ("" = own values) and the voice range it was fitted to. */
+    private volatile String presetId = "";
+    private volatile double presetRange;
 
     private volatile int revision;
     private final Path path;
@@ -268,11 +271,30 @@ public final class DistanceConfig {
         changed();
     }
 
-    /** Copies the interface settings (HUD); {@link #copyFrom} leaves them alone. */
+    /** The preset last picked, or {@code null} for own values. */
+    public Preset getChosenPreset() {
+        return Preset.byId(presetId);
+    }
+
+    /** Voice range (blocks) the chosen preset was fitted to. */
+    public double getPresetRange() {
+        return presetRange;
+    }
+
+    /** Remembers the preset just applied for a voice range of {@code range} blocks ({@code null}: own values). */
+    public void setChosenPreset(Preset preset, double range) {
+        presetId = preset == null ? "" : preset.getId();
+        presetRange = preset == null ? 0.0 : range;
+        changed();
+    }
+
+    /** Copies the interface settings (HUD, chosen preset); {@link #copyFrom} leaves them alone. */
     public void copyInterfaceFrom(DistanceConfig other) {
         hudMode = other.hudMode;
         hudCorner = other.hudCorner;
         welcomeShown = other.welcomeShown;
+        presetId = other.presetId;
+        presetRange = other.presetRange;
         changed();
     }
 
@@ -370,6 +392,8 @@ public final class DistanceConfig {
         hudMode = HudMode.fromId(props.getProperty("hud_mode"), DEFAULT_HUD_MODE);
         hudCorner = HudCorner.fromId(props.getProperty("hud_corner"), DEFAULT_HUD_CORNER);
         welcomeShown = parseBoolean(props, "welcome_shown", false);
+        presetId = props.getProperty("preset", "").trim().toLowerCase(java.util.Locale.ROOT);
+        presetRange = clamp(parseDouble(props, "preset_range", 0.0), 0.0, 10000.0);
         if (parseDouble(props, "config_version", 1) < 7 && hudCorner == HudCorner.TOP_LEFT) {
             hudCorner = HudCorner.TOP_RIGHT;
         }
@@ -379,8 +403,40 @@ public final class DistanceConfig {
                 occlusionEnabled, occlusionStrength);
 
         int version = (int) parseDouble(props, "config_version", 1);
+        if (version < 8) {
+            adoptResizedPreset();
+        }
         if (version < CONFIG_VERSION) {
             save();
+        }
+    }
+
+    /**
+     * Up to 1.5 the realism, clear and stealth presets kept full volume over a fixed share of the
+     * range (60%, 80%, 35%). A config still holding one of those moves to the preset as it is now.
+     */
+    private void adoptResizedPreset() {
+        Object[][] old = {
+                {Preset.REALISTIC, AttenuationModel.REALISTIC_INVERSE, 0.70, 0.05, 0.60, 1.10},
+                {Preset.CLEAR, AttenuationModel.LINEAR, 0.35, 0.25, 0.80, 0.90},
+                {Preset.ATMOSPHERIC, AttenuationModel.EXPONENTIAL, 1.00, 0.00, 0.35, 1.40}
+        };
+        for (Object[] o : old) {
+            if (model == o[1]
+                    && Math.abs(attenuationFactor - (double) o[2]) < 0.005
+                    && Math.abs(minVolumeFraction - (double) o[3]) < 0.005
+                    && Math.abs(openalReferenceRatio - (double) o[4]) < 0.005
+                    && Math.abs(whisperMultiplier - (double) o[5]) < 0.005) {
+                Preset preset = (Preset) o[0];
+                // Only the curve moves; walls stay as they are
+                boolean walls = occlusionEnabled;
+                double strength = occlusionStrength;
+                preset.apply(this, AudioDistancePlugin.FALLBACK_DISTANCE);
+                occlusionEnabled = walls;
+                occlusionStrength = strength;
+                setChosenPreset(preset, AudioDistancePlugin.FALLBACK_DISTANCE);
+                return;
+            }
         }
     }
 
@@ -410,7 +466,16 @@ public final class DistanceConfig {
                         "Угол экрана для HUD: top_left, top_right, bottom_left, bottom_right. По умолчанию top_right.")
                 .value("hud_corner", hudCorner.getId())
                 .comment("The first-join hint was shown. / Подсказка при первом входе уже показана.")
-                .value("welcome_shown", welcomeShown);
+                .value("welcome_shown", welcomeShown)
+                .comment("The preset picked on the settings screen: default, realistic, high_audibility, atmospheric; empty = own values.",
+                        "Presets that set the full-volume zone in blocks are fitted again when a server's voice range differs,",
+                        "as long as you did not change the values yourself.",
+                        "Пресет, выбранный в настройках: default, realistic, high_audibility, atmospheric; пусто = свои значения.",
+                        "Пресеты с зоной полной громкости в блоках подгоняются заново, когда у сервера другая дальность голоса,",
+                        "если вы не меняли значения сами.")
+                .value("preset", presetId)
+                .comment("Voice range (blocks) the preset was fitted to. / Дальность голоса (в блоках), под которую подогнан пресет.")
+                .value("preset_range", presetRange);
         w.save(getPath());
     }
 

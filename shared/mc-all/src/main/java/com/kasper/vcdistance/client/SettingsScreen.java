@@ -229,7 +229,9 @@ public abstract class SettingsScreen extends Screen {
             Preset p = presets[i];
             int x = i == presets.length - 1 ? right - pw : left + i * (pw + GAP);
             Button b = Button.builder(Component.translatable(p.getTranslationKey()), btn -> {
-                p.apply(config);
+                double range = AudioDistancePlugin.getServerMaxDistance();
+                p.apply(config, range);
+                config.setChosenPreset(p, range);
                 rebuild();
             }).bounds(x, contentTop, pw, 20).tooltip(Tooltip.create(Component.translatable(p.getTooltipKey()))).build();
             presetButtons.add(b);
@@ -464,7 +466,7 @@ public abstract class SettingsScreen extends Screen {
     private void refreshPresetButtons() {
         boolean enforced = AudioDistancePlugin.LINK.isEnforced();
         for (int i = 0; i < presetButtons.size(); i++) {
-            presetButtons.get(i).active = !enforced && !presetOrder.get(i).matches(config);
+            presetButtons.get(i).active = !enforced && !presetOrder.get(i).matches(config, AudioDistancePlugin.getServerMaxDistance());
         }
     }
 
@@ -506,7 +508,7 @@ public abstract class SettingsScreen extends Screen {
         }
         c.fill(activeTabX1 + 2, tabsBottom + 1, activeTabX2 - 2, tabsBottom + 3, Palette.ACCENT);
         for (int i = 0; i < presetBounds.size(); i++) {
-            if (presetOrder.get(i).matches(shown())) {
+            if (presetOrder.get(i).matches(shown(), AudioDistancePlugin.getServerMaxDistance())) {
                 int[] b = presetBounds.get(i);
                 c.fill(b[0] + 2, b[2] + 1, b[1] - 2, b[2] + 3, Palette.ACCENT);
             }
