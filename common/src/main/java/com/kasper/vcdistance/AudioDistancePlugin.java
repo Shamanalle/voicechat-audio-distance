@@ -690,10 +690,16 @@ public class AudioDistancePlugin implements VoicechatPlugin {
                 changed = true;
             }
             Reverb reverb = speaker.getReverb();
-            RoomEstimate room = env.room();
-            double wet = ownPhysics && c.isReverbEnabled() ? room.wet() * c.getReverbStrength() : 0.0;
-            if (wet > 0.0 || reverb.isActive()) {
-                reverb.process(raw, wet, room.decaySeconds());
+            RoomEstimate room = RoomEstimate.combine(env.room(), speaker.getRoom());
+            double wet = 0.0;
+            double echo = 0.0;
+            if (ownPhysics && c.isReverbEnabled() && room.isAudible()) {
+                double[] level = echoLevels(room, speaker, c.getReverbStrength());
+                wet = level[0];
+                echo = level[1];
+            }
+            if (wet > 0.0 || echo > 0.0 || reverb.isActive()) {
+                reverb.process(raw, room, wet, echo);
                 changed = true;
             }
             if (changed) {
@@ -702,5 +708,25 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         } catch (Throwable t) {
             DistanceConfig.LOGGER.debug("Voice processing failed for {}: {}", speaker.getChannelId(), t.toString());
         }
+    }
+
+    /**
+     * How loud the room's echo and the repeats off cliffs are for this voice, 0 - 1 each. A voice
+     * next to you stays clear and a far one sounds like the room: the echo share grows with the
+     * distance. OpenAL turns the whole voice down with distance, echo included, while in a real room
+     * the echo stays about as loud, so far voices get part of that back (at most twice).
+     */
+    static double[] echoLevels(RoomEstimate room, SpeakerRegistry.Speaker speaker, double strength) {
+        double distance = speaker.getDistance();
+        double share = room.distanceShare(distance);
+        double boost = 1.0;
+        if (distance >= 0.0) {
+            double range = speaker.getMaxDistance() > 0.0F ? speaker.getMaxDistance() : getServerMaxDistance();
+            double curve = curveGain(distance, range, speaker.isWhispering());
+            boost = Math.min(2.0, 1.0 / Math.sqrt(Math.max(0.25, curve)));
+        }
+        double wet = Math.min(1.0, room.wet() * strength * share * boost);
+        double echo = room.echoes().isEmpty() ? 0.0 : Math.min(1.0, strength * (0.4 + 0.6 * share) * boost);
+        return new double[]{wet, echo};
     }
 }

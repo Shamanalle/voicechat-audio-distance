@@ -3,6 +3,7 @@ package com.kasper.vcdistance.client;
 import com.kasper.vcdistance.EnvironmentEffects;
 import com.kasper.vcdistance.NearbyPlayers;
 import com.kasper.vcdistance.RayBundle;
+import com.kasper.vcdistance.RoomEstimate;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.world.phys.Vec3;
 
@@ -42,10 +43,10 @@ public interface WorldAccess {
     List<NearbyPlayers.Player> nearbyPlayers(Vec3 listener, double range);
 
     /**
-     * Distance from {@code from} to the first solid block along a direction (unit vector), or a
-     * negative value when nothing is hit within {@code maxDistance}.
+     * The first solid block along a direction (unit vector) and its material, or {@code null} when
+     * nothing is hit within {@code maxDistance}. Measures the space a voice echoes in.
      */
-    double rayDistance(Vec3 from, double dx, double dy, double dz, double maxDistance);
+    RoomEstimate.Hit rayHit(Vec3 from, double dx, double dy, double dz, double maxDistance);
 
     /** {@code true} when sound passes this block freely: air, water, open doors and gates, fences, bars. */
     boolean isOpenForSound(int x, int y, int z);

@@ -56,6 +56,9 @@ public final class SpeakerRegistry {
         private volatile double openingZ;
         private volatile double pathThickness = Double.NaN;
         private volatile long lastPathNanos = Long.MIN_VALUE;
+        // The space around the speaker (client tick); null: the listener's own
+        private volatile RoomEstimate room;
+        private volatile long lastRoomNanos = Long.MIN_VALUE;
         private volatile String displayName;
         private volatile long lastTraceNanos;
         private volatile int cachedEntityNetworkId = Integer.MIN_VALUE;
@@ -169,6 +172,20 @@ public final class SpeakerRegistry {
         public void clearPath() {
             pathThickness = Double.NaN;
             hasOpening = false;
+        }
+
+        /** The space the speaker is in, or {@code null} when it is the listener's own (or not known yet). */
+        public RoomEstimate getRoom() {
+            return room;
+        }
+
+        public long getLastRoomNanos() {
+            return lastRoomNanos;
+        }
+
+        public void setRoom(RoomEstimate room, long nowNanos) {
+            this.room = room;
+            this.lastRoomNanos = nowNanos;
         }
 
         public void setSurroundings(boolean underWater, EnvironmentEffects.Weather weather) {

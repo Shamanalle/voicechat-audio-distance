@@ -83,6 +83,11 @@ public final class BlockAcoustics {
         return MATERIALS.computeIfAbsent(state, BlockAcoustics::classify) == AcousticMaterial.THIN;
     }
 
+    /** The material of a surface an echo bounces off. */
+    public static AcousticMaterial echoMaterial(BlockState state) {
+        return MATERIALS.computeIfAbsent(state, BlockAcoustics::classify);
+    }
+
     /** Block tags can differ between servers, so the material cache is dropped on world change. */
     public static void clearCache() {
         MATERIALS.clear();

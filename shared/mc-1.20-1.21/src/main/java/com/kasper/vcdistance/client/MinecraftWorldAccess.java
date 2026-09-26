@@ -1,10 +1,10 @@
 package com.kasper.vcdistance.client;
 
-import com.kasper.vcdistance.AcousticMaterial;
 import com.kasper.vcdistance.AudioDistancePlugin;
 import com.kasper.vcdistance.Bearing;
 import com.kasper.vcdistance.EnvironmentEffects;
 import com.kasper.vcdistance.NearbyPlayers;
+import com.kasper.vcdistance.RoomEstimate;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -12,9 +12,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -120,14 +117,17 @@ public final class MinecraftWorldAccess implements WorldAccess {
     }
 
     @Override
-    public double rayDistance(Vec3 from, double dx, double dy, double dz, double maxDistance) {
+    public RoomEstimate.Hit rayHit(Vec3 from, double dx, double dy, double dz, double maxDistance) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) {
-            return -1.0;
+            return null;
         }
         Vec3 to = from.add(dx * maxDistance, dy * maxDistance, dz * maxDistance);
         BlockHitResult hit = mc.level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
-        return hit.getType() == HitResult.Type.MISS ? -1.0 : hit.getLocation().distanceTo(from);
+        if (hit.getType() == HitResult.Type.MISS) {
+            return null;
+        }
+        return new RoomEstimate.Hit(hit.getLocation().distanceTo(from), BlockAcoustics.echoMaterial(mc.level.getBlockState(hit.getBlockPos())));
     }
 
     @Override

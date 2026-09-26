@@ -88,6 +88,12 @@ public final class BlockAcoustics {
         return classify(state) == AcousticMaterial.THIN;
     }
 
+    /** The material of a surface an echo bounces off (blocks that let sound through by their tool). */
+    public static AcousticMaterial echoMaterial(BlockState state) {
+        AcousticMaterial m = classify(state);
+        return m != null ? m : byTool(state);
+    }
+
     /** Block tags can differ between servers, so the material cache is dropped on world change. */
     public static void clearCache() {
         MATERIALS.clear();
