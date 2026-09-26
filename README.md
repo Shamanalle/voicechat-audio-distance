@@ -23,9 +23,11 @@
 An addon for **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)** that shapes how voices fade with distance and muffles them through walls.
 
 It works on either side, and each side is useful alone:
-- **Client only** — you choose how *you* hear voices; nothing is needed on the server.
-- **Server only** — players with plain Simple Voice Chat hear voices muffled through walls.
-- **Both** — the server can share its sound profile, and the client gets exact whisper ranges while doing the wall muffling itself.
+- **Client only** — you choose how *you* hear voices: curve, walls, echo, HUD. Nothing is needed on the server.
+- **Server only** — players with plain Simple Voice Chat hear voices muffled through walls, and the server gets sound zones and game rules.
+- **Both** — everything, plus the server's sound profile, zones with echo and entry messages, and the Server tab for admins.
+
+See [What works where](#what-works-where) for the full list.
 
 ### Features
 
@@ -136,13 +138,47 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 
 ### What works where
 
+The addon can be installed on the client (the player's game), on the server, or on both. Each way works on its own.
+
+**🎮 Addon on your client, server without it** (any server with Simple Voice Chat)
+- ✅ Distance curve and presets: how *you* hear voices fading.
+- ✅ Walls, doors and glass muffle voices, and voices come through doorways.
+- ✅ Echo in caves and halls, dull voices under water, rain and thunder.
+- ✅ Voice HUD, monitor and radar with every nearby player.
+- ✅ Profile codes, colors for color blindness, all settings.
+- ⚠️ Only you hear the difference: other players hear as usual.
+- ⚠️ The whisper curve on the graph is approximate (half the range), and the monitor knows less about other players' voice chat.
+- ❌ No sound zones, game rules, server profile or Server tab: these need the addon on the server.
+
+**🖥️ Addon on the server, players without it** (plain Simple Voice Chat on their side)
+- ✅ Voices are muffled through walls for every player: the server does it for them.
+- ✅ Sound zones that change the voice range (stage, library), wall strength, or isolate an area.
+- ✅ Game rules: sneaking, dead players, spectators, megaphone.
+- ✅ `/vcd` commands for admins, messages in each player's language.
+- ✅ Can suggest or require the addon, with a download link.
+- ❌ No curve choice, echo, water, weather, HUD or monitor: these need the addon on the client.
+
+**🤝 Addon on both** (everything)
+- ✅ Everything above.
+- ✅ The server can share its sound profile (suggest it with a button, or enforce it for fair PvP and events).
+- ✅ Zones also set a fixed echo (a cathedral) and show a message on entering.
+- ✅ Exact whisper range on the graph.
+- ✅ The monitor shows every nearby player's voice chat state, from the server.
+- ✅ Admins get the **Server** tab: zones, rules and settings with buttons.
+- The client does the wall muffling itself, and the server skips these players, so voices are never muffled twice.
+
 | | Client only | Server only | Both |
 |---|---|---|---|
-| Distance curve | ✅ | — | ✅ (the server profile can be suggested or enforced) |
-| Wall muffling | ✅ locally | ✅ for players without the addon | ✅ locally; the server skips these players |
-| Settings screen, monitor, HUD | ✅ | — | ✅ plus server status and every nearby player's voice chat state |
-| Echo, water, weather | ✅ | — | ✅ (can be part of the server profile) |
-| Whisper curve on the graph | approximate (½ of the range) | — | exact |
+| Distance curve, presets | ✅ | — | ✅ + server profile |
+| Walls | ✅ for you | ✅ for players without the addon | ✅ |
+| Echo, water, weather | ✅ | — | ✅ |
+| HUD, monitor, radar | ✅ | — | ✅ + state of every player |
+| Sound zones: voice range, walls, isolation | — | ✅ | ✅ |
+| Sound zones: echo, message on entering | — | — | ✅ |
+| Game rules (sneak, dead, spectators, megaphone) | — | ✅ | ✅ |
+| Addon requirement, `/vcd` | — | ✅ | ✅ |
+| Server tab in game | — | — | ✅ (admins) |
+| Whisper curve on the graph | approximate | — | exact |
 
 ### Versions and files
 
@@ -323,9 +359,11 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 Аддон для **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)**: настраивает, как голоса затихают с расстоянием, и глушит их за стенами.
 
 Работает на любой стороне, и каждая сторона полезна сама по себе:
-- **Только клиент** — вы сами решаете, как слышите голоса *вы*; на сервер ничего ставить не нужно.
-- **Только сервер** — игроки с обычным Simple Voice Chat слышат голоса приглушёнными за стенами.
-- **Вместе** — сервер может передать свой профиль звука, а клиент получает точную дальность шёпота и сам глушит стены.
+- **Только клиент** — вы сами решаете, как слышите голоса: кривая, стены, эхо, HUD. На сервер ничего ставить не нужно.
+- **Только сервер** — игроки с обычным Simple Voice Chat слышат голоса приглушёнными за стенами, а у сервера есть звуковые зоны и правила игры.
+- **Вместе** — всё сразу, плюс профиль звука сервера, зоны с эхом и сообщениями при входе и вкладка «Сервер» для админов.
+
+Полный список — в разделе [Что где работает](#что-где-работает).
 
 ### Возможности
 
@@ -436,13 +474,47 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Что где работает
 
+Аддон ставится на клиент (игру игрока), на сервер или туда и туда. Каждый вариант работает сам по себе.
+
+**🎮 Аддон у вас, на сервере его нет** (любой сервер с Simple Voice Chat)
+- ✅ Кривая громкости и пресеты: как затихают голоса *для вас*.
+- ✅ Стены, двери и стекло глушат голоса, голос проходит через дверные проёмы.
+- ✅ Эхо в пещерах и залах, глухие голоса под водой, дождь и гроза.
+- ✅ HUD голоса, монитор и радар со всеми игроками рядом.
+- ✅ Коды профиля, цвета для дальтоников, все настройки.
+- ⚠️ Разницу слышите только вы: остальные слышат как обычно.
+- ⚠️ Кривая шёпота на графике примерная (половина дальности), а монитор знает меньше о голосовом чате других игроков.
+- ❌ Нет звуковых зон, правил игры, профиля сервера и вкладки «Сервер»: для них нужен аддон на сервере.
+
+**🖥️ Аддон на сервере, у игроков его нет** (у них обычный Simple Voice Chat)
+- ✅ Голоса глушатся стенами для всех игроков: сервер делает это за них.
+- ✅ Звуковые зоны, которые меняют дальность голоса (сцена, библиотека), силу стен или изолируют место.
+- ✅ Правила игры: корточки, мёртвые, зрители, мегафон.
+- ✅ Команды `/vcd` для админов, сообщения на языке каждого игрока.
+- ✅ Можно предложить или потребовать аддон, со ссылкой на скачивание.
+- ❌ Нет выбора кривой, эха, воды, погоды, HUD и монитора: для них нужен аддон у игрока.
+
+**🤝 Аддон и там, и там** (всё)
+- ✅ Всё, что выше.
+- ✅ Сервер может передать свой профиль звука (предложить кнопкой или закрепить для честного PvP и ивентов).
+- ✅ Зоны задают ещё и постоянное эхо (собор) и показывают сообщение при входе.
+- ✅ Точная дальность шёпота на графике.
+- ✅ Монитор показывает состояние голосового чата у всех игроков рядом, со слов сервера.
+- ✅ У админов есть вкладка **«Сервер»**: зоны, правила и настройки кнопками.
+- Стены глушит сам клиент, а сервер этих игроков пропускает, так что голоса не глушатся дважды.
+
 | | Только клиент | Только сервер | Вместе |
 |---|---|---|---|
-| Кривая громкости | ✅ | — | ✅ (профиль сервера можно рекомендовать или закрепить) |
-| Приглушение стенами | ✅ у себя | ✅ для игроков без аддона | ✅ у себя; сервер этих игроков пропускает |
-| Экран настроек, монитор, HUD | ✅ | — | ✅ плюс статус сервера и состояние голосового чата у всех игроков рядом |
-| Эхо, вода, погода | ✅ | — | ✅ (могут входить в профиль сервера) |
-| Кривая шёпота на графике | примерная (½ дальности) | — | точная |
+| Кривая громкости, пресеты | ✅ | — | ✅ + профиль сервера |
+| Стены | ✅ для вас | ✅ для игроков без аддона | ✅ |
+| Эхо, вода, погода | ✅ | — | ✅ |
+| HUD, монитор, радар | ✅ | — | ✅ + состояние всех игроков |
+| Звуковые зоны: дальность, стены, изоляция | — | ✅ | ✅ |
+| Звуковые зоны: эхо, сообщение при входе | — | — | ✅ |
+| Правила игры (корточки, мёртвые, зрители, мегафон) | — | ✅ | ✅ |
+| Требование аддона, `/vcd` | — | ✅ | ✅ |
+| Вкладка «Сервер» в игре | — | — | ✅ (админы) |
+| Кривая шёпота на графике | примерная | — | точная |
 
 ### Версии и файлы
 
