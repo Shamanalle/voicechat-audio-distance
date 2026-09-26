@@ -158,6 +158,7 @@
   "gui.vc-audio-distance.hud.hears_whisper": "能听到你的耳语：%s",
   "gui.vc-audio-distance.hud.in_range": "语音范围内：%s",
   "gui.vc-audio-distance.hud.in_range_whisper": "耳语范围内：%s",
+  "gui.vc-audio-distance.hud.in_group": "群组内 %s 人",
   "gui.vc-audio-distance.hud.mode": "语音 HUD：%s",
   "gui.vc-audio-distance.hud.mode.always": "始终",
   "gui.vc-audio-distance.hud.mode.off": "关",

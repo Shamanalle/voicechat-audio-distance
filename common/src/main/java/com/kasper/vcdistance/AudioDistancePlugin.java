@@ -25,9 +25,11 @@ import org.lwjgl.openal.AL11;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
@@ -275,16 +277,56 @@ public class AudioDistancePlugin implements VoicechatPlugin {
                     p -> !p.getUuid().equals(selfId) && visible.test(player, p.getPlayer())));
             near.sort(Comparator.comparingDouble(p -> squaredDistance(self, p)));
             Map<UUID, VoiceState> states = new LinkedHashMap<>();
+            UUID selfGroup = groupIdOf(s.getConnectionOf(selfId));
+            Set<UUID> mates = new HashSet<>();
+            Set<UUID> isolated = new HashSet<>();
             for (ServerPlayer p : near) {
                 VoicechatConnection c = s.getConnectionOf(p.getUuid());
                 states.put(p.getUuid(), c == null ? VoiceState.NO_VOICE_CHAT
                         : VoiceState.of(c.isInstalled(), c.isConnected(), c.isDisabled(), c.isInGroup()));
+                UUID group = groupIdOf(c);
+                if (group != null && group.equals(selfGroup)) {
+                    mates.add(p.getUuid());
+                } else if (group != null && "isolated".equals(groupType(c.getGroup()))) {
+                    isolated.add(p.getUuid());
+                }
             }
-            return LinkProtocol.nearby(states);
+            return LinkProtocol.nearby(states, new LinkProtocol.GroupInfo(mates, isolated,
+                    selfGroup == null ? -1 : groupMembers(s, selfId, selfGroup, false),
+                    selfGroup == null ? -1 : groupMembers(s, selfId, selfGroup, true)));
         } catch (Throwable t) {
             DistanceConfig.LOGGER.debug("Could not list nearby players: {}", t.toString());
             return null;
         }
+    }
+
+    /** Id of the connection's group, or {@code null} when it has none (or this Simple Voice Chat cannot tell). */
+    private static UUID groupIdOf(VoicechatConnection c) {
+        try {
+            de.maxhenkel.voicechat.api.Group g = c == null ? null : c.getGroup();
+            return g == null ? null : g.getId();
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /**
+     * Other online members of {@code group}, anywhere on the server: those who hear the group
+     * ({@code deaf} false) or those who cannot (sound off, disconnected).
+     */
+    private static int groupMembers(VoicechatServerApi s, UUID self, UUID group, boolean deaf) {
+        int n = 0;
+        for (ServerPlayers.Info p : PLAYERS.all()) {
+            if (p.id().equals(self)) {
+                continue;
+            }
+            VoicechatConnection c = s.getConnectionOf(p.id());
+            if (c != null && group.equals(groupIdOf(c))
+                    && VoiceState.of(c.isInstalled(), c.isConnected(), c.isDisabled(), true).isProblem() == deaf) {
+                n++;
+            }
+        }
+        return n;
     }
 
     private static double squaredDistance(ServerPlayer a, ServerPlayer b) {

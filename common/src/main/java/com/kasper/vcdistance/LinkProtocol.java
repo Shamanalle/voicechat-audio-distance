@@ -7,9 +7,11 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -20,7 +22,8 @@ import java.util.UUID;
  *     <li>{@code profile} (server to client): the server's sound profile, how it is offered, and the
  *     server's real voice and whisper distances.</li>
  *     <li>{@code nearby} (server to client, about once a second): the voice chat state of the
- *     players within voice range, for the monitor.</li>
+ *     players within voice range, for the monitor, and who in the receiver's Simple Voice Chat group
+ *     hears them (see {@link GroupInfo}).</li>
  *     <li>{@code admin} (client to server) and {@code admin_reply} (server to client): the Server tab
  *     for server admins, which runs the same commands as {@code /vcd}.</li>
  * </ul>
@@ -46,6 +49,25 @@ public final class LinkProtocol {
 
     private static final String PROFILE_PREFIX = "profile.";
     private static final String PLAYER_PREFIX = "player.";
+    private static final String MATE_PREFIX = "mate.";
+    private static final String ISOLATED_PREFIX = "isolated.";
+
+    /**
+     * The receiver's Simple Voice Chat group, as the {@code nearby} message describes it. Clients
+     * before 2.0.3 read only the {@code player.*} keys and ignore these.
+     *
+     * @param mates     listed nearby players in the receiver's group
+     * @param isolated  listed nearby players in another, isolated group (they do not hear the receiver)
+     * @param groupHear other members of the receiver's group, anywhere, who hear it; -1 when not in a group or unknown
+     * @param groupDeaf other members who cannot (sound off, disconnected); -1 when unknown
+     */
+    public record GroupInfo(Set<UUID> mates, Set<UUID> isolated, int groupHear, int groupDeaf) {
+        public static final GroupInfo NONE = new GroupInfo(Set.of(), Set.of(), -1, -1);
+
+        public boolean hasTotals() {
+            return groupHear >= 0 && groupDeaf >= 0;
+        }
+    }
 
     private LinkProtocol() {
     }
@@ -210,6 +232,11 @@ public final class LinkProtocol {
 
     /** @param states voice chat state per player UUID, closest first; only the first {@link #MAX_NEARBY} are sent */
     public static String nearby(Map<UUID, VoiceState> states) {
+        return nearby(states, GroupInfo.NONE);
+    }
+
+    /** @param group the receiver's group, see {@link GroupInfo} */
+    public static String nearby(Map<UUID, VoiceState> states, GroupInfo group) {
         Properties p = new Properties();
         p.setProperty("protocol", String.valueOf(VERSION));
         int n = 0;
@@ -218,8 +245,44 @@ public final class LinkProtocol {
                 break;
             }
             p.setProperty(PLAYER_PREFIX + e.getKey(), e.getValue().getId());
+            if (group.mates().contains(e.getKey())) {
+                p.setProperty(MATE_PREFIX + e.getKey(), "1");
+            } else if (group.isolated().contains(e.getKey())) {
+                p.setProperty(ISOLATED_PREFIX + e.getKey(), "1");
+            }
+        }
+        if (group.hasTotals()) {
+            p.setProperty("group_hear", String.valueOf(group.groupHear()));
+            p.setProperty("group_deaf", String.valueOf(group.groupDeaf()));
         }
         return write(p);
+    }
+
+    /** @return the group part of a {@code nearby} message; {@link GroupInfo#NONE} when it has none or is invalid */
+    public static GroupInfo parseNearbyGroup(String text) {
+        Properties p = read(text);
+        if (p == null) {
+            return GroupInfo.NONE;
+        }
+        Set<UUID> mates = new HashSet<>();
+        Set<UUID> isolated = new HashSet<>();
+        for (String key : p.stringPropertyNames()) {
+            Set<UUID> target = key.startsWith(MATE_PREFIX) ? mates : key.startsWith(ISOLATED_PREFIX) ? isolated : null;
+            if (target == null || target.size() >= MAX_NEARBY) {
+                continue;
+            }
+            try {
+                target.add(UUID.fromString(key.substring(key.indexOf('.') + 1)));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        int hear = (int) DistanceConfig.parseDouble(p, "group_hear", -1);
+        int deaf = (int) DistanceConfig.parseDouble(p, "group_deaf", -1);
+        if (hear < 0 || deaf < 0) {
+            hear = -1;
+            deaf = -1;
+        }
+        return new GroupInfo(Set.copyOf(mates), Set.copyOf(isolated), hear, deaf);
     }
 
     /** @return the state per player, or {@code null} when the text is not a valid nearby message; unknown entries are skipped */

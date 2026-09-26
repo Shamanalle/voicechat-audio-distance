@@ -158,6 +158,7 @@
   "gui.vc-audio-distance.hud.hears_whisper": "Hear your whisper: %s",
   "gui.vc-audio-distance.hud.in_range": "In voice range: %s",
   "gui.vc-audio-distance.hud.in_range_whisper": "In whisper range: %s",
+  "gui.vc-audio-distance.hud.in_group": "%s in the group",
   "gui.vc-audio-distance.hud.mode": "Voice HUD: %s",
   "gui.vc-audio-distance.hud.mode.always": "always",
   "gui.vc-audio-distance.hud.mode.off": "off",

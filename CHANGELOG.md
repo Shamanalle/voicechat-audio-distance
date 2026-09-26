@@ -13,12 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 #### Changed
 - **Edge volume reshapes the curve.** The whole fade is now fitted between 100% and the edge volume, so the curve comes down smoothly and reaches it exactly at the edge of the range. Before, the curve was cut off by it: the voice fell to the edge volume early, stayed flat, then stopped at the edge. The graph, the *Listen* preview and what you hear all follow the new shape. Presets with an edge volume (Realistic, Clear) are a little louder in the middle of the range.
 - **Wall strength in 5% steps** on the Server tab (was 10%); `/vcd walls` suggests every 5%.
+- **"Hear you" in the HUD counts your Simple Voice Chat group.** Group members count wherever they are ("Hear you: 4 · 3 in the group"), players nearby count only when your group is open, and a player in another isolated group counts as not hearing you. The group count needs the addon on the server (2.0.3+).
 
 ### Русский
 
 #### Изменено
 - **Громкость на краю меняет форму кривой.** Теперь всё затухание укладывается между 100% и громкостью на краю, и кривая плавно доходит до неё ровно на границе слышимости. Раньше громкость на краю просто срезала кривую: голос рано падал до неё, шёл ровно, а на границе обрывался. График, кнопка «Прослушать» и то, что вы слышите, следуют новой форме. Пресеты с громкостью на краю («Реализм», «Чётко») стали чуть громче в середине дистанции.
 - **Сила стен с шагом 5%** на вкладке «Сервер» (было 10%); `/vcd walls` подсказывает каждые 5%.
+- **«Вас слышат» в HUD учитывает группу Simple Voice Chat.** Участники группы считаются, где бы они ни были («Вас слышат: 4 · 3 в группе»), игроки рядом — только если ваша группа открытая, а игрок из чужой изолированной группы считается не слышащим. Для счёта группы нужен аддон на сервере (2.0.3+).
 
 ## [2.0.2] - 2026-09-26
 

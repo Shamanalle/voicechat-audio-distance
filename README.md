@@ -62,7 +62,7 @@ See [What works where](#what-works-where) for the full list.
 #### Voice HUD (client)
 A small panel in a corner of the screen:
 - who is talking nearby, how far away and from which direction (an arrow), whispering or behind a wall;
-- **while you talk: how many players hear you** — within your voice range, or your whisper range while you whisper — and how many cannot (no voice chat, sound off);
+- **while you talk: how many players hear you** — within your voice range, or your whisper range while you whisper — and how many cannot (no voice chat, sound off). In a Simple Voice Chat group it follows the group's rules: your group counts wherever it is ("· 3 in the group"), players nearby count only when the group is open, and a player in another isolated group does not hear you. The group count needs the addon on the server;
 - modes: off, while talking (default: only when someone speaks), always (also how many are in range); any of the four corners; a key in Controls cycles the modes;
 - size (50–150%), background opacity (down to none) and a **compact** mode with one line for everyone talking — on the Monitor tab.
 
@@ -422,7 +422,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 #### HUD голоса (клиент)
 Небольшая панель в углу экрана:
 - кто рядом говорит, как далеко и с какой стороны (стрелка), шепчет ли и не за стеной ли;
-- **пока говорите вы — сколько игроков вас слышат**: в радиусе голоса, а когда шепчете — в радиусе шёпота, и сколько не слышат (нет голосового чата, выключен звук);
+- **пока говорите вы — сколько игроков вас слышат**: в радиусе голоса, а когда шепчете — в радиусе шёпота, и сколько не слышат (нет голосового чата, выключен звук). В группе Simple Voice Chat счёт идёт по правилам группы: ваша группа считается, где бы она ни была («· 3 в группе»), игроки рядом — только если группа открытая, а игрок из чужой изолированной группы вас не слышит. Для счёта группы нужен аддон на сервере;
 - режимы: выкл., когда говорят (по умолчанию: только пока кто-то говорит), всегда (ещё и сколько человек в радиусе); любой из четырёх углов; клавиша в «Управлении» переключает режимы;
 - размер (50–150%), прозрачность фона (вплоть до полного отсутствия) и **компактный** режим — одна строка на всех говорящих — на вкладке «Монитор».
 

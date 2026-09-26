@@ -158,6 +158,7 @@
   "gui.vc-audio-distance.hud.hears_whisper": "Ouvem seu sussurro: %s",
   "gui.vc-audio-distance.hud.in_range": "No alcance da voz: %s",
   "gui.vc-audio-distance.hud.in_range_whisper": "No alcance do sussurro: %s",
+  "gui.vc-audio-distance.hud.in_group": "%s no grupo",
   "gui.vc-audio-distance.hud.mode": "HUD de voz: %s",
   "gui.vc-audio-distance.hud.mode.always": "sempre",
   "gui.vc-audio-distance.hud.mode.off": "desligado",
