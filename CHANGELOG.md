@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `/vcd debug` shows the player's group and its type, and the HUD says whether your group is open (nearby players hear you too) or isolated.
 - Wall strength on the Server tab goes in 10% steps (was 0, 30, 60, 85, 100%).
 - *Where to upload* when uploading a release to the stores by hand.
+- **Wall strength in 10% steps** on the Server tab: − and + either side of the value; `/vcd walls` suggests every 10%.
 
 #### Fixed
 - The addon requirement's message now has a **clickable link** to the download page (Fabric, NeoForge and Paper; plain text on Spigot).
@@ -37,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `/vcd debug` показывает группу игрока и её тип, а HUD — открытая ли ваша группа (вас слышат и игроки рядом) или изолированная.
 - Сила стен на вкладке «Сервер» меняется шагом 10% (было 0, 30, 60, 85, 100%).
 - Выбор площадки (*Where to upload*) при ручной выгрузке релиза.
+- **Сила стен с шагом 10%** на вкладке «Сервер»: кнопки − и + по бокам от значения; `/vcd walls` подсказывает каждые 10%.
 
 #### Исправлено
 - В сообщении о требовании аддона ссылка на скачивание теперь **кликабельная** (Fabric, NeoForge и Paper; на Spigot — простым текстом).

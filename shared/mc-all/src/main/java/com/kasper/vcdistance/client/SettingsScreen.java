@@ -473,7 +473,6 @@ public abstract class SettingsScreen extends Screen {
 
     private static final String[] SERVER_MODES = {"off", "suggest", "enforce"};
     private static final String[] SERVER_PRESETS = {"custom", "vanilla", "realistic", "clear", "stealth"};
-    private static final String[] SERVER_WALLS = {"0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"};
     private static final String[] SERVER_REQUIRE = {"off", "suggest", "warn", "kick"};
     private static final String[] SERVER_SNEAK = {"1", "0.7", "0.5", "0.3"};
     private static final String[] ZONE_RANGE = {"-", "0.4", "2", "3"};
@@ -573,9 +572,16 @@ public abstract class SettingsScreen extends Screen {
                 "profile " + next(SERVER_MODES, mode));
         serverButton(tr("server.preset", presetName(preset)), "server.preset.tooltip", x2, y, third,
                 "preset " + next(SERVER_PRESETS, preset));
-        String wallsNext = next(SERVER_WALLS, walls);
-        serverButton(tr("server.walls", same(walls, "0") ? tr("off") : Component.literal(pct(parse(walls)))), "server.walls.tooltip",
-                x3, y, third, "walls " + (same(wallsNext, "0") ? "off" : wallsNext));
+        // Walls in 10% steps: − and + either side of the value
+        int wallsPct = (int) Math.round(parse(walls) * 100.0);
+        int down = Math.max(0, (wallsPct + 9) / 10 * 10 - 10);
+        int up = Math.min(100, wallsPct / 10 * 10 + 10);
+        serverButton(Component.literal("−"), "server.walls.tooltip", x3, y, 20, down == 0 ? "walls off" : "walls " + down)
+                .active = wallsPct > 0;
+        serverButton(tr("server.walls", wallsPct == 0 ? tr("off") : Component.literal(wallsPct + "%")), "server.walls.tooltip",
+                x3 + 22, y, third - 44, "walls " + up).active = wallsPct < 100;
+        serverButton(Component.literal("+"), "server.walls.tooltip", right - 20, y, 20, "walls " + up)
+                .active = wallsPct < 100;
 
         y += ROW;
         boolean serverWalls = "true".equalsIgnoreCase(st.getProperty("server_walls"));
