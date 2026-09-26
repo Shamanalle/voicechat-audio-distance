@@ -88,10 +88,28 @@ public class DistanceConfigTest {
         c.load();
         assertEquals(AttenuationModel.REALISTIC_INVERSE, c.getModel());
         String text = Files.readString(file);
-        assertTrue(text.contains("config_version=7"));
+        assertTrue(text.contains("config_version=8"));
         assertTrue(text.contains("reverb_enabled=true"));
         assertTrue(text.contains("material.stone"));
         assertTrue(text.contains("hud_mode=talking"));
+    }
+
+    @Test
+    @DisplayName("Materials added later start at their defaults; the ones already set are kept")
+    void newMaterialsStartAtDefaults() throws IOException {
+        Path file = dir.resolve("vc.properties");
+        Files.writeString(file, "config_version=7\nmaterial.stone=1.5\nmaterial.wool=2\n");
+        DistanceConfig c = new DistanceConfig(file);
+        c.load();
+        assertEquals(1.5, c.getMaterialWeight(AcousticMaterial.STONE), 1e-9);
+        assertEquals(2.0, c.getMaterialWeight(AcousticMaterial.WOOL), 1e-9);
+        for (AcousticMaterial m : new AcousticMaterial[]{AcousticMaterial.METAL, AcousticMaterial.EARTH,
+                AcousticMaterial.SOFT, AcousticMaterial.ICE, AcousticMaterial.OTHER}) {
+            assertEquals(m.getDefaultWeight(), c.getMaterialWeight(m), 1e-9, m.getId());
+        }
+        String text = Files.readString(file);
+        assertTrue(text.contains("config_version=8"));
+        assertTrue(text.contains("material.other="));
     }
 
     @Test

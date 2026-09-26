@@ -6,17 +6,53 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
-## [1.5.1] - 2026-09-26
+## [1.6.0] - 2026-09-26
 
 ### English
 
+#### Added
+- **More materials.** There are 13 groups now:
+  - new ones: metal (blocks of iron, gold, copper, netherite, anvils), earth & sand (everything dug with a shovel), soft blocks (hay, sponge, moss, sculk), ice, and **other blocks**;
+  - *other blocks* covers every solid block not in the list, such as bedrock and blocks from other mods; before, they counted as stone.
+  - Stone, wood and the new groups are recognised by the tool that mines the block, so blocks from newer versions and data packs fall into the right group.
+- The wall preview also shows a block of dirt and an iron block wall.
+
 #### Changed
+- **The distance graph is more compact.** It no longer stretches to the window's full height, and the sliders sit right under it.
+- **The graph is easier to read:**
+  - it has a volume scale on the left;
+  - the edge of the full-volume zone is marked;
+  - the whisper curve stays dashed on steep parts;
+  - a mark on the distance scale shows where the whisper range ends.
+- **The summary, legend and Listen button moved above the graph.**
+- The wall preview panel is only as tall as its rows.
 - **Files are now named after Voice Physics:** `voice-physics-fabric-…`, `voice-physics-neoforge-…`, `voice-physics-forge-…` and `voice-physics-bukkit-…` instead of `voicechat-audio-distance-…`. Delete the old file when you update, so the game or server does not load both. Settings are kept.
+
+#### Fixed
+- The Listen button looked disabled because the graph panel was drawn over it.
 
 ### Русский
 
+#### Добавлено
+- **Больше материалов.** Теперь их 13 групп:
+  - новые: металл (блоки железа, золота, меди, незерита, наковальни), земля и песок (всё, что копается лопатой), мягкие блоки (сено, губка, мох, скалк), лёд и **остальные блоки**;
+  - *остальные блоки* — все твёрдые блоки не из списка, например бедрок и блоки из других модов; раньше они считались камнем.
+  - Камень, дерево и новые группы определяются по инструменту, которым добывается блок, поэтому блоки из новых версий и датапаков попадают в нужную группу.
+- В превью стен добавлены блок земли и стена из блоков железа.
+
 #### Изменено
+- **График дальности стал компактнее.** Он больше не растягивается на всю высоту окна, а ползунки идут сразу под ним.
+- **График стало легче читать:**
+  - слева появилась шкала громкости;
+  - граница зоны полной громкости отмечена;
+  - кривая шёпота остаётся пунктирной на крутых участках;
+  - метка на шкале расстояния показывает, где заканчивается дальность шёпота.
+- **Сводка, легенда и кнопка «Прослушать» переехали над графиком.**
+- Панель превью стен теперь высотой по своим строкам.
 - **Файлы теперь называются по имени Voice Physics:** `voice-physics-fabric-…`, `voice-physics-neoforge-…`, `voice-physics-forge-…` и `voice-physics-bukkit-…` вместо `voicechat-audio-distance-…`. При обновлении удалите старый файл, чтобы игра или сервер не загрузили оба. Настройки сохраняются.
+
+#### Исправлено
+- Кнопка «Прослушать» выглядела выключенной: панель графика рисовалась поверх неё.
 
 ## [1.5.0] - 2026-09-26
 

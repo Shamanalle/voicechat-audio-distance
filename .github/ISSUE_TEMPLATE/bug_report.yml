@@ -45,7 +45,7 @@ body:
     attributes:
       label: "Addon version / Версия аддона"
       description: "The file name from your mods or plugins folder / Имя файла из папки mods или plugins"
-      placeholder: "voice-physics-fabric-1.5.1+mc1.21.x.jar"
+      placeholder: "voice-physics-fabric-1.6.0+mc1.21.x.jar"
     validations:
       required: true
 

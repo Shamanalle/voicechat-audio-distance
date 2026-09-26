@@ -20,8 +20,9 @@ public final class DistanceConfig {
     public static final Logger LOGGER = LoggerFactory.getLogger("VC-AudioDistance");
 
     /** 3: the file is written with a comment for every key; 4: interface section; 5: echo, water, weather; 6: sound around corners;
-     * 7: the HUD moves from the top left (under Simple Voice Chat's group list) to the top right. */
-    private static final int CONFIG_VERSION = 7;
+     * 7: the HUD moves from the top left (under Simple Voice Chat's group list) to the top right;
+     * 8: more materials (metal, earth, soft, ice, other). */
+    private static final int CONFIG_VERSION = 8;
     private static final String FILE_NAME = "vc-audio-distance.properties";
 
     // -------------------------------------------------------------------------
