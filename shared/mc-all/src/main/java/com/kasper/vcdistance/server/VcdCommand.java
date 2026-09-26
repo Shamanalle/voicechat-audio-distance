@@ -15,7 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 import java.util.function.Predicate;
 
 /**
- * {@code /vcd} on a Fabric server. The text after the command goes to {@link AdminCommands} as is,
+ * {@code /vcd} on a Fabric or NeoForge server. The text after the command goes to {@link AdminCommands} as is,
  * so every version registers the same small tree; only the permission check differs by version.
  */
 public final class VcdCommand {
@@ -40,33 +40,12 @@ public final class VcdCommand {
     private static int run(CommandContext<CommandSourceStack> ctx, String args, Server hooks) {
         CommandSourceStack source = ctx.getSource();
         MinecraftServer server = source.getServer();
-        AdminCommands.Context context = new AdminCommands.Context() {
-            @Override
-            public String platform() {
-                return "Fabric";
-            }
-
-            @Override
-            public int onlinePlayers() {
-                return server.getPlayerCount();
-            }
-
-            @Override
-            public int addonPlayers() {
-                int n = 0;
-                for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-                    if (AudioDistancePlugin.SERVER_WALLS.hasAddon(p.getUUID())) {
-                        n++;
-                    }
-                }
-                return n;
-            }
-
-            @Override
-            public void resendProfiles() {
-                hooks.resendProfiles(server);
-            }
-        };
+        ServerPlayer player = source.getPlayer();
+        if (player != null) {
+            // Commands like zone pos1 need where the admin stands right now
+            AudioDistancePlugin.PLAYERS.update(ServerBridge.info(player));
+        }
+        AdminCommands.Context context = ServerBridge.context(server, player == null ? null : player.getUUID(), hooks);
         for (String line : AdminCommands.run(args, AudioDistancePlugin.SERVER_SETTINGS, context)) {
             source.sendSuccess(() -> Component.literal(line), false);
         }

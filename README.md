@@ -103,7 +103,16 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 - **Exact whisper range:** the server sends its real voice and whisper distances, so the whisper curve on the graph is exact.
 - **Voice chat state of nearby players:** once a second the server tells each player with the addon who within voice range has no Simple Voice Chat, has it disconnected, turned the sound off, or is in a group, for the monitor.
 - **Hot reload:** edits to the server settings file are picked up without a restart and sent to connected players.
-- **Sound zones:** a world (dimension) or, on Paper with WorldGuard, a region can have its own profile mode and preset — a quiet library, a loud arena, a stealth dungeon. The profile follows players as they move, and the HUD names the zone.
+- **Sound zones:** a world (dimension), a **box** drawn in game with `/vcd zone`, or, on Paper with WorldGuard, a region. A zone can change:
+  - how far voices carry (a stage ×2, a library ×0.4, or a range in blocks) — for every player, with or without the addon;
+  - whether voices cross its border at all (*isolated*: a soundproof booth);
+  - wall strength, a fixed echo (a cathedral) or none, the profile mode and preset, and a message on entering.
+
+  Where zones overlap the highest priority wins. The HUD shows the zone (or its message) when you enter.
+- **Game rules:** sneaking players carry less far, dead players are silent until they respawn, spectators are heard only by spectators, and an item held in hand (a goat horn, for example) works as a **megaphone**.
+- **Addon requirement:** players who have Simple Voice Chat but not the addon (or an older version) can get a message once, on every join, or be disconnected. Players without Simple Voice Chat are never affected.
+- **Server tab:** operators with the addon get a *Server* tab in the settings screen with all of this as buttons: profile, preset, walls, rules, the requirement, and zones (make one around you, then set its range, walls, echo and isolation).
+- **Messages in every language:** `/vcd` replies and messages to players come in each player's own game language (1.21+). The texts are in `vc-audio-distance-lang/` next to the settings file, where you can change any line or add a language.
 - **`/vcd` command** for operators (level 2+) and the console:
 
   | Command | What it does |
@@ -115,9 +124,15 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
   | `/vcd preset export` / `/vcd preset import <code>` | The server's profile as a profile code |
   | `/vcd walls 0-100\|off` | Wall strength for everyone, in % |
   | `/vcd serverwalls on\|off` | Walls for players without the addon |
-  | `/vcd zones` | Worlds and regions with their own profile |
+  | `/vcd zones` | Every zone |
+  | `/vcd zone pos1` / `pos2`, `/vcd zone create <name> [radius]` | Make a box zone from two corners, or around you |
+  | `/vcd zone set <name> <setting> <value\|default>` | `mode`, `preset`, `voice_range`, `whisper_range`, `range_multiplier`, `walls`, `echo`, `isolated`, `message`, `priority` |
+  | `/vcd zone delete <name>`, `/vcd zone info` | Remove a zone; which zone you are in |
+  | `/vcd rule sneak 0.1-1\|dead on\|off\|spectators on\|off\|megaphone <item>\|megaphone_range 1-10` | Game rules |
+  | `/vcd require off\|suggest\|warn\|kick [version]` | The addon requirement |
+  | `/vcd debug <player>` | Whom a player hears and who hears them, and why not |
 
-  Changes are saved to the settings file and sent to players with the addon right away. On Paper the permission is `vcd.admin` (operators by default). Replies are in English or Russian (`messages_language`).
+  Changes are saved to the settings file and sent to players with the addon right away. On Paper the permission is `vcd.admin` (operators by default).
 
 ### What works where
 
@@ -133,14 +148,14 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 
 | Loader | Minecraft | File | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.7.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.7.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.7.0.jar` | 17+ | Bukkit version |
-| Forge | 1.20.1 | `voice-physics-forge-1.7.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.7.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.8.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.8.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.8.0.jar` | 17+ | Bukkit version |
+| Forge | 1.20.1 | `voice-physics-forge-1.8.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.8.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** is the full version, on the client and on the server. It needs [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 - **Paper / Purpur / Spigot / Bukkit** is the server side as a plugin: walls for players without the addon, and the server profile for players with it. Players can join with any client: with the Fabric addon, without it, or without mods at all. The plugin is compiled against the 1.20.1 API and checked in CI against every Paper release from 1.20.1 to 26.3: every class, method, field and override it uses resolves the same way (Paper 1.20.5 cannot be checked: its API snapshot is no longer downloadable).
@@ -164,7 +179,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 3. Walls for players without the addon are on by default. To share a profile, set `profile_mode` to `suggest` or `enforce` and pick a `profile_preset`. Every key in the file has a comment in English and Russian, and the file is re-read automatically.
 
 **Server (Paper / Purpur / Spigot / Bukkit)**
-1. Put `voice-physics-bukkit-1.7.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
+1. Put `voice-physics-bukkit-1.8.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
 2. Start the server once; it creates `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. The settings are the same as on Fabric (see below), and the file is also re-read automatically.
 
@@ -196,7 +211,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 
 On Paper / Purpur / Spigot / Bukkit the file is `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 
-The file has six sections, and every key has a comment in English and Russian. Changes apply within 2 seconds without a restart. The voice and whisper range itself is set in Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
+The file has eight sections, and every key has a comment in English and Russian. Changes apply within 2 seconds without a restart. The voice and whisper range itself is set in Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
 
 **1. Walls, for every player**
 
@@ -230,17 +245,57 @@ The file has six sections, and every key has a comment in English and Russian. C
 
 | Key | Values | What it does |
 |---|---|---|
-| `zone.world.<world>.profile_mode` | `off` / `suggest` / `enforce` | How the profile is offered in this world |
-| `zone.world.<world>.profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` | The preset in this world |
-| `zone.region.<region id>.profile_mode`, `zone.region.<region id>.profile_preset` | as above | The same for a WorldGuard region (Paper); a region wins over its world |
+| `zone.<kind>.<name>.profile_mode` | `off` / `suggest` / `enforce` | How the profile is offered here |
+| `zone.<kind>.<name>.profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` | The preset here |
+| `zone.<kind>.<name>.voice_range`, `.whisper_range` | 1 – 1000 blocks | Voice and whisper range here, for every player |
+| `zone.<kind>.<name>.range_multiplier` | 0.05 – 10 | Voice and whisper range times this: 2 = a stage, 0.4 = a library |
+| `zone.<kind>.<name>.walls_strength` | 0 – 1 | Wall strength for players here |
+| `zone.<kind>.<name>.echo` | `auto` / `off` / 0.1 – 1 | Measured as usual / no echo / this big an echo everywhere here |
+| `zone.<kind>.<name>.isolated` | `true` / `false` | Voices neither leave nor enter the zone |
+| `zone.<kind>.<name>.enter_message` | text | Shown to players who enter |
+| `zone.<kind>.<name>.priority` | whole number | Where zones overlap the highest wins (default 0) |
+| `zone.box.<name>.world`, `.from`, `.to` | world, `x,y,z`, `x,y,z` | The box (written for you by `/vcd zone create`) |
 
-On Paper the world is its folder name (`world_nether`); on Fabric it is the dimension (`the_nether`, or `minecraft:the_nether` written as `minecraft\:the_nether`). What a zone leaves out comes from section 3; walls always come from section 1.
+`<kind>` is `world`, `box` or `region` (WorldGuard, Paper). On Paper the world is its folder name (`world_nether`); on Fabric and NeoForge it is the dimension (`the_nether`). On a tie in priority a region wins, then the smallest box; a world's zone covers the rest of that world. What a zone leaves out comes from the sections above.
 
-**6. Messages**
+Example — a stage twice as loud, and a soundproof booth:
+```properties
+zone.box.stage.world=world
+zone.box.stage.from=0,60,0
+zone.box.stage.to=30,80,20
+zone.box.stage.range_multiplier=2
+zone.box.stage.enter_message=On stage: everyone hears you
+zone.box.booth.world=world
+zone.box.booth.from=40,60,0
+zone.box.booth.to=44,64,4
+zone.box.booth.isolated=true
+```
+
+**6. Game rules**
 
 | Key | Values | Default | What it does |
 |---|---|---|---|
-| `messages_language` | `en` / `ru` | `en` | Language of the `/vcd` replies |
+| `sneak_range_multiplier` | 0.1 – 1 | 1 | Voice range while sneaking, times this |
+| `dead_players_silent` | `true` / `false` | `false` | Dead players are not heard until they respawn |
+| `spectators_hear_only_spectators` | `true` / `false` | `false` | Spectators are heard only by other spectators |
+| `megaphone_item` | item id or empty | empty | An item that works as a megaphone while held, e.g. `minecraft:goat_horn` |
+| `megaphone_multiplier` | 1 – 10 | 2.5 | Voice range with the megaphone, times this |
+
+**7. Players without the addon: requirement**
+
+| Key | Values | Default | What it does |
+|---|---|---|---|
+| `require_addon` | `off` / `suggest` / `warn` / `kick` | `off` | For players with Simple Voice Chat but not the addon: nothing / one message per server start / a message on every join / disconnect |
+| `min_addon_version` | version or empty | empty | Lowest addon version that counts |
+| `addon_download_url` | link | the GitHub releases page | Where the message sends players |
+
+**8. Messages**
+
+| Key | Values | Default | What it does |
+|---|---|---|---|
+| `messages_language` | `auto` / `en_us` / `ru_ru` / `uk_ua` / `de_de` / `es_es` / `pt_br` / `zh_cn` | `auto` | Language of `/vcd` replies and messages to players; `auto` = each player's own game language (1.21+; English on 1.20.1 and in the console) |
+
+The texts themselves are in `vc-audio-distance-lang/<language>.json` next to the settings file, written on the first start. Change any line, or add a file (`fr_fr.json`) for a new language; missing lines come from the built-in texts.
 
 Walls always come from section 1, whichever preset is chosen. Older files are rewritten in this format on the first start, keeping their values.
 
@@ -348,7 +403,16 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Точная дальность шёпота:** сервер передаёт настоящие дальности голоса и шёпота, поэтому кривая шёпота на графике точная.
 - **Состояние голосового чата у игроков рядом:** раз в секунду сервер сообщает каждому игроку с аддоном, у кого в радиусе голоса нет Simple Voice Chat, у кого он не подключён, кто выключил звук и кто в группе, — для монитора.
 - **Горячая перезагрузка:** изменения в файле настроек сервера подхватываются без перезапуска и отправляются подключённым игрокам.
-- **Звуковые зоны:** у мира (измерения) или, на Paper с WorldGuard, у региона может быть свой режим и пресет профиля — тихая библиотека, громкая арена, стелс-подземелье. Профиль следует за игроком, а HUD называет зону.
+- **Звуковые зоны:** мир (измерение), **бокс**, созданный в игре через `/vcd zone`, или, на Paper с WorldGuard, регион. Зона может менять:
+  - как далеко слышно голоса (сцена ×2, библиотека ×0.4 или дальность в блоках) — для всех игроков, с аддоном и без;
+  - выходят ли голоса за её границу вообще (*изоляция*: звуконепроницаемая кабинка);
+  - силу стен, постоянное эхо (собор) или его отсутствие, режим и пресет профиля, сообщение при входе.
+
+  Где зоны пересекаются, побеждает высший приоритет. При входе HUD показывает зону (или её сообщение).
+- **Правила игры:** на корточках голос слышно ближе, мёртвых не слышно до возрождения, наблюдателей слышат только наблюдатели, а предмет в руке (например, козий рог) работает как **мегафон**.
+- **Требование аддона:** игрокам с Simple Voice Chat, но без аддона (или со старой версией) можно один раз написать, напоминать при каждом входе или отключать их. Игроков без Simple Voice Chat это не касается.
+- **Вкладка «Сервер»:** операторы с аддоном видят в экране настроек вкладку «Сервер», где всё это — кнопками: профиль, пресет, стены, правила, требование аддона и зоны (создать вокруг себя, затем настроить дальность, стены, эхо и изоляцию).
+- **Сообщения на всех языках:** ответы `/vcd` и сообщения игрокам приходят на языке игры самого игрока (1.21+). Тексты лежат в `vc-audio-distance-lang/` рядом с файлом настроек — там можно поменять любую строку или добавить язык.
 - **Команда `/vcd`** для операторов (уровень 2+) и консоли:
 
   | Команда | Что делает |
@@ -360,9 +424,15 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
   | `/vcd preset export` / `/vcd preset import <код>` | Профиль сервера в виде кода профиля |
   | `/vcd walls 0-100\|off` | Сила стен для всех, в % |
   | `/vcd serverwalls on\|off` | Стены для игроков без аддона |
-  | `/vcd zones` | Миры и регионы со своим профилем |
+  | `/vcd zones` | Все зоны |
+  | `/vcd zone pos1` / `pos2`, `/vcd zone create <имя> [радиус]` | Создать зону-бокс по двум углам или вокруг себя |
+  | `/vcd zone set <имя> <параметр> <значение\|default>` | `mode`, `preset`, `voice_range`, `whisper_range`, `range_multiplier`, `walls`, `echo`, `isolated`, `message`, `priority` |
+  | `/vcd zone delete <имя>`, `/vcd zone info` | Удалить зону; в какой зоне вы стоите |
+  | `/vcd rule sneak 0.1-1\|dead on\|off\|spectators on\|off\|megaphone <предмет>\|megaphone_range 1-10` | Правила игры |
+  | `/vcd require off\|suggest\|warn\|kick [версия]` | Требование аддона |
+  | `/vcd debug <игрок>` | Кого слышит игрок и кто слышит его, и почему нет |
 
-  Изменения сохраняются в файл настроек и сразу отправляются игрокам с аддоном. На Paper право — `vcd.admin` (по умолчанию у операторов). Ответы на английском или русском (`messages_language`).
+  Изменения сохраняются в файл настроек и сразу отправляются игрокам с аддоном. На Paper право — `vcd.admin` (по умолчанию у операторов).
 
 ### Что где работает
 
@@ -378,14 +448,14 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 | Загрузчик | Minecraft | Файл | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.7.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.7.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.7.0.jar` | 17+ | версия для Bukkit |
-| Forge | 1.20.1 | `voice-physics-forge-1.7.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.7.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.8.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.8.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.8.0.jar` | 17+ | версия для Bukkit |
+| Forge | 1.20.1 | `voice-physics-forge-1.8.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.8.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** — полная версия, на клиенте и на сервере. Нужен [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
 - **Paper / Purpur / Spigot / Bukkit** — серверная часть в виде плагина: стены для игроков без аддона и профиль сервера для игроков с ним. Заходить можно с любым клиентом: с аддоном для Fabric, без него или совсем без модов. Плагин собран против API 1.20.1 и в CI проверяется на каждом релизе Paper от 1.20.1 до 26.3: каждый класс, метод, поле и переопределение, которые он использует, разрешаются одинаково (Paper 1.20.5 проверить нельзя: снимок его API больше не скачивается).
@@ -409,7 +479,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 3. Стены для игроков без аддона включены по умолчанию. Чтобы передавать профиль, поставьте `profile_mode` в `suggest` или `enforce` и выберите `profile_preset`. У каждого ключа в файле есть комментарий на английском и русском, файл перечитывается автоматически.
 
 **Сервер (Paper / Purpur / Spigot / Bukkit)**
-1. Положите `voice-physics-bukkit-1.7.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
+1. Положите `voice-physics-bukkit-1.8.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
 2. Запустите сервер один раз — он создаст `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. Настройки те же, что на Fabric (см. ниже), файл тоже перечитывается автоматически.
 
@@ -441,7 +511,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 На Paper / Purpur / Spigot / Bukkit файл находится в `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 
-В файле шесть разделов, у каждого ключа есть комментарий на английском и русском. Изменения применяются в течение 2 секунд без перезапуска. Сама дальность голоса и шёпота задаётся в Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
+В файле восемь разделов, у каждого ключа есть комментарий на английском и русском. Изменения применяются в течение 2 секунд без перезапуска. Сама дальность голоса и шёпота задаётся в Simple Voice Chat (`max_voice_distance`, `whisper_distance`).
 
 **1. Стены, для всех игроков**
 
@@ -475,17 +545,57 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 | Ключ | Значения | Что делает |
 |---|---|---|
-| `zone.world.<мир>.profile_mode` | `off` / `suggest` / `enforce` | Как предлагать профиль в этом мире |
-| `zone.world.<мир>.profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` | Пресет в этом мире |
-| `zone.region.<id региона>.profile_mode`, `zone.region.<id региона>.profile_preset` | как выше | То же для региона WorldGuard (Paper); регион главнее своего мира |
+| `zone.<вид>.<имя>.profile_mode` | `off` / `suggest` / `enforce` | Как предлагать профиль здесь |
+| `zone.<вид>.<имя>.profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` | Пресет здесь |
+| `zone.<вид>.<имя>.voice_range`, `.whisper_range` | 1 – 1000 блоков | Дальность голоса и шёпота здесь, для всех игроков |
+| `zone.<вид>.<имя>.range_multiplier` | 0.05 – 10 | Дальность голоса и шёпота умножается: 2 — сцена, 0.4 — библиотека |
+| `zone.<вид>.<имя>.walls_strength` | 0 – 1 | Сила стен для игроков здесь |
+| `zone.<вид>.<имя>.echo` | `auto` / `off` / 0.1 – 1 | Как измерено / без эха / такое эхо везде в зоне |
+| `zone.<вид>.<имя>.isolated` | `true` / `false` | Голоса не выходят из зоны и не заходят в неё |
+| `zone.<вид>.<имя>.enter_message` | текст | Показывается игрокам при входе |
+| `zone.<вид>.<имя>.priority` | целое число | Где зоны пересекаются, побеждает высший (по умолчанию 0) |
+| `zone.box.<имя>.world`, `.from`, `.to` | мир, `x,y,z`, `x,y,z` | Сам бокс (его записывает `/vcd zone create`) |
 
-На Paper мир — это имя его папки (`world_nether`); на Fabric — измерение (`the_nether` или `minecraft:the_nether`, записанное как `minecraft\:the_nether`). Чего в зоне нет, берётся из раздела 3; стены всегда из раздела 1.
+`<вид>` — `world`, `box` или `region` (WorldGuard, Paper). На Paper мир — это имя его папки (`world_nether`); на Fabric и NeoForge — измерение (`the_nether`). При равном приоритете побеждает регион, затем меньший бокс; зона мира действует во всём остальном мире. Чего в зоне нет, берётся из разделов выше.
 
-**6. Сообщения**
+Пример — сцена в два раза громче и звуконепроницаемая кабинка:
+```properties
+zone.box.stage.world=world
+zone.box.stage.from=0,60,0
+zone.box.stage.to=30,80,20
+zone.box.stage.range_multiplier=2
+zone.box.stage.enter_message=На сцене: вас слышат все
+zone.box.booth.world=world
+zone.box.booth.from=40,60,0
+zone.box.booth.to=44,64,4
+zone.box.booth.isolated=true
+```
+
+**6. Правила игры**
 
 | Ключ | Значения | По умолчанию | Что делает |
 |---|---|---|---|
-| `messages_language` | `en` / `ru` | `en` | Язык ответов `/vcd` |
+| `sneak_range_multiplier` | 0.1 – 1 | 1 | Дальность голоса на корточках умножается на это |
+| `dead_players_silent` | `true` / `false` | `false` | Мёртвых не слышно, пока они не возродятся |
+| `spectators_hear_only_spectators` | `true` / `false` | `false` | Наблюдателей слышат только другие наблюдатели |
+| `megaphone_item` | id предмета или пусто | пусто | Предмет, который в руке работает как мегафон, например `minecraft:goat_horn` |
+| `megaphone_multiplier` | 1 – 10 | 2.5 | Дальность голоса с мегафоном умножается на это |
+
+**7. Игроки без аддона: требование**
+
+| Ключ | Значения | По умолчанию | Что делает |
+|---|---|---|---|
+| `require_addon` | `off` / `suggest` / `warn` / `kick` | `off` | Игрокам с Simple Voice Chat, но без аддона: ничего / одно сообщение за запуск сервера / сообщение при каждом входе / отключение |
+| `min_addon_version` | версия или пусто | пусто | Минимальная версия аддона |
+| `addon_download_url` | ссылка | страница релизов на GitHub | Куда сообщение отправляет игроков |
+
+**8. Сообщения**
+
+| Ключ | Значения | По умолчанию | Что делает |
+|---|---|---|---|
+| `messages_language` | `auto` / `en_us` / `ru_ru` / `uk_ua` / `de_de` / `es_es` / `pt_br` / `zh_cn` | `auto` | Язык ответов `/vcd` и сообщений игрокам; `auto` — язык игры самого игрока (1.21+; на 1.20.1 и в консоли — английский) |
+
+Сами тексты лежат в `vc-audio-distance-lang/<язык>.json` рядом с файлом настроек и записываются при первом запуске. Меняйте любые строки или добавьте файл (`fr_fr.json`) для нового языка; недостающие строки берутся из встроенных.
 
 Стены всегда берутся из раздела 1, какой бы пресет ни был выбран. Старые файлы при первом запуске переписываются в этот формат с сохранением значений.
 

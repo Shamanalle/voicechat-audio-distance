@@ -2,7 +2,9 @@ package com.kasper.vcdistance.neoforge;
 
 import com.kasper.vcdistance.AudioDistancePlugin;
 import com.kasper.vcdistance.LinkProtocol;
+import com.kasper.vcdistance.ServerHooks;
 import com.kasper.vcdistance.Zone;
+import com.kasper.vcdistance.server.ServerBridge;
 import com.kasper.vcdistance.server.ServerZones;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -51,6 +53,26 @@ public final class NeoNetworking {
         }
     }
 
+    public record Admin(String text) implements CustomPacketPayload {
+        public static final Type<Admin> TYPE = new Type<>(Identifier.fromNamespaceAndPath(LinkProtocol.NAMESPACE, LinkProtocol.ADMIN));
+        public static final StreamCodec<ByteBuf, Admin> CODEC = ByteBufCodecs.stringUtf8(LinkProtocol.MAX_LENGTH).map(Admin::new, Admin::text);
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record AdminReply(String text) implements CustomPacketPayload {
+        public static final Type<AdminReply> TYPE = new Type<>(Identifier.fromNamespaceAndPath(LinkProtocol.NAMESPACE, LinkProtocol.ADMIN_REPLY));
+        public static final StreamCodec<ByteBuf, AdminReply> CODEC = ByteBufCodecs.stringUtf8(LinkProtocol.MAX_LENGTH).map(AdminReply::new, AdminReply::text);
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     private NeoNetworking() {
     }
 
@@ -62,13 +84,16 @@ public final class NeoNetworking {
                 AudioDistancePlugin.LINK.onProfile(payload.text()));
         registrar.playToClient(Nearby.TYPE, Nearby.CODEC, (payload, context) ->
                 AudioDistancePlugin.LINK.onNearby(payload.text()));
+        registrar.playToServer(Admin.TYPE, Admin.CODEC, (payload, context) ->
+                context.enqueueWork(() -> onAdmin((ServerPlayer) context.player(), payload.text())));
+        registrar.playToClient(AdminReply.TYPE, AdminReply.CODEC, (payload, context) ->
+                AudioDistancePlugin.LINK.onAdminReply(payload.text()));
     }
 
     private static void onHello(ServerPlayer player, String text) {
-        if (LinkProtocol.parseHello(text) < 1) {
+        if (!ServerHooks.hello(player.getUUID(), text)) {
             return;
         }
-        AudioDistancePlugin.SERVER_WALLS.markAddonListener(player.getUUID());
         Zone zone = ServerZones.of(player);
         AudioDistancePlugin.ZONES.set(player.getUUID(), zone);
         sendProfile(player, zone);
@@ -76,7 +101,15 @@ public final class NeoNetworking {
 
     static void sendProfile(ServerPlayer player, Zone zone) {
         if (player.connection.hasChannel(Profile.TYPE)) {
-            PacketDistributor.sendToPlayer(player, new Profile(AudioDistancePlugin.serverProfileMessage(zone)));
+            PacketDistributor.sendToPlayer(player, new Profile(AudioDistancePlugin.serverProfileMessage(zone, ServerBridge.isAdmin(player))));
+        }
+    }
+
+    /** A command from the player's Server tab; answered only for admins. */
+    private static void onAdmin(ServerPlayer player, String text) {
+        String reply = ServerBridge.admin(player, text, AudioDistanceNeoForge::resendProfiles);
+        if (reply != null && player.connection.hasChannel(AdminReply.TYPE)) {
+            PacketDistributor.sendToPlayer(player, new AdminReply(reply));
         }
     }
 

@@ -173,7 +173,12 @@ public final class SpeakerTicker {
             }
             env.update(access.isUnderWater(listener), access.weatherAt(listener));
             env.setPosition(listener.x, listener.y, listener.z);
-            if (ticks++ % (ROOM_INTERVAL_TICKS * slow) == 0) {
+            Double zoneEcho = AudioDistancePlugin.LINK.zoneEcho();
+            if (zoneEcho != null) {
+                // The server's zone sets the echo (a cathedral, a padded room): no need to measure
+                ticks++;
+                env.updateRoom(RoomEstimate.forced(zoneEcho));
+            } else if (ticks++ % (ROOM_INTERVAL_TICKS * slow) == 0) {
                 double[] hits = new double[RoomEstimate.DIRECTIONS.length];
                 for (int i = 0; i < hits.length; i++) {
                     double[] d = RoomEstimate.DIRECTIONS[i];

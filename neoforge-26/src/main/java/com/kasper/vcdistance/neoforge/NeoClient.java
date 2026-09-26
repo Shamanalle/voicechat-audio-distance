@@ -53,6 +53,12 @@ final class NeoClient {
     static void init(IEventBus modBus, ModContainer container) {
         AudioDistancePlugin.CONFIG.ensureLoaded();
         ticker = new SpeakerTicker(new ModernWorldAccess());
+        AudioDistancePlugin.LINK.setAdminSender(text -> {
+            ClientPacketListener connection = Minecraft.getInstance().getConnection();
+            if (connection != null && connection.hasChannel(NeoNetworking.Admin.TYPE)) {
+                ClientPacketDistributor.sendToServer(new NeoNetworking.Admin(text));
+            }
+        });
         container.registerExtensionPoint(IConfigScreenFactory.class,
                 (IConfigScreenFactory) (mod, parent) -> new AudioDistanceScreen(parent));
 
