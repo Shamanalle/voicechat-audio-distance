@@ -25,9 +25,9 @@ cd voice-physics
 | Directory | Compiled into | Contains |
 |---|---|---|
 | `common/` | every jar (Java 17, no Minecraft classes) | Simple Voice Chat plugin, OpenAL curve, config and presets, wall filter (`VoiceFilter`), occlusion model, speaker registry, server walls (`ServerWalls`), server settings, client–server protocol (`LinkProtocol`, `ServerLink`), **translations and icon** |
-| `shared/mc-all/` | all three Fabric modules | settings screen (`SettingsScreen`), `Canvas`, slider, client tick logic, multi-ray tracer |
-| `shared/mc-1.20-1.21/` | `fabric-1.20`, `fabric-1.21` | client and common entrypoints, screen and canvas adapters, block acoustics, client world access, server wall measuring, key mapping |
-| `fabric-1.20/`, `fabric-1.21/` | own module | `Compat` (the only screen difference between 1.20 and 1.21), networking (channels on 1.20.1, payloads on 1.21), `fabric.mod.json`, `mods.toml` |
+| `shared/mc-all/` | every Fabric module | settings screen (`SettingsScreen`), `Canvas`, slider, client tick logic, multi-ray tracer |
+| `shared/mc-1.20-1.21/` | `fabric-1.20`, `fabric-1.20.4`, `fabric-1.20.6`, `fabric-1.21` | client and common entrypoints, screen and canvas adapters, block acoustics, client world access, server wall measuring, key mapping |
+| `fabric-1.20/`, `fabric-1.20.4/`, `fabric-1.20.6/`, `fabric-1.21/` | own module (1.20 – 1.20.1, 1.20.2 – 1.20.4, 1.20.5 – 1.20.6, 1.21.x) | `Compat` (screens draw their own background since 1.20.2), networking (channels up to 1.20.4, payloads since 1.20.5), `PlayerLanguage` (since 1.20.2), `fabric.mod.json`, `mods.toml` |
 | `fabric-26/` | own module | 26.x adapters (render-state API, key and screen differences between 26.1 and 26.3, payload names), block acoustics, server wall measuring, metadata. Checked on every 26.x release by *Minecraft 26.x compatibility* (`.github/workflows/compat-26.yml`) |
 | `bukkit/` | own jar (Java 17) | Paper / Purpur / Spigot / Bukkit plugin: server side only. Plugin messaging on the same channels as Fabric, block acoustics through the Bukkit API, `plugin.yml` |
 
@@ -104,9 +104,9 @@ cd voice-physics
 | Папка | Куда попадает | Что внутри |
 |---|---|---|
 | `common/` | во все JAR (Java 17, без классов Minecraft) | плагин Simple Voice Chat, кривая OpenAL, конфиг и пресеты, фильтр стен (`VoiceFilter`), модель приглушения, реестр говорящих, стены на сервере (`ServerWalls`), настройки сервера, протокол клиент–сервер (`LinkProtocol`, `ServerLink`), **переводы и иконка** |
-| `shared/mc-all/` | во все три модуля Fabric | экран настроек (`SettingsScreen`), `Canvas`, слайдер, логика тика клиента, трассировка несколькими лучами |
-| `shared/mc-1.20-1.21/` | `fabric-1.20`, `fabric-1.21` | точки входа клиента и общая, адаптеры экрана и отрисовки, акустика блоков, доступ к миру на клиенте, измерение стен на сервере, регистрация клавиши |
-| `fabric-1.20/`, `fabric-1.21/` | свой модуль | `Compat` (единственное отличие экрана 1.20 от 1.21), сеть (каналы в 1.20.1, payload в 1.21), `fabric.mod.json`, `mods.toml` |
+| `shared/mc-all/` | во все модули Fabric | экран настроек (`SettingsScreen`), `Canvas`, слайдер, логика тика клиента, трассировка несколькими лучами |
+| `shared/mc-1.20-1.21/` | `fabric-1.20`, `fabric-1.20.4`, `fabric-1.20.6`, `fabric-1.21` | точки входа клиента и общая, адаптеры экрана и отрисовки, акустика блоков, доступ к миру на клиенте, измерение стен на сервере, регистрация клавиши |
+| `fabric-1.20/`, `fabric-1.20.4/`, `fabric-1.20.6/`, `fabric-1.21/` | свой модуль (1.20 – 1.20.1, 1.20.2 – 1.20.4, 1.20.5 – 1.20.6, 1.21.x) | `Compat` (с 1.20.2 экран сам рисует фон), сеть (каналы до 1.20.4, payload с 1.20.5), `PlayerLanguage` (с 1.20.2), `fabric.mod.json`, `mods.toml` |
 | `fabric-26/` | свой модуль | адаптеры 26.x (API отрисовки через render state, различия клавиш и экранов между 26.1 и 26.3, имена payload), акустика блоков, измерение стен на сервере, метаданные. Проверяется на каждом релизе 26.x workflow *Minecraft 26.x compatibility* (`.github/workflows/compat-26.yml`) |
 | `bukkit/` | свой JAR (Java 17) | плагин для Paper / Purpur / Spigot / Bukkit: только серверная часть. Сообщения плагина на тех же каналах, что у Fabric, акустика блоков через API Bukkit, `plugin.yml` |
 

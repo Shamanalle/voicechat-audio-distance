@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "vc-audio-distance",
+  "version": "${version}",
+  "name": "Voice Physics",
+  "icon": "assets/vc-audio-distance/icon.png",
+  "description": "Shapes how Simple Voice Chat voices fade with distance and muffles them through walls. Client: live curve, wall preview, monitor. Server (optional): walls for players without the addon and a shared sound profile.",
+  "authors": [
+    "Shamanalle"
+  ],
+  "contact": {
+    "homepage": "https://github.com/Shamanalle/voice-physics",
+    "sources": "https://github.com/Shamanalle/voice-physics",
+    "issues": "https://github.com/Shamanalle/voice-physics/issues"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.kasper.vcdistance.AudioDistanceMod"
+    ],
+    "client": [
+      "com.kasper.vcdistance.AudioDistanceClient"
+    ],
+    "voicechat": [
+      "com.kasper.vcdistance.AudioDistancePlugin"
+    ],
+    "modmenu": [
+      "com.kasper.vcdistance.ModMenuIntegration"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": ">=1.20.2 <=1.20.4",
+    "java": ">=17",
+    "voicechat": ">=1.20.2-2.4.0"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}

@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [2.0.2] - 2026-09-26
+
+### English
+
+#### Added
+- **Minecraft 1.20.2 – 1.20.6.** Two new files: one for 1.20.2 – 1.20.4 (Java 17) and one for 1.20.5 – 1.20.6 (Java 21). They are the full version on Fabric and Quilt, and the lite version on NeoForge and Forge, like the other files.
+- On 1.20.2 and newer, `/vcd` replies and messages to players come in each player's own game language.
+
+#### Changed
+- The store files are named after the Minecraft versions they run on: "Mod for 1.20 – 1.20.1", "Mod for 1.21 – 1.21.11", "Mod for 26.1 – 26.3".
+
+### Русский
+
+#### Добавлено
+- **Minecraft 1.20.2 – 1.20.6.** Два новых файла: для 1.20.2 – 1.20.4 (Java 17) и для 1.20.5 – 1.20.6 (Java 21). На Fabric и Quilt это полная версия, на NeoForge и Forge — облегчённая, как и у остальных файлов.
+- На 1.20.2 и новее ответы `/vcd` и сообщения игрокам приходят на языке игры каждого игрока.
+
+#### Изменено
+- Файлы в магазинах названы по версиям Minecraft, на которых они работают: «Mod for 1.20 – 1.20.1», «Mod for 1.21 – 1.21.11», «Mod for 26.1 – 26.3».
+
 ## [2.0.1] - 2026-09-26
 
 ### English

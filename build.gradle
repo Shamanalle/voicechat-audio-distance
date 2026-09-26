@@ -7,6 +7,8 @@ plugins {
 // configured through config/vc-audio-distance.properties) without the Fabric-only client features.
 def releaseTargets = [
         [project: ':fabric-1.20', target: 'mc1.20.1', aliases: ['forge']],
+        [project: ':fabric-1.20.4', target: 'mc1.20.2-1.20.4', aliases: ['neoforge', 'forge']],
+        [project: ':fabric-1.20.6', target: 'mc1.20.5-1.20.6', aliases: ['neoforge', 'forge']],
         [project: ':fabric-1.21', target: 'mc1.21.x', aliases: ['neoforge', 'forge']],
         [project: ':fabric-26', target: 'mc26.x', aliases: ['neoforge', 'forge']],
 ]
