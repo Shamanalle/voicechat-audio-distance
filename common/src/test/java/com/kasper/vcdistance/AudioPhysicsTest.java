@@ -134,17 +134,46 @@ public class AudioPhysicsTest {
     void testPresets() {
         DistanceConfig config = new DistanceConfig(java.nio.file.Path.of("unused.properties"));
         for (Preset preset : Preset.values()) {
-            preset.apply(config);
-            assertEquals(preset, Preset.find(config), "Preset should be detected after applying: " + preset);
+            for (double range : new double[]{8, 16, 48, 128, 500}) {
+                preset.apply(config, range);
+                assertEquals(preset, Preset.find(config, range), "Preset should be detected after applying: " + preset + " at " + range);
+                assertTrue(config.getOpenalReferenceRatio() >= DistanceConfig.REFERENCE_MIN && config.getOpenalReferenceRatio() <= DistanceConfig.REFERENCE_MAX);
+            }
             assertTrue(config.getAttenuationFactor() >= DistanceConfig.ROLLOFF_MIN && config.getAttenuationFactor() <= DistanceConfig.ROLLOFF_MAX);
             assertTrue(config.getMinVolumeFraction() >= DistanceConfig.MIN_VOLUME_MIN && config.getMinVolumeFraction() <= DistanceConfig.MIN_VOLUME_MAX);
             assertTrue(config.getOpenalReferenceRatio() >= DistanceConfig.REFERENCE_MIN && config.getOpenalReferenceRatio() <= DistanceConfig.REFERENCE_MAX);
             assertTrue(config.getWhisperMultiplier() >= DistanceConfig.WHISPER_MIN && config.getWhisperMultiplier() <= DistanceConfig.WHISPER_MAX);
         }
-        Preset.VANILLA.apply(config);
+        Preset.VANILLA.apply(config, 48);
         assertEquals(AttenuationModel.LINEAR, config.getModel());
         assertEquals(1.0, config.getAttenuationFactor(), EPSILON);
         assertEquals(0.5, config.getOpenalReferenceRatio(), EPSILON);
         assertFalse(config.isOcclusionEnabled(), "Vanilla preset must sound exactly like Simple Voice Chat");
+        Preset.VANILLA.apply(config, 128);
+        assertEquals(0.5, config.getOpenalReferenceRatio(), EPSILON, "Simple Voice Chat's zone is always half the range");
+    }
+
+    @Test
+    @DisplayName("Realism and stealth keep their full-volume zone in blocks, within limits of the range")
+    void testPresetZoneInBlocks() {
+        // Realism: 12 blocks, between 5% and 40% of the range
+        assertEquals(12.0, Preset.REALISTIC.referenceFor(48) * 48, EPSILON);
+        assertEquals(12.0, Preset.REALISTIC.referenceFor(32) * 32, EPSILON);
+        assertEquals(0.40, Preset.REALISTIC.referenceFor(16), EPSILON);
+        assertEquals(0.05, Preset.REALISTIC.referenceFor(500), EPSILON);
+        // Stealth: 7 blocks, at most 30% of the range
+        assertEquals(7.0, Preset.ATMOSPHERIC.referenceFor(48) * 48, EPSILON);
+        assertEquals(0.30, Preset.ATMOSPHERIC.referenceFor(16), EPSILON);
+        // Loudness at a given distance in blocks does not depend on the range (1/r in blocks)
+        double at12of48 = AudioPhysics.calculateGain(12.0 / 48, AttenuationModel.REALISTIC_INVERSE, 0.7, 0.0, Preset.REALISTIC.referenceFor(48));
+        double at12of96 = AudioPhysics.calculateGain(12.0 / 96, AttenuationModel.REALISTIC_INVERSE, 0.7, 0.0, Preset.REALISTIC.referenceFor(96));
+        assertEquals(at12of48, at12of96, 1e-9);
+        // Fitted to one range, the preset no longer matches another
+        DistanceConfig config = new DistanceConfig(java.nio.file.Path.of("unused.properties"));
+        Preset.REALISTIC.apply(config, 48);
+        assertTrue(Preset.REALISTIC.matches(config, 48));
+        assertFalse(Preset.REALISTIC.matches(config, 96));
+        assertTrue(Preset.REALISTIC.dependsOnRange());
+        assertFalse(Preset.VANILLA.dependsOnRange());
     }
 }

@@ -6,6 +6,66 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [1.6.0] - 2026-09-26
+
+### English
+
+#### Added
+- **More materials.** There are 13 groups now:
+  - new ones: metal (blocks of iron, gold, copper, netherite, anvils), earth & sand (everything dug with a shovel), soft blocks (hay, sponge, moss, sculk), ice, and **other blocks**;
+  - *other blocks* covers every solid block not in the list, such as bedrock and blocks from other mods; before, they counted as stone.
+  - Stone, wood and the new groups are recognised by the tool that mines the block, so blocks from newer versions and data packs fall into the right group.
+- The wall preview also shows a block of dirt and an iron block wall.
+
+#### Changed
+- **Presets fit the server's voice range:**
+  - Realistic, Clear and Stealth now set full volume in blocks: about 12, 24 and 7. Before, it was 60%, 80% and 35% of the range, so on a 48-block server Realistic stayed at full volume up to 29 blocks and Stealth up to 17.
+  - The zone is kept within limits of the server's range, so a voice at a given distance sounds the same on servers with different ranges.
+  - The preset you picked is fitted again when you join a server with another range, unless you changed the values yourself.
+  - Settings that still hold one of the old presets move to the new one; walls are kept.
+  - Server profiles set by preset name (`profile_preset`, zones) are fitted to the server's own range.
+- **The distance graph is more compact.** It no longer stretches to the window's full height, and the sliders sit right under it.
+- **The graph is easier to read:**
+  - it has a volume scale on the left;
+  - the edge of the full-volume zone is marked;
+  - the whisper curve stays dashed on steep parts;
+  - a mark on the distance scale shows where the whisper range ends.
+- **The summary, legend and Listen button moved above the graph.**
+- The wall preview panel is only as tall as its rows.
+- **Files are now named after Voice Physics:** `voice-physics-fabric-…`, `voice-physics-neoforge-…`, `voice-physics-forge-…` and `voice-physics-bukkit-…` instead of `voicechat-audio-distance-…`. Delete the old file when you update, so the game or server does not load both. Settings are kept.
+
+#### Fixed
+- The Listen button looked disabled because the graph panel was drawn over it.
+
+### Русский
+
+#### Добавлено
+- **Больше материалов.** Теперь их 13 групп:
+  - новые: металл (блоки железа, золота, меди, незерита, наковальни), земля и песок (всё, что копается лопатой), мягкие блоки (сено, губка, мох, скалк), лёд и **остальные блоки**;
+  - *остальные блоки* — все твёрдые блоки не из списка, например бедрок и блоки из других модов; раньше они считались камнем.
+  - Камень, дерево и новые группы определяются по инструменту, которым добывается блок, поэтому блоки из новых версий и датапаков попадают в нужную группу.
+- В превью стен добавлены блок земли и стена из блоков железа.
+
+#### Изменено
+- **Пресеты подстраиваются под дальность голоса сервера:**
+  - «Реализм», «Чётко» и «Стелс» теперь задают полную громкость в блоках: примерно 12, 24 и 7. Раньше это было 60%, 80% и 35% от дальности, поэтому на сервере с 48 блоками «Реализм» держал полную громкость до 29 блоков, а «Стелс» — до 17.
+  - Зона не выходит за пределы, заданные от дальности сервера, поэтому голос на одном и том же расстоянии звучит одинаково на серверах с разной дальностью.
+  - Выбранный пресет подгоняется заново, когда вы заходите на сервер с другой дальностью, если вы не меняли значения сами.
+  - Настройки, в которых остался один из старых пресетов, переходят на новый; стены сохраняются.
+  - Профили сервера, заданные именем пресета (`profile_preset`, зоны), подгоняются под дальность самого сервера.
+- **График дальности стал компактнее.** Он больше не растягивается на всю высоту окна, а ползунки идут сразу под ним.
+- **График стало легче читать:**
+  - слева появилась шкала громкости;
+  - граница зоны полной громкости отмечена;
+  - кривая шёпота остаётся пунктирной на крутых участках;
+  - метка на шкале расстояния показывает, где заканчивается дальность шёпота.
+- **Сводка, легенда и кнопка «Прослушать» переехали над графиком.**
+- Панель превью стен теперь высотой по своим строкам.
+- **Файлы теперь называются по имени Voice Physics:** `voice-physics-fabric-…`, `voice-physics-neoforge-…`, `voice-physics-forge-…` и `voice-physics-bukkit-…` вместо `voicechat-audio-distance-…`. При обновлении удалите старый файл, чтобы игра или сервер не загрузили оба. Настройки сохраняются.
+
+#### Исправлено
+- Кнопка «Прослушать» выглядела выключенной: панель графика рисовалась поверх неё.
+
 ## [1.5.0] - 2026-09-26
 
 ### English

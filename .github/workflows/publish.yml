@@ -128,8 +128,19 @@ jobs:
             { echo "${output}<<EOF"; tr ' ' '\n' <<< "${!name}"; echo "EOF"; } >> "$GITHUB_OUTPUT"
           done
           version="${TAG#v}"
-          file="voicechat-audio-distance-${PATTERN//\{v\}/${version}}"
-          gh release download "${TAG}" --pattern "${file}" --dir dist
+          # Files are named voice-physics-* since 1.5.1; older releases use the previous name
+          file=""
+          for prefix in voice-physics voicechat-audio-distance; do
+            candidate="${prefix}-${PATTERN//\{v\}/${version}}"
+            if gh release download "${TAG}" --pattern "${candidate}" --dir dist; then
+              file="${candidate}"
+              break
+            fi
+          done
+          if [ -z "${file}" ]; then
+            echo "::error::No ${PATTERN//\{v\}/${version}} file in release ${TAG}"
+            exit 1
+          fi
           # The mod jar serves every loader, so the stores get it without "fabric" in the name
           upload="${file/-fabric-/-}"
           if [ "${upload}" != "${file}" ]; then

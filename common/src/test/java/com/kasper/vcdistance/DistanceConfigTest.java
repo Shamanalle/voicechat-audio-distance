@@ -88,10 +88,66 @@ public class DistanceConfigTest {
         c.load();
         assertEquals(AttenuationModel.REALISTIC_INVERSE, c.getModel());
         String text = Files.readString(file);
-        assertTrue(text.contains("config_version=7"));
+        assertTrue(text.contains("config_version=8"));
         assertTrue(text.contains("reverb_enabled=true"));
         assertTrue(text.contains("material.stone"));
         assertTrue(text.contains("hud_mode=talking"));
+    }
+
+    @Test
+    @DisplayName("A config holding the old realism preset (60% zone) moves to the new one; walls stay")
+    void adoptsResizedPreset() throws IOException {
+        Path file = dir.resolve("vc.properties");
+        Files.writeString(file, "config_version=7\ndistance_model=realistic_inverse\nattenuation_factor=0.7\n"
+                + "min_volume_fraction=0.05\nopenal_reference_ratio=0.6\nwhisper_multiplier=1.1\n"
+                + "occlusion_enabled=true\nocclusion_strength=0.4\n");
+        DistanceConfig c = new DistanceConfig(file);
+        c.load();
+        assertEquals(Preset.REALISTIC, c.getChosenPreset());
+        assertEquals(12.0 / 48, c.getOpenalReferenceRatio(), 1e-9);
+        assertEquals(0.4, c.getOcclusionStrength(), 1e-9);
+
+        // Own values are left alone
+        Files.writeString(file, "config_version=7\ndistance_model=realistic_inverse\nopenal_reference_ratio=0.6\n");
+        DistanceConfig own = new DistanceConfig(file);
+        own.load();
+        assertNull(own.getChosenPreset());
+        assertEquals(0.6, own.getOpenalReferenceRatio(), 1e-9);
+    }
+
+    @Test
+    @DisplayName("The chosen preset and the range it was fitted to are remembered")
+    void chosenPreset() throws IOException {
+        Path file = dir.resolve("vc.properties");
+        DistanceConfig c = new DistanceConfig(file);
+        Preset.REALISTIC.apply(c, 64);
+        c.setChosenPreset(Preset.REALISTIC, 64);
+        c.save();
+        DistanceConfig again = new DistanceConfig(file);
+        again.load();
+        assertEquals(Preset.REALISTIC, again.getChosenPreset());
+        assertEquals(64.0, again.getPresetRange(), 1e-9);
+        assertTrue(Preset.REALISTIC.matches(again, 64));
+        again.setChosenPreset(null, 0);
+        assertNull(again.getChosenPreset());
+    }
+
+    @Test
+    @DisplayName("Materials added later start at their defaults; the ones already set are kept")
+    void newMaterialsStartAtDefaults() throws IOException {
+        Path file = dir.resolve("vc.properties");
+        Files.writeString(file, "config_version=7\nmaterial.stone=1.5\nmaterial.wool=2\n");
+        DistanceConfig c = new DistanceConfig(file);
+        c.load();
+        assertEquals(1.5, c.getMaterialWeight(AcousticMaterial.STONE), 1e-9);
+        assertEquals(2.0, c.getMaterialWeight(AcousticMaterial.WOOL), 1e-9);
+        for (AcousticMaterial m : new AcousticMaterial[]{AcousticMaterial.METAL, AcousticMaterial.EARTH,
+                AcousticMaterial.SOFT, AcousticMaterial.ICE, AcousticMaterial.OTHER}) {
+            assertEquals(m.getDefaultWeight(), c.getMaterialWeight(m), 1e-9, m.getId());
+        }
+        String text = Files.readString(file);
+        assertTrue(text.contains("config_version=8"));
+        assertTrue(text.contains("material.other="));
     }
 
     @Test

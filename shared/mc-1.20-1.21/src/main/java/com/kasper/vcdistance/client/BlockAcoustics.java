@@ -67,6 +67,10 @@ public final class BlockAcoustics {
         if (state.is(BlockTags.FENCES) || state.is(BlockTags.FENCE_GATES)) {
             return AcousticMaterial.THIN;
         }
+        // Ice sounds like glass, so it is checked first
+        if (state.is(BlockTags.ICE)) {
+            return AcousticMaterial.ICE;
+        }
         SoundType sound = state.getSoundType();
         if (sound == SoundType.GLASS) {
             return AcousticMaterial.GLASS;
@@ -74,11 +78,25 @@ public final class BlockAcoustics {
         if (state.getBlock() instanceof IronBarsBlock) {
             return AcousticMaterial.THIN;
         }
-        if (state.is(BlockTags.LOGS) || state.is(BlockTags.PLANKS)
+        if (sound == SoundType.METAL || sound == SoundType.COPPER || sound == SoundType.NETHERITE_BLOCK
+                || sound == SoundType.ANVIL) {
+            return AcousticMaterial.METAL;
+        }
+        if (state.is(BlockTags.LOGS) || state.is(BlockTags.PLANKS) || state.is(BlockTags.MINEABLE_WITH_AXE)
                 || sound == SoundType.WOOD || sound == SoundType.NETHER_WOOD
                 || sound == SoundType.BAMBOO_WOOD || sound == SoundType.CHERRY_WOOD) {
             return AcousticMaterial.WOOD;
         }
-        return AcousticMaterial.STONE;
+        // Everything else by the tool that mines it
+        if (state.is(BlockTags.MINEABLE_WITH_HOE)) {
+            return AcousticMaterial.SOFT;
+        }
+        if (state.is(BlockTags.MINEABLE_WITH_SHOVEL)) {
+            return AcousticMaterial.EARTH;
+        }
+        if (state.is(BlockTags.MINEABLE_WITH_PICKAXE)) {
+            return AcousticMaterial.STONE;
+        }
+        return AcousticMaterial.OTHER;
     }
 }
