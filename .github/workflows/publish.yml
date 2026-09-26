@@ -90,7 +90,7 @@ jobs:
         # Fabric API is marked optional: a required one would be pulled into Forge installs too, and
         # Fabric itself still insists on it.
         include:
-          - name: Mod for 1.20.1
+          - name: Mod for 1.20 – 1.20.1
             file: fabric-{v}+mc1.20.1.jar
             target: mc1.20.1
             loaders: fabric quilt forge
@@ -98,7 +98,23 @@ jobs:
             java: 17
             dependencies: simple-voice-chat(required) fabric-api(optional) modmenu(optional)
             curseforge: true
-          - name: Mod for 1.21.x
+          - name: Mod for 1.20.2 – 1.20.4
+            file: fabric-{v}+mc1.20.2-1.20.4.jar
+            target: mc1.20.2-1.20.4
+            loaders: fabric quilt neoforge forge
+            game-versions: 1.20.2 1.20.3 1.20.4
+            java: 17
+            dependencies: simple-voice-chat(required) fabric-api(optional) modmenu(optional)
+            curseforge: true
+          - name: Mod for 1.20.5 – 1.20.6
+            file: fabric-{v}+mc1.20.5-1.20.6.jar
+            target: mc1.20.5-1.20.6
+            loaders: fabric quilt neoforge forge
+            game-versions: 1.20.5 1.20.6
+            java: 21
+            dependencies: simple-voice-chat(required) fabric-api(optional) modmenu(optional)
+            curseforge: true
+          - name: Mod for 1.21 – 1.21.11
             file: fabric-{v}+mc1.21.x.jar
             target: mc1.21.x
             loaders: fabric quilt neoforge forge
@@ -106,7 +122,7 @@ jobs:
             java: 21
             dependencies: simple-voice-chat(required) fabric-api(optional) modmenu(optional)
             curseforge: true
-          - name: Mod for 26.x
+          - name: Mod for 26.1 – 26.3
             file: fabric-{v}+mc26.x.jar
             target: mc26.x
             loaders: fabric neoforge forge

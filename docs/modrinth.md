@@ -71,7 +71,7 @@ It works on **either side alone**:
 - **the server only:** walls for everyone who joins;
 - **both:** everything above.
 
-Minecraft 1.20.1, 1.21.x and 26.x.
+Minecraft 1.20 – 1.20.6, 1.21 – 1.21.11 and 26.1 – 26.3.
 
 Guides, all settings and the changelog: [GitHub](https://github.com/Shamanalle/voice-physics).
 
@@ -150,6 +150,6 @@ Guides, all settings and the changelog: [GitHub](https://github.com/Shamanalle/v
 - **только на сервере:** стены для всех, кто зашёл;
 - **вместе:** всё, что выше.
 
-Minecraft 1.20.1, 1.21.x и 26.x.
+Minecraft 1.20 – 1.20.6, 1.21 – 1.21.11 и 26.1 – 26.3.
 
 Инструкции, все настройки и список изменений: [GitHub](https://github.com/Shamanalle/voice-physics).

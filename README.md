@@ -1,6 +1,6 @@
 # 🎙️ Voice Physics — Simple Voice Chat addon
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1%20%7C%201.21.x%20%7C%2026.x-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20%E2%80%931.20.6%20%7C%201.21.x%20%7C%2026.x-blue.svg?logo=minecraft&logoColor=white)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-lightgrey.svg?logo=fabric&logoColor=white)](https://fabricmc.net/)
 [![Server](https://img.shields.io/badge/Server-Fabric%20%7C%20Paper%20%7C%20Purpur%20%7C%20Spigot-lightgrey.svg)](#versions-and-files)
 [![Simple Voice Chat](https://img.shields.io/badge/Simple%20Voice%20Chat-2.4%2B-orange.svg)](https://modrinth.com/plugin/simple-voice-chat)
@@ -190,19 +190,24 @@ The addon can be installed on the client (the player's game), on the server, or 
 
 | Loader | Minecraft | File | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.1+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.1+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.1+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.1.jar` | 17+ | Bukkit version |
-| Forge | 1.20.1 | `voice-physics-forge-2.0.1+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.1+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.1+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.1+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.2+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.20.2 – 1.20.4 | `voice-physics-fabric-2.0.2+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| **Fabric / Quilt** | 1.20.5 – 1.20.6 | `voice-physics-fabric-2.0.2+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.2+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.2.jar` | 17+ | Bukkit version |
+| Forge | 1.20.1 | `voice-physics-forge-2.0.2+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.20.2 – 1.20.4 | `voice-physics-{neoforge,forge}-2.0.2+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| NeoForge / Forge | 1.20.5 – 1.20.6 | `voice-physics-{neoforge,forge}-2.0.2+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.2+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** is the full version, on the client and on the server. It needs [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 - **Paper / Purpur / Spigot / Bukkit** is the server side as a plugin: walls for players without the addon, and the server profile for players with it. Players can join with any client: with the Fabric addon, without it, or without mods at all. The plugin is compiled against the 1.20.1 API and checked in CI against every Paper release from 1.20.1 to 26.3: every class, method, field and override it uses resolves the same way (Paper 1.20.5 cannot be checked: its API snapshot is no longer downloadable).
 - **NeoForge for 26.x** is the full version, the same as Fabric: client and server, settings screen, walls, HUD, monitor, `/vcd`. The settings are also under *Mods → Voice Physics → Config*.
-- **Forge, and NeoForge for 1.20.1 / 1.21.x,** are a lite version: distance curves only, configured in `config/vc-audio-distance.properties`. There is no settings screen, no walls, no monitor and no server side (those jars are built for Fabric's class names; 26.x has one set of names for every loader).
+- **Forge, and NeoForge before 26.x,** are a lite version: distance curves only, configured in `config/vc-audio-distance.properties`. There is no settings screen, no walls, no monitor and no server side (those jars are built for Fabric's class names; 26.x has one set of names for every loader).
+- The 1.20.2 – 1.20.4 jar is built for 1.20.4 and the 1.20.5 – 1.20.6 jar for 1.20.6; the Minecraft methods they use have the same signatures on 1.20.2, 1.20.3 and 1.20.5.
 - The 1.21.x jar was checked against the signatures of every Minecraft method it uses on each release from 1.21 to 1.21.11.
 - The 26.x jar is built for 26.3 and checked in CI on every 26.x release (26.1 – 26.3): every class, method, field and override the jar uses resolves on each one exactly as on 26.3. Where 26.x changed (screens moved to `Gui` in 26.2, SDL input in 26.3), the jar picks the right API at runtime.
 
@@ -221,7 +226,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 3. Walls for players without the addon are on by default. To share a profile, set `profile_mode` to `suggest` or `enforce` and pick a `profile_preset`. Every key in the file has a comment in English and Russian, and the file is re-read automatically.
 
 **Server (Paper / Purpur / Spigot / Bukkit)**
-1. Put `voice-physics-bukkit-2.0.1.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
+1. Put `voice-physics-bukkit-2.0.2.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
 2. Start the server once; it creates `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. The settings are the same as on Fabric (see below), and the file is also re-read automatically.
 
@@ -337,7 +342,7 @@ zone.box.booth.isolated=true
 
 | Key | Values | Default | What it does |
 |---|---|---|---|
-| `messages_language` | `auto` / `en_us` / `ru_ru` / `uk_ua` / `de_de` / `es_es` / `pt_br` / `zh_cn` | `auto` | Language of `/vcd` replies and messages to players; `auto` = each player's own game language (1.21+; English on 1.20.1 and in the console) |
+| `messages_language` | `auto` / `en_us` / `ru_ru` / `uk_ua` / `de_de` / `es_es` / `pt_br` / `zh_cn` | `auto` | Language of `/vcd` replies and messages to players; `auto` = each player's own game language (1.20.2+; English on 1.20 – 1.20.1 and in the console) |
 
 The texts themselves are in `vc-audio-distance-lang/<language>.json` next to the settings file, written on the first start. Change any line, or add a file (`fr_fr.json`) for a new language; missing lines come from the built-in texts.
 
@@ -545,19 +550,24 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 | Загрузчик | Minecraft | Файл | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.1+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.1+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.1+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.1.jar` | 17+ | версия для Bukkit |
-| Forge | 1.20.1 | `voice-physics-forge-2.0.1+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.1+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.1+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.1+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.2+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.20.2 – 1.20.4 | `voice-physics-fabric-2.0.2+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| **Fabric / Quilt** | 1.20.5 – 1.20.6 | `voice-physics-fabric-2.0.2+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.2+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.2.jar` | 17+ | версия для Bukkit |
+| Forge | 1.20.1 | `voice-physics-forge-2.0.2+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.20.2 – 1.20.4 | `voice-physics-{neoforge,forge}-2.0.2+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| NeoForge / Forge | 1.20.5 – 1.20.6 | `voice-physics-{neoforge,forge}-2.0.2+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.2+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** — полная версия, на клиенте и на сервере. Нужен [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
 - **Paper / Purpur / Spigot / Bukkit** — серверная часть в виде плагина: стены для игроков без аддона и профиль сервера для игроков с ним. Заходить можно с любым клиентом: с аддоном для Fabric, без него или совсем без модов. Плагин собран против API 1.20.1 и в CI проверяется на каждом релизе Paper от 1.20.1 до 26.3: каждый класс, метод, поле и переопределение, которые он использует, разрешаются одинаково (Paper 1.20.5 проверить нельзя: снимок его API больше не скачивается).
 - **NeoForge для 26.x** — полная версия, как на Fabric: клиент и сервер, экран настроек, стены, HUD, монитор, `/vcd`. Настройки есть и в «Моды → Voice Physics → Настроить».
-- **Forge, а также NeoForge для 1.20.1 / 1.21.x,** — облегчённая версия: только кривые громкости, настройка в `config/vc-audio-distance.properties`. Нет экрана настроек, стен, монитора и серверной части (эти файлы собраны под имена классов Fabric; в 26.x имена одни для всех загрузчиков).
+- **Forge, а также NeoForge до 26.x,** — облегчённая версия: только кривые громкости, настройка в `config/vc-audio-distance.properties`. Нет экрана настроек, стен, монитора и серверной части (эти файлы собраны под имена классов Fabric; в 26.x имена одни для всех загрузчиков).
+- JAR для 1.20.2 – 1.20.4 собран под 1.20.4, а для 1.20.5 – 1.20.6 — под 1.20.6; методы Minecraft, которые они используют, имеют те же сигнатуры на 1.20.2, 1.20.3 и 1.20.5.
 - JAR для 1.21.x проверен по сигнатурам каждого используемого метода Minecraft на всех версиях с 1.21 по 1.21.11.
 - JAR для 26.x собран под 26.3 и в CI проверяется на каждом релизе 26.x (26.1 – 26.3): каждый класс, метод, поле и переопределение, которые использует JAR, разрешаются на каждой версии так же, как на 26.3. Там, где 26.x менялся (экраны переехали в `Gui` в 26.2, ввод через SDL в 26.3), JAR выбирает нужный API во время работы.
 
@@ -576,7 +586,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 3. Стены для игроков без аддона включены по умолчанию. Чтобы передавать профиль, поставьте `profile_mode` в `suggest` или `enforce` и выберите `profile_preset`. У каждого ключа в файле есть комментарий на английском и русском, файл перечитывается автоматически.
 
 **Сервер (Paper / Purpur / Spigot / Bukkit)**
-1. Положите `voice-physics-bukkit-2.0.1.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
+1. Положите `voice-physics-bukkit-2.0.2.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
 2. Запустите сервер один раз — он создаст `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. Настройки те же, что на Fabric (см. ниже), файл тоже перечитывается автоматически.
 
@@ -692,7 +702,7 @@ zone.box.booth.isolated=true
 
 | Ключ | Значения | По умолчанию | Что делает |
 |---|---|---|---|
-| `messages_language` | `auto` / `en_us` / `ru_ru` / `uk_ua` / `de_de` / `es_es` / `pt_br` / `zh_cn` | `auto` | Язык ответов `/vcd` и сообщений игрокам; `auto` — язык игры самого игрока (1.21+; на 1.20.1 и в консоли — английский) |
+| `messages_language` | `auto` / `en_us` / `ru_ru` / `uk_ua` / `de_de` / `es_es` / `pt_br` / `zh_cn` | `auto` | Язык ответов `/vcd` и сообщений игрокам; `auto` — язык игры самого игрока (1.20.2+; на 1.20 – 1.20.1 и в консоли — английский) |
 
 Сами тексты лежат в `vc-audio-distance-lang/<язык>.json` рядом с файлом настроек и записываются при первом запуске. Меняйте любые строки или добавьте файл (`fr_fr.json`) для нового языка; недостающие строки берутся из встроенных.
 

@@ -1,0 +1,34 @@
+modLoader = "lowcodefml"
+loaderVersion = "[50,)"
+license = "MIT"
+issueTrackerURL = "https://github.com/Shamanalle/voice-physics/issues"
+
+[[mods]]
+modId = "vc_audio_distance"
+version = "${version}"
+displayName = "Voice Physics (lite)"
+displayURL = "https://github.com/Shamanalle/voice-physics"
+logoFile = "assets/vc-audio-distance/icon.png"
+authors = "Shamanalle"
+displayTest = "IGNORE_ALL_VERSION"
+description = '''
+Distance curves for Simple Voice Chat, configured in config/vc-audio-distance.properties.
+The settings screen, wall muffling, the live monitor and the server side are available in the Fabric version.
+
+Кривые громкости для Simple Voice Chat, настройка в config/vc-audio-distance.properties.
+Экран настроек, приглушение стенами, монитор и серверная часть есть в версии для Fabric.
+'''
+
+[[dependencies.vc_audio_distance]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.20.5,1.20.6]"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.vc_audio_distance]]
+modId = "voicechat"
+type = "required"
+versionRange = "[1.20.5-2.5.0,)"
+ordering = "AFTER"
+side = "CLIENT"
