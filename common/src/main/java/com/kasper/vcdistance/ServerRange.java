@@ -64,6 +64,28 @@ public final class ServerRange {
         return !s.getMegaphoneItem().isEmpty() && speaker.holds(s.getMegaphoneItem());
     }
 
+    /**
+     * Whether {@code listener} hears {@code speaker} in their Simple Voice Chat group. Only the rules
+     * the admin chose for groups apply; a group has no range, so the distance is 0.
+     */
+    public static Decision decideGroup(ServerSettings s, ServerPlayers.Info speaker, ServerPlayers.Info listener) {
+        if (s.isGroupDeadSilent() && !speaker.alive()) {
+            return new Decision(Reason.DEAD, 0.0);
+        }
+        if (s.isGroupSpectatorsApart() && speaker.spectator() && !listener.spectator()) {
+            return new Decision(Reason.SPECTATOR, 0.0);
+        }
+        if (s.isGroupIsolatedZones()) {
+            Zone from = s.zoneOf(speaker);
+            Zone to = s.zoneOf(listener);
+            boolean sameZone = from == null ? to == null : to != null && from.key().equals(to.key());
+            if (!sameZone && ((from != null && from.rules().isolated()) || (to != null && to.rules().isolated()))) {
+                return new Decision(Reason.ISOLATED, 0.0);
+            }
+        }
+        return new Decision(Reason.HEARS, 0.0);
+    }
+
     /** Whether {@code listener} hears {@code speaker}, and over what range. */
     public static Decision decide(ServerSettings s, ServerPlayers.Info speaker, ServerPlayers.Info listener,
                                   boolean whispering, double voice, double whisper) {

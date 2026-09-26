@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * /vcd walls 0-100|off                         wall strength for everyone, in %
  * /vcd serverwalls on|off                      walls for players without the addon
  * /vcd lock all|none|curve,walls,...           what players cannot change while the profile is enforced
+ * /vcd group dead|spectators|zones|open_range on|off  rules for Simple Voice Chat groups
  * /vcd monitor on|off                          monitor, radar and nearby players in the HUD
  * /vcd zones                                   every zone
  * /vcd zone pos1|pos2 | create &lt;name&gt; [radius] | set &lt;name&gt; &lt;setting&gt; &lt;value&gt; | delete &lt;name&gt; | info
@@ -34,13 +35,14 @@ public final class AdminCommands {
 
     public static final String NAME = "vcd";
     static final String[] SUBCOMMANDS = {"status", "reload", "profile", "preset", "walls", "serverwalls", "lock", "monitor", "zones", "zone",
-            "rule", "require", "debug", "help"};
+            "rule", "group", "require", "debug", "help"};
     static final String[] MODES = {"off", "suggest", "enforce"};
     static final String[] PRESETS = {"vanilla", "realistic", "clear", "stealth", "custom", "export", "import"};
     static final String[] ZONE_ACTIONS = {"pos1", "pos2", "create", "set", "delete", "info", "list"};
     static final String[] ZONE_SETTINGS = {"mode", "preset", "voice_range", "whisper_range", "range_multiplier", "walls",
             "echo", "isolated", "message", "priority"};
     static final String[] RULES = {"sneak", "dead", "spectators", "megaphone", "megaphone_range"};
+    static final String[] GROUP_RULES = {"dead", "spectators", "zones", "open_range"};
     static final String[] REQUIRE = {"off", "suggest", "warn", "kick"};
     /** Largest box {@code zone create <name> <radius>} makes around the admin. */
     static final int MAX_RADIUS = 256;
@@ -151,6 +153,7 @@ public final class AdminCommands {
             case "zones" -> zones(settings, m, out);
             case "zone" -> zone(args, settings, ctx, me, m, out);
             case "rule" -> rule(args, settings, ctx, m, out);
+            case "group" -> group(args, settings, ctx, m, out);
             case "require" -> require(args, settings, ctx, m, out);
             case "debug" -> debug(args, settings, ctx, m, out);
             default -> help(m, out);
@@ -169,11 +172,12 @@ public final class AdminCommands {
             String[] options = switch (args[0].toLowerCase(Locale.ROOT)) {
                 case "profile" -> MODES;
                 case "preset" -> PRESETS;
-                case "walls" -> new String[]{"off", "30", "60", "85", "100"};
+                case "walls" -> new String[]{"off", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"};
                 case "serverwalls", "monitor" -> new String[]{"on", "off"};
                 case "lock" -> new String[]{"all", "none", "curve", "walls", "materials", "effects", "curve,walls"};
                 case "zone" -> ZONE_ACTIONS;
                 case "rule" -> RULES;
+                case "group" -> GROUP_RULES;
                 case "require" -> REQUIRE;
                 default -> new String[0];
             };
@@ -189,6 +193,8 @@ public final class AdminCommands {
                 default -> new String[0];
             };
             addMatching(out, options, args[2]);
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("group")) {
+            addMatching(out, new String[]{"on", "off"}, args[2]);
         }
         return out;
     }
@@ -213,6 +219,8 @@ public final class AdminCommands {
                 p.getModel().getId(), p.isReverbEnabled() ? pct(p.getReverbStrength()) : m.get("off")));
         out.add(m.get("status.locks", DistanceConfig.Part.format(settings.getLockedParts()),
                 settings.isMonitorAllowed() ? m.get("on") : m.get("off")));
+        out.add(m.get("status.groups", onOff(m, settings.isGroupDeadSilent()), onOff(m, settings.isGroupSpectatorsApart()),
+                onOff(m, settings.isGroupIsolatedZones()), onOff(m, settings.isOpenGroupRange())));
         out.add(m.get("status.rules", pct(settings.getSneakMultiplier()),
                 settings.isDeadSilent() ? m.get("on") : m.get("off"),
                 settings.isSpectatorsOnly() ? m.get("on") : m.get("off"),
@@ -502,6 +510,22 @@ public final class AdminCommands {
         }
     }
 
+    private static void group(String[] args, ServerSettings settings, Context ctx, Messages m, List<String> out) {
+        String name = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "";
+        Boolean on = args.length > 2 ? parseOnOff(args[2]) : null;
+        if (on == null || !Arrays.asList(GROUP_RULES).contains(name)) {
+            out.add(m.get("usage", "/vcd group " + String.join("|", GROUP_RULES) + " on|off"));
+            return;
+        }
+        switch (name) {
+            case "dead" -> settings.setGroupDeadSilent(on);
+            case "spectators" -> settings.setGroupSpectatorsApart(on);
+            case "zones" -> settings.setGroupIsolatedZones(on);
+            default -> settings.setOpenGroupRange(on);
+        }
+        saved(settings, ctx, out, m.get("group." + name + (on ? ".on" : ".off")));
+    }
+
     private static void require(String[] args, ServerSettings settings, Context ctx, Messages m, List<String> out) {
         ServerSettings.RequireAddon mode = args.length > 1 ? ServerSettings.RequireAddon.fromId(args[1], null) : null;
         if (mode == null) {
@@ -537,6 +561,10 @@ public final class AdminCommands {
         out.add(m.get("debug.addon", version == null ? m.get("debug.no_addon") : version,
                 ServerRange.isMegaphone(settings, target) ? m.get("on") : m.get("off"),
                 target.sneaking() ? m.get("on") : m.get("off")));
+        String[] group = AudioDistancePlugin.groupOf(target.id());
+        if (group != null) {
+            out.add(m.get("debug.group", group[0], group[1].isEmpty() ? "-" : m.get("group.type." + group[1])));
+        }
         out.add(m.get("debug.range", fmt(ServerRange.rangeOf(settings, target, false, voice, whisper)),
                 fmt(ServerRange.rangeOf(settings, target, true, voice, whisper))));
         int shown = 0;
@@ -561,10 +589,14 @@ public final class AdminCommands {
         }
     }
 
+    private static String onOff(Messages m, boolean on) {
+        return on ? m.get("on") : m.get("off");
+    }
+
     private static void help(Messages m, List<String> out) {
         out.add(m.get("help.title"));
         for (String line : new String[]{"status", "reload", "profile", "preset", "walls", "serverwalls", "lock", "monitor", "zones", "zone",
-                "rule", "require", "debug"}) {
+                "rule", "group", "require", "debug"}) {
             out.add(m.get("help." + line));
         }
     }

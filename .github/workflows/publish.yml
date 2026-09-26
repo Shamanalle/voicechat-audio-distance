@@ -24,6 +24,11 @@ on:
         description: 'Release tag, e.g. v1.2.1'
         type: string
         required: true
+      stores:
+        description: 'Where to upload'
+        type: choice
+        options: [both, modrinth, curseforge]
+        default: both
 
 permissions:
   contents: read
@@ -47,6 +52,8 @@ jobs:
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          # Only when run by hand; a release always uploads to both
+          STORES: ${{ inputs.stores || 'both' }}
         run: |
           modrinth=$(jq -r '.modrinth // ""' .github/publish.json)
           curseforge=$(jq -r '.curseforge // ""' .github/publish.json)
@@ -56,6 +63,12 @@ jobs:
           fi
           if [ -z "${curseforge}" ] || [ -z "${CURSEFORGE_TOKEN}" ]; then
             echo "::warning::CurseForge skipped: set \"curseforge\" in .github/publish.json and the CURSEFORGE_TOKEN secret"
+            curseforge=""
+          fi
+          if [ "${STORES}" = "curseforge" ]; then
+            modrinth=""
+          fi
+          if [ "${STORES}" = "modrinth" ]; then
             curseforge=""
           fi
           echo "modrinth=${modrinth}" >> "$GITHUB_OUTPUT"
@@ -154,6 +167,8 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Upload
+        # The plugin goes to Modrinth only, so it has nothing to do when only CurseForge is chosen
+        if: needs.config.outputs.modrinth != '' || (matrix.curseforge && needs.config.outputs.curseforge != '')
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ needs.config.outputs.modrinth }}

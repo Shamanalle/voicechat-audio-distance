@@ -128,7 +128,10 @@ public final class HudOverlay {
             // In a voice chat group the group hears you wherever they are
             String group = compact ? null : AudioDistancePlugin.selfGroupName();
             if (group != null) {
-                lines.add(new Line(hud("group", group), Palette.WHISPER, Palette.TEXT));
+                // Open groups are heard by nearby players too, isolated ones only by the group
+                String type = AudioDistancePlugin.selfGroupType();
+                String key = "open".equals(type) || "isolated".equals(type) ? "group." + type : "group";
+                lines.add(new Line(hud(key, group), Palette.WHISPER, Palette.TEXT));
             }
             double range = lastSelfWhisper ? voiceRange * AudioDistancePlugin.LINK.whisperShare() : voiceRange;
             HearingEstimate e = HearingEstimate.of(AudioDistancePlugin.NEARBY.players(), range,

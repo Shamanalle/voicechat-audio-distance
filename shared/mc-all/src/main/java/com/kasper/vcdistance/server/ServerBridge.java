@@ -58,7 +58,7 @@ public final class ServerBridge {
             public void message(UUID player, String text) {
                 ServerPlayer p = server.getPlayerList().getPlayer(player);
                 if (p != null) {
-                    p.sendSystemMessage(Component.literal(text));
+                    p.sendSystemMessage(ChatLink.of(text));
                 }
             }
 

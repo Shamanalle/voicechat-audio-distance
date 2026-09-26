@@ -32,7 +32,7 @@ public final class ServerSettings {
      * 3: echo, water and weather; 4: zones and messages_language; 5: more materials;
      * 6: boxes and zone rules, game rules, the addon requirement, messages in every language.
      */
-    private static final int SETTINGS_VERSION = 7;
+    private static final int SETTINGS_VERSION = 8;
     private static final String ZONE_PREFIX = "zone.";
     public static final String CUSTOM_PRESET = "custom";
 
@@ -120,6 +120,10 @@ public final class ServerSettings {
     private volatile String profilePreset = CUSTOM_PRESET;
     private volatile java.util.Set<DistanceConfig.Part> lockedParts = java.util.EnumSet.allOf(DistanceConfig.Part.class);
     private volatile boolean allowMonitor = true;
+    private volatile boolean groupDeadSilent;
+    private volatile boolean groupSpectatorsApart;
+    private volatile boolean groupIsolatedZones;
+    private volatile boolean openGroupRange = true;
     private volatile boolean serverWalls = true;
     private volatile int maxStreams = DEFAULT_MAX_STREAMS;
     private volatile long loadedModified = Long.MIN_VALUE;
@@ -209,6 +213,10 @@ public final class ServerSettings {
         spectatorsOnly = DistanceConfig.parseBoolean(props, "spectators_hear_only_spectators", false);
         megaphoneItem = itemId(props.getProperty("megaphone_item", ""));
         megaphoneMultiplier = DistanceConfig.clamp(DistanceConfig.parseDouble(props, "megaphone_multiplier", DEFAULT_MEGAPHONE_MULTIPLIER), 1.0, 10.0);
+        groupDeadSilent = DistanceConfig.parseBoolean(props, "group_dead_silent", false);
+        groupSpectatorsApart = DistanceConfig.parseBoolean(props, "group_spectators_apart", false);
+        groupIsolatedZones = DistanceConfig.parseBoolean(props, "group_isolated_zones", false);
+        openGroupRange = DistanceConfig.parseBoolean(props, "open_group_range", true);
         requireAddon = RequireAddon.fromId(props.getProperty("require_addon"), RequireAddon.OFF);
         minAddonVersion = props.getProperty("min_addon_version", "").trim();
         String url = props.getProperty("addon_download_url", DEFAULT_ADDON_URL).trim();
@@ -436,6 +444,26 @@ public final class ServerSettings {
                         "Язык ответов /vcd и сообщений игрокам: auto (язык игры самого игрока)",
                         "или en_us, ru_ru, uk_ua, de_de, es_es, pt_br, zh_cn. По умолчанию auto.")
                 .value("messages_language", messagesLanguage);
+
+        w.section("9. Simple Voice Chat groups", "9. Группы Simple Voice Chat")
+                .comment("Voices inside a group reach its members wherever they are, so walls and range never apply there.",
+                        "These choose which game rules do. All default false, except open_group_range.",
+                        "Голос внутри группы доходит до её участников где угодно, поэтому стены и дальность там не действуют.",
+                        "Здесь выбирается, какие правила игры действуют. Все по умолчанию false, кроме open_group_range.")
+                .comment("true: dead players are not heard by their group either, until they respawn.",
+                        "true: мёртвых не слышит и их группа, пока они не возродятся.")
+                .value("group_dead_silent", groupDeadSilent)
+                .comment("true: spectators in a group are heard only by the spectators in it.",
+                        "true: наблюдателей в группе слышат только наблюдатели этой группы.")
+                .value("group_spectators_apart", groupSpectatorsApart)
+                .comment("true: an isolated zone also cuts group voices between inside and outside.",
+                        "true: изолированная зона отрезает и голоса группы между теми, кто внутри и снаружи.")
+                .value("group_isolated_zones", groupIsolatedZones)
+                .comment("true: in open groups (heard by nearby players too) zone range, sneaking and the megaphone",
+                        "work for that nearby voice. Default true.",
+                        "true: в открытых группах (их слышат и игроки рядом) дальность зон, корточки и мегафон",
+                        "действуют на этот голос рядом. По умолчанию true.")
+                .value("open_group_range", openGroupRange);
         w.save(getPath());
         // Our own write is not an edit to pick up again
         loadedModified = lastModified(getPath());
@@ -521,6 +549,57 @@ public final class ServerSettings {
 
     public void setDeadSilent(boolean on) {
         deadSilent = on;
+    }
+
+    /** Dead players are not heard by their Simple Voice Chat group either. */
+    public boolean isGroupDeadSilent() {
+        return groupDeadSilent;
+    }
+
+    public void setGroupDeadSilent(boolean on) {
+        groupDeadSilent = on;
+    }
+
+    /** Spectators in a group are heard only by the spectators in it. */
+    public boolean isGroupSpectatorsApart() {
+        return groupSpectatorsApart;
+    }
+
+    public void setGroupSpectatorsApart(boolean on) {
+        groupSpectatorsApart = on;
+    }
+
+    /** Isolated zones also cut group voices between inside and outside. */
+    public boolean isGroupIsolatedZones() {
+        return groupIsolatedZones;
+    }
+
+    public void setGroupIsolatedZones(boolean on) {
+        groupIsolatedZones = on;
+    }
+
+    /** Zone range, sneaking and the megaphone work for the nearby voice of open-group members. */
+    public boolean isOpenGroupRange() {
+        return openGroupRange;
+    }
+
+    public void setOpenGroupRange(boolean on) {
+        openGroupRange = on;
+    }
+
+    /** Any rule that applies to voices inside a group. */
+    public boolean hasGroupRules() {
+        if (groupDeadSilent || groupSpectatorsApart) {
+            return true;
+        }
+        if (groupIsolatedZones) {
+            for (Zone z : zones.values()) {
+                if (z.rules().isolated()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public boolean isSpectatorsOnly() {
@@ -620,6 +699,10 @@ public final class ServerSettings {
         p.setProperty(prefix + "spectators_hear_only_spectators", String.valueOf(spectatorsOnly));
         p.setProperty(prefix + "megaphone_item", megaphoneItem);
         p.setProperty(prefix + "megaphone_multiplier", DistanceConfig.format(megaphoneMultiplier));
+        p.setProperty(prefix + "group_dead_silent", String.valueOf(groupDeadSilent));
+        p.setProperty(prefix + "group_spectators_apart", String.valueOf(groupSpectatorsApart));
+        p.setProperty(prefix + "group_isolated_zones", String.valueOf(groupIsolatedZones));
+        p.setProperty(prefix + "open_group_range", String.valueOf(openGroupRange));
         p.setProperty(prefix + "require_addon", requireAddon.getId());
         p.setProperty(prefix + "min_addon_version", minAddonVersion);
         int n = 0;

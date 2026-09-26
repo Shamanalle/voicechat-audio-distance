@@ -6,6 +6,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [2.0.1] - 2026-09-26
+
+### English
+
+#### Added
+- **Rules for Simple Voice Chat groups.** A new section of the server settings (and `/vcd group`, and the Server tab) chooses which game rules also apply inside groups:
+  - `group_dead_silent`: dead players are not heard by their group either;
+  - `group_spectators_apart`: spectators in a group are heard only by its spectators;
+  - `group_isolated_zones`: isolated zones also cut group voices.
+
+  All are off by default, so groups work as before.
+- `/vcd debug` shows the player's group and its type, and the HUD says whether your group is open (nearby players hear you too) or isolated.
+- Wall strength on the Server tab goes in 10% steps (was 0, 30, 60, 85, 100%).
+- *Where to upload* when uploading a release to the stores by hand.
+- **Wall strength in 10% steps** on the Server tab: − and + either side of the value; `/vcd walls` suggests every 10%.
+
+#### Fixed
+- The addon requirement's message now has a **clickable link** to the download page (Fabric, NeoForge and Paper; plain text on Spigot).
+- In **open** groups the voice nearby players hear now follows zone range, sneaking and the megaphone (`open_group_range`, on by default).
+
+### Русский
+
+#### Добавлено
+- **Правила для групп Simple Voice Chat.** Новый раздел настроек сервера (а также `/vcd group` и вкладка «Сервер») выбирает, какие правила игры действуют и внутри групп:
+  - `group_dead_silent`: мёртвых не слышит и их группа;
+  - `group_spectators_apart`: наблюдателей в группе слышат только её наблюдатели;
+  - `group_isolated_zones`: изолированные зоны отрезают и голоса групп.
+
+  По умолчанию всё выключено, так что группы работают как раньше.
+- `/vcd debug` показывает группу игрока и её тип, а HUD — открытая ли ваша группа (вас слышат и игроки рядом) или изолированная.
+- Сила стен на вкладке «Сервер» меняется шагом 10% (было 0, 30, 60, 85, 100%).
+- Выбор площадки (*Where to upload*) при ручной выгрузке релиза.
+- **Сила стен с шагом 10%** на вкладке «Сервер»: кнопки − и + по бокам от значения; `/vcd walls` подсказывает каждые 10%.
+
+#### Исправлено
+- В сообщении о требовании аддона ссылка на скачивание теперь **кликабельная** (Fabric, NeoForge и Paper; на Spigot — простым текстом).
+- В **открытых** группах голос, который слышат игроки рядом, теперь подчиняется дальности зон, корточкам и мегафону (`open_group_range`, по умолчанию включено).
+
 ## [2.0.0] - 2026-09-26
 
 ### English

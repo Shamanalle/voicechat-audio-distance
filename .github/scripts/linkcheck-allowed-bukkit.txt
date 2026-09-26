@@ -5,3 +5,8 @@
 # Sound: it only reads its constants (getstatic resolves the same on an interface) and compares
 # them with Objects.equals, inside try/catch (bukkit/.../BlockAcoustics.java).
 type org/bukkit/Sound
+
+# Adventure in Paper 26.2+ gives TextComponent.Builder.build() a default body instead of leaving it
+# abstract. The call is invokeinterface either way, and a default method resolves the same, so the
+# clickable link in the addon requirement message (bukkit/.../ChatLink.java) keeps working.
+method net/kyori/adventure/text/TextComponent$Builder.build()Lnet/kyori/adventure/text/BuildableComponent;
