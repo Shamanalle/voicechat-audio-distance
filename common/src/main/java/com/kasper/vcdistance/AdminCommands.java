@@ -172,7 +172,7 @@ public final class AdminCommands {
             String[] options = switch (args[0].toLowerCase(Locale.ROOT)) {
                 case "profile" -> MODES;
                 case "preset" -> PRESETS;
-                case "walls" -> new String[]{"off", "30", "60", "85", "100"};
+                case "walls" -> new String[]{"off", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"};
                 case "serverwalls", "monitor" -> new String[]{"on", "off"};
                 case "lock" -> new String[]{"all", "none", "curve", "walls", "materials", "effects", "curve,walls"};
                 case "zone" -> ZONE_ACTIONS;

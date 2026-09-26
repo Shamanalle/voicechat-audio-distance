@@ -473,7 +473,7 @@ public abstract class SettingsScreen extends Screen {
 
     private static final String[] SERVER_MODES = {"off", "suggest", "enforce"};
     private static final String[] SERVER_PRESETS = {"custom", "vanilla", "realistic", "clear", "stealth"};
-    private static final String[] SERVER_WALLS = {"0", "0.3", "0.6", "0.85", "1"};
+    private static final String[] SERVER_WALLS = {"0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"};
     private static final String[] SERVER_REQUIRE = {"off", "suggest", "warn", "kick"};
     private static final String[] SERVER_SNEAK = {"1", "0.7", "0.5", "0.3"};
     private static final String[] ZONE_RANGE = {"-", "0.4", "2", "3"};
@@ -492,6 +492,17 @@ public abstract class SettingsScreen extends Screen {
             if (same(values[i], current)) {
                 return values[(i + 1) % values.length];
             }
+        }
+        // A value set elsewhere (0.85 in the file): go on to the next step above it
+        try {
+            double v = Double.parseDouble(current);
+            for (String value : values) {
+                if (Double.parseDouble(value) > v) {
+                    return value;
+                }
+            }
+        } catch (NumberFormatException | NullPointerException ignored) {
+            // not a number list
         }
         return values[0];
     }
