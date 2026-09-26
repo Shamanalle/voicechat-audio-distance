@@ -29,9 +29,9 @@ public final class ServerSettings {
     private static final String PROFILE_PREFIX = "profile.";
     /**
      * 2: sections with comments, walls_strength and material.* at the top level, profile_preset;
-     * 3: echo, water and weather; 4: zones and messages_language.
+     * 3: echo, water and weather; 4: zones and messages_language; 5: more materials.
      */
-    private static final int SETTINGS_VERSION = 4;
+    private static final int SETTINGS_VERSION = 5;
     private static final String ZONE_PREFIX = "zone.";
     public static final String CUSTOM_PRESET = "custom";
 
