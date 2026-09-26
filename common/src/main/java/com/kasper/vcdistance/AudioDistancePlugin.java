@@ -25,9 +25,11 @@ import org.lwjgl.openal.AL11;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
@@ -275,16 +277,56 @@ public class AudioDistancePlugin implements VoicechatPlugin {
                     p -> !p.getUuid().equals(selfId) && visible.test(player, p.getPlayer())));
             near.sort(Comparator.comparingDouble(p -> squaredDistance(self, p)));
             Map<UUID, VoiceState> states = new LinkedHashMap<>();
+            UUID selfGroup = groupIdOf(s.getConnectionOf(selfId));
+            Set<UUID> mates = new HashSet<>();
+            Set<UUID> isolated = new HashSet<>();
             for (ServerPlayer p : near) {
                 VoicechatConnection c = s.getConnectionOf(p.getUuid());
                 states.put(p.getUuid(), c == null ? VoiceState.NO_VOICE_CHAT
                         : VoiceState.of(c.isInstalled(), c.isConnected(), c.isDisabled(), c.isInGroup()));
+                UUID group = groupIdOf(c);
+                if (group != null && group.equals(selfGroup)) {
+                    mates.add(p.getUuid());
+                } else if (group != null && "isolated".equals(groupType(c.getGroup()))) {
+                    isolated.add(p.getUuid());
+                }
             }
-            return LinkProtocol.nearby(states);
+            return LinkProtocol.nearby(states, new LinkProtocol.GroupInfo(mates, isolated,
+                    selfGroup == null ? -1 : groupMembers(s, selfId, selfGroup, false),
+                    selfGroup == null ? -1 : groupMembers(s, selfId, selfGroup, true)));
         } catch (Throwable t) {
             DistanceConfig.LOGGER.debug("Could not list nearby players: {}", t.toString());
             return null;
         }
+    }
+
+    /** Id of the connection's group, or {@code null} when it has none (or this Simple Voice Chat cannot tell). */
+    private static UUID groupIdOf(VoicechatConnection c) {
+        try {
+            de.maxhenkel.voicechat.api.Group g = c == null ? null : c.getGroup();
+            return g == null ? null : g.getId();
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /**
+     * Other online members of {@code group}, anywhere on the server: those who hear the group
+     * ({@code deaf} false) or those who cannot (sound off, disconnected).
+     */
+    private static int groupMembers(VoicechatServerApi s, UUID self, UUID group, boolean deaf) {
+        int n = 0;
+        for (ServerPlayers.Info p : PLAYERS.all()) {
+            if (p.id().equals(self)) {
+                continue;
+            }
+            VoicechatConnection c = s.getConnectionOf(p.id());
+            if (c != null && group.equals(groupIdOf(c))
+                    && VoiceState.of(c.isInstalled(), c.isConnected(), c.isDisabled(), true).isProblem() == deaf) {
+                n++;
+            }
+        }
+        return n;
     }
 
     private static double squaredDistance(ServerPlayer a, ServerPlayer b) {
@@ -510,10 +552,10 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             boolean whispering = isWhispering(event, maxDist);
             double range = maxDist > 0F ? maxDist : getServerMaxDistance();
 
-            double curve = AudioPhysics.calculateGain(sourceDistance(source) / range, c.getModel(),
+            // A voice coming round a wall is heard from the doorway, as far away as the way round
+            double distance = placeVoice(event, source, c);
+            double curve = AudioPhysics.calculateGain(distance / range, c.getModel(),
                     effectiveRolloff(c, whispering), c.getMinVolumeFraction(), c.getOpenalReferenceRatio());
-
-            redirectThroughOpening(event, source, c);
 
             float sourceGain = Math.max(0.0F, AL11.alGetSourcef(source, AL11.AL_GAIN));
             AL11.alSourcef(source, AL11.AL_ROLLOFF_FACTOR, 0.0F);
@@ -525,36 +567,64 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         }
     }
 
-    /** Distance between the source and the listener, the way OpenAL measures it. */
     /**
-     * A voice coming round a wall through a doorway is heard from the doorway's direction, at its
-     * real distance (so the distance curve stays the same). Directions are taken in world axes,
-     * which Simple Voice Chat's OpenAL space shares.
+     * Where a voice is heard from. Round a wall, the sound's share that comes through the doorway
+     * pulls the voice towards the doorway's direction and away by the extra length of the way
+     * round; the direction glides, so walking past a doorway pans smoothly. Directions are taken in
+     * world axes, which Simple Voice Chat's OpenAL space shares.
+     *
+     * @return the distance the volume curve should use, in blocks
      */
-    private static void redirectThroughOpening(OpenALSoundEvent event, int source, DistanceConfig c) {
+    private static double placeVoice(OpenALSoundEvent event, int source, DistanceConfig c) {
+        double dist = sourceDistance(source);
         SpeakerRegistry.Speaker speaker = SPEAKERS.get(event.getChannelId());
-        if (speaker == null || !speaker.hasOpening() || !c.isDiffractionEnabled()
-                || occlusionStatus() != OcclusionStatus.ACTIVE
-                || AL11.alGetSourcei(source, AL11.AL_SOURCE_RELATIVE) != AL11.AL_FALSE) {
-            return;
+        if (speaker == null || AL11.alGetSourcei(source, AL11.AL_SOURCE_RELATIVE) != AL11.AL_FALSE || !(dist > 0.01)) {
+            return dist;
         }
-        double[] eye = ENVIRONMENT.position();
-        double dx = speaker.getOpeningX() - eye[0];
-        double dy = speaker.getOpeningY() - eye[1];
-        double dz = speaker.getOpeningZ() - eye[2];
-        double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (!(len > 0.01)) {
-            return;
-        }
+        SoundBlend blend = speaker.getBlend();
+        boolean round = speaker.hasOpening() && c.isDiffractionEnabled() && blend != null && blend.pathShare() > 0.0
+                && occlusionStatus() == OcclusionStatus.ACTIVE;
+        float[] sx = new float[1];
+        float[] sy = new float[1];
+        float[] sz = new float[1];
+        AL11.alGetSource3f(source, AL11.AL_POSITION, sx, sy, sz);
         float[] lx = new float[1];
         float[] ly = new float[1];
         float[] lz = new float[1];
         AL11.alGetListener3f(AL11.AL_POSITION, lx, ly, lz);
-        double dist = sourceDistance(source);
+        double[] direct = {(sx[0] - lx[0]) / dist, (sy[0] - ly[0]) / dist, (sz[0] - lz[0]) / dist};
+        double[] target = direct;
+        double share = 0.0;
+        if (round) {
+            double[] eye = ENVIRONMENT.position();
+            double ox = speaker.getOpeningX() - eye[0];
+            double oy = speaker.getOpeningY() - eye[1];
+            double oz = speaker.getOpeningZ() - eye[2];
+            double len = Math.sqrt(ox * ox + oy * oy + oz * oz);
+            if (len > 0.01) {
+                share = blend.pathShare();
+                double x = direct[0] * (1.0 - share) + ox / len * share;
+                double y = direct[1] * (1.0 - share) + oy / len * share;
+                double z = direct[2] * (1.0 - share) + oz / len * share;
+                double l = Math.sqrt(x * x + y * y + z * z);
+                if (l > 1e-6) {
+                    target = new double[]{x / l, y / l, z / l};
+                }
+            } else {
+                round = false;
+            }
+        }
+        double[] heard = speaker.glideDirection(direct, target, round, System.nanoTime());
+        if (heard == null) {
+            return dist;
+        }
+        double d = dist + (round ? blend.extraDistance() : 0.0);
         AL11.alSource3f(source, AL11.AL_POSITION,
-                (float) (lx[0] + dx / len * dist), (float) (ly[0] + dy / len * dist), (float) (lz[0] + dz / len * dist));
+                (float) (lx[0] + heard[0] * d), (float) (ly[0] + heard[1] * d), (float) (lz[0] + heard[2] * d));
+        return d;
     }
 
+    /** Distance between the source and the listener, the way OpenAL measures it. */
     private static double sourceDistance(int source) {
         float[] sx = new float[1];
         float[] sy = new float[1];
@@ -622,10 +692,17 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             OcclusionStatus status = occlusionStatus();
             EnvironmentEffects.Effect effect = EnvironmentEffects.Effect.NONE;
             if (status == OcclusionStatus.ACTIVE && speaker.isOcclusionKnown()) {
-                double strength = c.getOcclusionStrength();
-                double thickness = speaker.getEffectiveThickness();
-                effect = new EnvironmentEffects.Effect(OcclusionModel.muffle(thickness, strength),
-                        OcclusionModel.lossDb(thickness, strength));
+                // Through the wall and round it through a doorway, both at once
+                boolean round = speaker.hasOpening() && c.isDiffractionEnabled();
+                double range = speaker.getMaxDistance() > 0.0F ? speaker.getMaxDistance() : getServerMaxDistance();
+                boolean whispering = speaker.isWhispering();
+                SoundBlend blend = SoundBlend.of(Math.max(0.0, speaker.getDistance()), speaker.getThickness(),
+                        round ? speaker.getPathLength() : Double.NaN, speaker.getPathThickness(),
+                        c.getOcclusionStrength(), d -> curveGain(d, range, whispering));
+                speaker.setBlend(blend);
+                effect = new EnvironmentEffects.Effect(blend.muffle(), blend.lossDb());
+            } else {
+                speaker.setBlend(null);
             }
             // Sound Physics Remastered does its own water and echo; weather is ours either way
             boolean ownPhysics = status != OcclusionStatus.SOUND_PHYSICS && status != OcclusionStatus.UNAVAILABLE;
@@ -648,10 +725,16 @@ public class AudioDistancePlugin implements VoicechatPlugin {
                 changed = true;
             }
             Reverb reverb = speaker.getReverb();
-            RoomEstimate room = env.room();
-            double wet = ownPhysics && c.isReverbEnabled() ? room.wet() * c.getReverbStrength() : 0.0;
-            if (wet > 0.0 || reverb.isActive()) {
-                reverb.process(raw, wet, room.decaySeconds());
+            RoomEstimate room = RoomEstimate.combine(env.room(), speaker.getRoom());
+            double wet = 0.0;
+            double echo = 0.0;
+            if (ownPhysics && c.isReverbEnabled() && room.isAudible()) {
+                double[] level = echoLevels(room, speaker, c.getReverbStrength());
+                wet = level[0];
+                echo = level[1];
+            }
+            if (wet > 0.0 || echo > 0.0 || reverb.isActive()) {
+                reverb.process(raw, room, wet, echo);
                 changed = true;
             }
             if (changed) {
@@ -660,5 +743,25 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         } catch (Throwable t) {
             DistanceConfig.LOGGER.debug("Voice processing failed for {}: {}", speaker.getChannelId(), t.toString());
         }
+    }
+
+    /**
+     * How loud the room's echo and the repeats off cliffs are for this voice, 0 - 1 each. A voice
+     * next to you stays clear and a far one sounds like the room: the echo share grows with the
+     * distance. OpenAL turns the whole voice down with distance, echo included, while in a real room
+     * the echo stays about as loud, so far voices get part of that back (at most twice).
+     */
+    static double[] echoLevels(RoomEstimate room, SpeakerRegistry.Speaker speaker, double strength) {
+        double distance = speaker.getDistance();
+        double share = room.distanceShare(distance);
+        double boost = 1.0;
+        if (distance >= 0.0) {
+            double range = speaker.getMaxDistance() > 0.0F ? speaker.getMaxDistance() : getServerMaxDistance();
+            double curve = curveGain(distance, range, speaker.isWhispering());
+            boost = Math.min(2.0, 1.0 / Math.sqrt(Math.max(0.25, curve)));
+        }
+        double wet = Math.min(1.0, room.wet() * strength * share * boost);
+        double echo = room.echoes().isEmpty() ? 0.0 : Math.min(1.0, strength * (0.4 + 0.6 * share) * boost);
+        return new double[]{wet, echo};
     }
 }

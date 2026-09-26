@@ -13,11 +13,14 @@
 ### 🧱 Walls, doors and glass
 - Voices behind a wall are **quieter and duller**, like through a real wall.
 - Wool and metal block more, glass and leaves less; an open door or a window lets the voice through.
-- A voice from the next room **comes through the doorway**, from its side.
+- A voice from the next room **comes through the doorway**, from its side; round a sharp corner it is duller, and it pans smoothly as you walk past.
+- Two players side by side in a narrow tunnel hear each other clearly.
 - You choose how strong walls are, and how much each kind of block muffles.
 
 ### 🌊 Caves, water and rain
-- **Echo** in caves and big halls, none in the open.
+- **Echo that fits the place:** a stone room rings briefly, a cave or hall long, a wooden house briefly and warmly; a forest, a field or a wool room stay dry.
+- **Echo in the mountains:** near cliffs the voice comes back a moment later.
+- A friend shouting in a cave echoes even if you are outside; a voice next to you stays clear.
 - Voices sound **dull under water**.
 - **Rain and thunder** drown out far voices.
 
@@ -92,11 +95,14 @@ Guides, all settings and the changelog: [GitHub](https://github.com/Shamanalle/v
 ### 🧱 Стены, двери и стекло
 - Голос за стеной **тише и глуше**, как за настоящей стеной.
 - Шерсть и металл глушат сильнее, стекло и листва слабее; открытая дверь или окно пропускают голос.
-- Голос из соседней комнаты **идёт через дверной проём**, с его стороны.
+- Голос из соседней комнаты **идёт через дверной проём**, с его стороны; из-за крутого угла он глуше и плавно смещается, когда вы проходите мимо.
+- Двое рядом в узком тоннеле слышат друг друга чисто.
 - Вы сами выбираете силу стен и то, как глушит каждый вид блоков.
 
 ### 🌊 Пещеры, вода и дождь
-- **Эхо** в пещерах и больших залах, на открытом воздухе его нет.
+- **Эхо по месту:** каменная комната звенит коротко, пещера или зал — долго, деревянный дом — коротко и тепло; в лесу, в поле и в комнате из шерсти эха нет.
+- **Эхо в горах:** у скал голос возвращается через мгновение.
+- Крик друга в пещере гулкий, даже если вы снаружи; голос рядом остаётся чистым.
 - Под водой голоса звучат **глухо**.
 - **Дождь и гроза** заглушают дальние голоса.
 

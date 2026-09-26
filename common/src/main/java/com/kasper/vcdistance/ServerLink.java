@@ -40,7 +40,7 @@ public final class ServerLink {
     private record Merged(LinkProtocol.ServerProfile profile, DistanceConfig own, int ownRevision, DistanceConfig config) {
     }
 
-    private record Nearby(Map<UUID, VoiceState> states, long receivedNanos) {
+    private record Nearby(Map<UUID, VoiceState> states, LinkProtocol.GroupInfo group, long receivedNanos) {
         boolean fresh(long nowNanos) {
             return nowNanos - receivedNanos <= NEARBY_STALE_NANOS;
         }
@@ -73,8 +73,18 @@ public final class ServerLink {
     void onNearby(String text, long nowNanos) {
         Map<UUID, VoiceState> states = LinkProtocol.parseNearby(text);
         if (states != null) {
-            nearby = new Nearby(states, nowNanos);
+            nearby = new Nearby(states, LinkProtocol.parseNearbyGroup(text), nowNanos);
         }
+    }
+
+    /**
+     * Your Simple Voice Chat group as the server last described it: nearby group mates, nearby
+     * players in isolated groups and the group's totals. {@link LinkProtocol.GroupInfo#NONE} when the
+     * server does not send it (no addon, older addon) or has not sent an update for a while.
+     */
+    public LinkProtocol.GroupInfo group(long nowNanos) {
+        Nearby n = nearby;
+        return n != null && n.fresh(nowNanos) ? n.group() : LinkProtocol.GroupInfo.NONE;
     }
 
     /**

@@ -2,12 +2,17 @@ package com.kasper.vcdistance.client;
 
 import com.kasper.vcdistance.AcousticMaterial;
 import com.kasper.vcdistance.DistanceConfig;
+import com.kasper.vcdistance.RayBundle;
+import com.kasper.vcdistance.VoxelRay;
+import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -18,7 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Acoustic ray casting through blocks for Minecraft 1.20 - 1.21.x, used by the client and the server.
  * <p>
  * A block only counts when the ray actually crosses its collision shape, so slabs, open doors,
- * fences and carpets are treated by their real geometry rather than as full cubes.
+ * fences and carpets are treated by their real geometry rather than as full cubes. A ray that only
+ * grazes a block's corner counts it by the short way it runs inside; doors, trapdoors, fences and
+ * bars count fully whenever they are crossed, since they are thin by nature.
  */
 public final class BlockAcoustics {
 
@@ -41,12 +48,44 @@ public final class BlockAcoustics {
             if (!state.isAir()) {
                 VoxelShape shape = state.getCollisionShape(level, pos);
                 if (!shape.isEmpty() && shape.clip(from, to, pos) != null) {
-                    acc[0] += weights.getMaterialWeight(MATERIALS.computeIfAbsent(state, BlockAcoustics::classify));
+                    AcousticMaterial material = MATERIALS.computeIfAbsent(state, BlockAcoustics::classify);
+                    acc[0] += weights.getMaterialWeight(material) * share(material, shape.bounds(), pos, from, to);
                 }
             }
             return acc[0] >= WorldAccess.MAX_RAY_THICKNESS ? Boolean.TRUE : null;
         }, acc -> null);
         return thickness[0];
+    }
+
+    /** How much of the block's weight the ray takes: grazing a corner counts less than crossing it. */
+    static double share(AcousticMaterial material, AABB box, BlockPos pos, Vec3 from, Vec3 to) {
+        if (material == AcousticMaterial.DOOR || material == AcousticMaterial.THIN) {
+            return 1.0;
+        }
+        return RayBundle.chordWeight(VoxelRay.chord(from.x, from.y, from.z, to.x, to.y, to.z,
+                pos.getX() + box.minX, pos.getY() + box.minY, pos.getZ() + box.minZ,
+                pos.getX() + box.maxX, pos.getY() + box.maxY, pos.getZ() + box.maxZ));
+    }
+
+    /** {@code true} when sound passes this block freely: air, water, open doors and gates, fences, bars. */
+    public static boolean isOpenForSound(BlockGetter level, int x, int y, int z) {
+        if (level == null) {
+            return true;
+        }
+        BlockPos pos = new BlockPos(x, y, z);
+        BlockState state = level.getBlockState(pos);
+        if (state.isAir() || state.getCollisionShape(level, pos).isEmpty()) {
+            return true;
+        }
+        if (state.hasProperty(BlockStateProperties.OPEN) && state.getValue(BlockStateProperties.OPEN)) {
+            return true;
+        }
+        return MATERIALS.computeIfAbsent(state, BlockAcoustics::classify) == AcousticMaterial.THIN;
+    }
+
+    /** The material of a surface an echo bounces off. */
+    public static AcousticMaterial echoMaterial(BlockState state) {
+        return MATERIALS.computeIfAbsent(state, BlockAcoustics::classify);
     }
 
     /** Block tags can differ between servers, so the material cache is dropped on world change. */

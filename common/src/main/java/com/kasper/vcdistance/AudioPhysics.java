@@ -6,8 +6,9 @@ package com.kasper.vcdistance;
  * <p>
  * Distances are fractions of the hearing range: 0 is the listener, 1 is where Simple Voice Chat
  * stops sending the voice. Up to {@code refRatio} the voice is at full volume; beyond it
- * {@code x} runs from 0 to 1 over the rest of the range. Every curve reaches silence at the edge
- * when the falloff is 100%, so voices fade out instead of being cut off there.
+ * {@code x} runs from 0 to 1 over the rest of the range. At 100% falloff every curve reaches the edge
+ * volume exactly at the edge (silence when it is 0): the whole fade is fitted between 100% and the
+ * edge volume, so voices fade out instead of flattening and being cut off there.
  */
 public final class AudioPhysics {
 
@@ -30,7 +31,7 @@ public final class AudioPhysics {
      * @param model        curve
      * @param rolloff      falloff: 0 = full volume everywhere, 1 = the full curve, above 1
      *                     (whispers) = steeper, reaching silence before the edge
-     * @param minVol       volume floor ("edge volume")
+     * @param minVol       edge volume: the curve is scaled to run from 1 down to it
      * @param refRatio     fraction of the range heard at full volume
      * @return gain between {@code minVol} and 1
      */
@@ -48,7 +49,9 @@ public final class AudioPhysics {
                 default -> 1.0 - rolloff * x; // Simple Voice Chat's own linear curve
             };
         }
-        return Math.max(minVol, Math.max(0.0, Math.min(1.0, gain)));
+        gain = Math.max(0.0, Math.min(1.0, gain));
+        double floor = Math.max(0.0, Math.min(1.0, minVol));
+        return floor + (1.0 - floor) * gain;
     }
 
     /** Exponential decay from 1 at x = 0 to exactly 0 at x = 1. */

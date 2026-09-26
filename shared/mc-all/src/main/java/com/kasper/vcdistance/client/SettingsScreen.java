@@ -9,6 +9,7 @@ import com.kasper.vcdistance.DistanceConfig;
 import com.kasper.vcdistance.EnvironmentEffects;
 import com.kasper.vcdistance.ListenerEnvironment;
 import com.kasper.vcdistance.RoomEstimate;
+import com.kasper.vcdistance.SoundBlend;
 import com.kasper.vcdistance.HudMode;
 import com.kasper.vcdistance.LinkProtocol;
 import com.kasper.vcdistance.NearbyPlayers;
@@ -572,10 +573,10 @@ public abstract class SettingsScreen extends Screen {
                 "profile " + next(SERVER_MODES, mode));
         serverButton(tr("server.preset", presetName(preset)), "server.preset.tooltip", x2, y, third,
                 "preset " + next(SERVER_PRESETS, preset));
-        // Walls in 10% steps: − and + either side of the value
+        // Walls in 5% steps: − and + either side of the value
         int wallsPct = (int) Math.round(parse(walls) * 100.0);
-        int down = Math.max(0, (wallsPct + 9) / 10 * 10 - 10);
-        int up = Math.min(100, wallsPct / 10 * 10 + 10);
+        int down = Math.max(0, (wallsPct + 4) / 5 * 5 - 5);
+        int up = Math.min(100, wallsPct / 5 * 5 + 5);
         serverButton(Component.literal("−"), "server.walls.tooltip", x3, y, 20, down == 0 ? "walls off" : "walls " + down)
                 .active = wallsPct > 0;
         serverButton(tr("server.walls", wallsPct == 0 ? tr("off") : Component.literal(wallsPct + "%")), "server.walls.tooltip",
@@ -1213,16 +1214,23 @@ public abstract class SettingsScreen extends Screen {
         c.text(tr("effects.now"), x, y + 5, Palette.TEXT_DIM);
         int rowY = y + 20;
 
-        // Echo: the room around you
+        // Echo: what kind of place you are in and what it does to voices
         RoomEstimate room = env.room();
         boolean reverbOn = shown.isReverbEnabled() && status != AudioDistancePlugin.OcclusionStatus.SOUND_PHYSICS;
-        double level = room.wet() * shown.getReverbStrength();
-        Component roomText = room.wet() < 0.02
-                ? tr("effects.room.open")
-                : tr("effects.room.closed", pct(room.enclosure()), blocks(room.meanFree()),
-                String.format(Locale.ROOT, "%.1f", room.decaySeconds()));
-        c.text(fit(c, roomText, w), x, rowY, reverbOn ? Palette.TEXT : Palette.TEXT_MUTED);
+        double level = (room.wet() > 0.0 ? room.wet() : room.echoes().loudest()) * shown.getReverbStrength();
+        c.text(fit(c, Component.translatable(room.kind().getTranslationKey()), w), x, rowY,
+                reverbOn && room.isAudible() ? Palette.TEXT : Palette.TEXT_MUTED);
         rowY += 12;
+        Component detail = null;
+        if (!room.echoes().isEmpty()) {
+            detail = tr("effects.room.repeat", String.format(Locale.ROOT, "%.2f", room.echoes().delays()[0]));
+        } else if (room.wet() > 0.0) {
+            detail = tr("effects.room.detail", String.format(Locale.ROOT, "%.1f", room.decaySeconds()), blocks(room.meanFree()));
+        }
+        if (detail != null && contentBottom - rowY > 72) {
+            c.text(fit(c, detail, w), x, rowY, Palette.TEXT_DIM);
+            rowY += 12;
+        }
         int barRight = right - 8 - c.width(Component.literal("100%")) - 4;
         c.fill(x, rowY + 1, barRight, rowY + 7, 0x22FFFFFF);
         c.fill(x, rowY + 1, x + (int) Math.round(Math.min(1.0, reverbOn ? level : 0.0) * (barRight - x)), rowY + 7,
@@ -1246,7 +1254,7 @@ public abstract class SettingsScreen extends Screen {
         // Corners: voices that come round a wall right now
         int round = 0;
         for (SpeakerRegistry.Speaker sp : AudioDistancePlugin.SPEAKERS.active(System.nanoTime())) {
-            if (sp.hasOpening()) {
+            if (sp.isHeardRound()) {
                 round++;
             }
         }
@@ -1515,8 +1523,11 @@ public abstract class SettingsScreen extends Screen {
                 distRight, rowY, Palette.TEXT_DIM);
 
         float lossDb = wallsActive ? s.getFilter().getDisplayLossDb() : 0.0F;
+        // Round a wall the voice is as loud as the longer way round
+        SoundBlend blend = wallsActive ? s.getBlend() : null;
+        double heardAt = blend != null ? s.getDistance() + blend.extraDistance() : s.getDistance();
         double gain = s.getDistance() >= 0.0
-                ? AudioDistancePlugin.curveGain(s.getDistance(), s.getMaxDistance(), s.isWhispering()) * OcclusionModel.dbToGain(-lossDb)
+                ? AudioDistancePlugin.curveGain(heardAt, s.getMaxDistance(), s.isWhispering()) * OcclusionModel.dbToGain(-lossDb)
                 : 0.0;
         Component pctText = Component.literal(pct(gain));
         int barRight = loudRight - c.width(Component.literal("100%")) - 4;

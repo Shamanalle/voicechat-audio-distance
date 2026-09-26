@@ -6,6 +6,7 @@ import com.kasper.vcdistance.DistanceConfig;
 import com.kasper.vcdistance.HearingEstimate;
 import com.kasper.vcdistance.HudCorner;
 import com.kasper.vcdistance.HudMode;
+import com.kasper.vcdistance.LinkProtocol;
 import com.kasper.vcdistance.NearbyPlayers;
 import com.kasper.vcdistance.SpeakerRegistry;
 import net.minecraft.client.Minecraft;
@@ -126,17 +127,24 @@ public final class HudOverlay {
         double voiceRange = AudioDistancePlugin.getServerMaxDistance();
         if (selfRecent) {
             // In a voice chat group the group hears you wherever they are
-            String group = compact ? null : AudioDistancePlugin.selfGroupName();
-            if (group != null) {
+            String group = AudioDistancePlugin.selfGroupName();
+            String type = group == null ? null : AudioDistancePlugin.selfGroupType();
+            if (group != null && type == null) {
+                type = "";
+            }
+            if (group != null && !compact) {
                 // Open groups are heard by nearby players too, isolated ones only by the group
-                String type = AudioDistancePlugin.selfGroupType();
                 String key = "open".equals(type) || "isolated".equals(type) ? "group." + type : "group";
                 lines.add(new Line(hud(key, group), Palette.WHISPER, Palette.TEXT));
             }
-            double range = lastSelfWhisper ? voiceRange * AudioDistancePlugin.LINK.whisperShare() : voiceRange;
-            HearingEstimate e = HearingEstimate.of(AudioDistancePlugin.NEARBY.players(), range,
-                    id -> AudioDistancePlugin.voiceState(id, now));
-            lines.add(hearingLine(e, lastSelfWhisper));
+            LinkProtocol.GroupInfo groupInfo = AudioDistancePlugin.LINK.group(now);
+            // In a group that nearby players do not hear, only the server can say who hears you
+            if (group == null || "open".equals(type) || groupInfo.hasTotals()) {
+                double range = lastSelfWhisper ? voiceRange * AudioDistancePlugin.LINK.whisperShare() : voiceRange;
+                HearingEstimate e = HearingEstimate.of(AudioDistancePlugin.NEARBY.players(), range,
+                        id -> AudioDistancePlugin.voiceState(id, now), type, groupInfo);
+                lines.add(hearingLine(e, lastSelfWhisper));
+            }
         } else if (mode == HudMode.ALWAYS && talkers.isEmpty()) {
             HearingEstimate e = HearingEstimate.of(AudioDistancePlugin.NEARBY.players(), voiceRange,
                     id -> AudioDistancePlugin.voiceState(id, now));
@@ -224,6 +232,9 @@ public final class HudOverlay {
         if (s.isWhispering()) {
             text = Component.empty().append(text).append(Component.literal(" · ")).append(Component.translatable("gui.vc-audio-distance.monitor.whisper"));
             color = Palette.WHISPER;
+        } else if (wallsActive && s.isHeardRound()) {
+            text = Component.empty().append(text).append(Component.literal(" · ")).append(hud("round"));
+            color = Palette.MUFFLED;
         } else if (wallsActive && s.getFilter().getDisplayLossDb() > 1.0F) {
             text = Component.empty().append(text).append(Component.literal(" · ")).append(hud("walls"));
             color = Palette.MUFFLED;
@@ -247,6 +258,9 @@ public final class HudOverlay {
                 ? Component.literal(String.valueOf(e.hear()))
                 : hud("of", e.hear(), e.inRange());
         Component text = hud("hears" + suffix, count);
+        if (e.group() > 0) {
+            text = Component.empty().append(text).append(Component.literal(" · ")).append(hud("in_group", e.group()));
+        }
         if (e.deaf() > 0) {
             text = Component.empty().append(text).append(Component.literal(" · ")).append(hud("deaf", e.deaf()));
         }

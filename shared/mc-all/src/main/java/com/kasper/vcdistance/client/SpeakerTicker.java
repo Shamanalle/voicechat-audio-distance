@@ -20,13 +20,17 @@ public final class SpeakerTicker {
 
     private static final long TRACE_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(50);
     private static final int MAX_TRACES_PER_TICK = 12;
-    /** The room around the listener is measured this often (18 rays). */
+    /** The room around the listener is measured this often (34 rays). */
     private static final int ROOM_INTERVAL_TICKS = 10;
-    /** A wall at least this thick (stone blocks) makes it worth looking for a way round. */
-    private static final double MIN_WALL_FOR_PATH = 0.4;
-    private static final long PATH_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(500);
+    /** The space around each speaker is measured this often, one speaker per tick. */
+    private static final long SPEAKER_ROOM_INTERVAL_NANOS = TimeUnit.SECONDS.toNanos(1);
+    /** A speaker this close and in plain sight shares the listener's space: no need to measure it. */
+    private static final double SAME_ROOM_DISTANCE = 6.0;
+    /** A wall at least this thick (stone blocks) makes it worth looking for a way round: even a door frame. */
+    private static final double MIN_WALL_FOR_PATH = 0.15;
+    private static final long PATH_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(250);
     /** Ways round searched per tick, and how big each search may get. */
-    private static final int PATHS_PER_TICK = 1;
+    private static final int PATHS_PER_TICK = 2;
     private static final int PATH_NODES = 1200;
 
     private final WorldAccess access;
@@ -110,6 +114,8 @@ public final class SpeakerTicker {
         int pathBudget = ticks % slow == 0 ? PATHS_PER_TICK : 0;
         boolean corners = config.isDiffractionEnabled();
         SoundPath.Grid grid = cachedGrid();
+        SpeakerRegistry.Speaker roomSpeaker = null;
+        Vec3 roomSource = null;
 
         for (SpeakerRegistry.Speaker s : active) {
             try {
@@ -129,7 +135,7 @@ public final class SpeakerTicker {
                     s.clearOcclusion();
                 } else if (budget > 0 && (configChanged || !s.isOcclusionKnown()
                         || now - s.getLastTraceNanos() >= TRACE_INTERVAL_NANOS * slow)) {
-                    s.setOcclusion(OcclusionTracer.trace(access::traceRay, listener, source), now);
+                    s.setOcclusion(OcclusionTracer.trace(access::traceRay, grid, listener, source), now);
                     budget--;
                 }
                 // Behind a wall: is there a doorway round it?
@@ -141,13 +147,49 @@ public final class SpeakerTicker {
                     double limit = Math.min(Math.max(16.0, s.getMaxDistance()), direct * 2.0 + 12.0);
                     SoundPath.Result path = SoundPath.find(grid, listener.x, listener.y, listener.z,
                             source.x, source.y, source.z, limit, PATH_NODES);
-                    s.setPath(path, path != null && path.thickness() < s.getThickness(), now);
+                    s.setPath(path, now);
+                }
+                // The speaker's own space, oldest first
+                if (now - s.getLastRoomNanos() >= SPEAKER_ROOM_INTERVAL_NANOS * slow
+                        && (roomSpeaker == null || s.getLastRoomNanos() < roomSpeaker.getLastRoomNanos())) {
+                    roomSpeaker = s;
+                    roomSource = source;
                 }
             } catch (Throwable t) {
                 DistanceConfig.LOGGER.debug("Failed to update speaker {}: {}", s.getChannelId(), t.toString());
                 s.clearOcclusion();
             }
         }
+        if (roomSpeaker != null) {
+            measureSpeakerRoom(roomSpeaker, roomSource, listener, now, config);
+        }
+    }
+
+    /** The space around a speaker, so a voice from a cave echoes for a listener outside it too. */
+    private void measureSpeakerRoom(SpeakerRegistry.Speaker s, Vec3 source, Vec3 listener, long now, DistanceConfig config) {
+        try {
+            // Sound Physics Remastered does its own echo
+            if (!config.isReverbEnabled()
+                    || AudioDistancePlugin.occlusionStatus() == AudioDistancePlugin.OcclusionStatus.SOUND_PHYSICS) {
+                s.setRoom(null, now);
+            } else if (listener.distanceTo(source) <= SAME_ROOM_DISTANCE && s.isOcclusionKnown() && s.getThickness() < 0.1) {
+                s.setRoom(null, now);
+            } else {
+                s.setRoom(measureRoom(source), now);
+            }
+        } catch (Throwable t) {
+            s.setRoom(null, now);
+        }
+    }
+
+    /** Rays in every direction from {@code point}, with what they hit. */
+    private RoomEstimate measureRoom(Vec3 point) {
+        RoomEstimate.Hit[] hits = new RoomEstimate.Hit[RoomEstimate.DIRECTIONS.length];
+        for (int i = 0; i < hits.length; i++) {
+            double[] d = RoomEstimate.DIRECTIONS[i];
+            hits[i] = access.rayHit(point, d[0], d[1], d[2], RoomEstimate.rayLength(i));
+        }
+        return RoomEstimate.of(hits);
     }
 
     /** The monitor's list of nearby players; a failure here must not stop the wall tracing. */
@@ -179,12 +221,7 @@ public final class SpeakerTicker {
                 ticks++;
                 env.updateRoom(RoomEstimate.forced(zoneEcho));
             } else if (ticks++ % (ROOM_INTERVAL_TICKS * slow) == 0) {
-                double[] hits = new double[RoomEstimate.DIRECTIONS.length];
-                for (int i = 0; i < hits.length; i++) {
-                    double[] d = RoomEstimate.DIRECTIONS[i];
-                    hits[i] = access.rayDistance(listener, d[0], d[1], d[2], RoomEstimate.RAY_LENGTH);
-                }
-                env.updateRoom(RoomEstimate.of(hits));
+                env.updateRoom(measureRoom(listener));
             }
         } catch (Throwable t) {
             AudioDistancePlugin.ENVIRONMENT.reset();

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,6 +54,63 @@ public class HudLogicTest {
         HearingEstimate w = HearingEstimate.of(players, 12, states::get);
         assertEquals(new HearingEstimate(2, 1, 1, 0), w);
         assertTrue(w.isExact());
+    }
+
+    @Test
+    @DisplayName("Hearing estimate follows Simple Voice Chat groups: members anywhere, nearby only for open groups")
+    void hearingInGroups() {
+        UUID mate = UUID.randomUUID();
+        UUID stranger = UUID.randomUUID();
+        UUID isolated = UUID.randomUUID();
+        List<NearbyPlayers.Player> players = List.of(
+                new NearbyPlayers.Player(mate, "Mate", 5),
+                new NearbyPlayers.Player(stranger, "Stranger", 8),
+                new NearbyPlayers.Player(isolated, "Isolated", 10));
+        Map<UUID, VoiceState> states = Map.of(mate, VoiceState.GROUP, stranger, VoiceState.CONNECTED, isolated, VoiceState.GROUP);
+        // Two more members far away hear you, one has the sound off; the nearby mate is one of the two
+        LinkProtocol.GroupInfo group = new LinkProtocol.GroupInfo(Set.of(mate), Set.of(isolated), 2, 1);
+
+        // Not in a group: the player in someone else's isolated group does not hear you
+        assertEquals(new HearingEstimate(3, 2, 1, 0),
+                HearingEstimate.of(players, 24, states::get, null, new LinkProtocol.GroupInfo(Set.of(), Set.of(isolated), -1, -1)));
+        // Normal group: nearby players outside it do not hear you; the group does, wherever it is
+        assertEquals(new HearingEstimate(3, 2, 1, 0, 3), HearingEstimate.of(players, 24, states::get, "normal", group));
+        assertEquals(new HearingEstimate(3, 2, 1, 0, 3), HearingEstimate.of(players, 24, states::get, "isolated", group));
+        // Open group: nearby players too, the nearby mate counted once
+        assertEquals(new HearingEstimate(5, 3, 2, 0, 3), HearingEstimate.of(players, 24, states::get, "open", group));
+        // Server without group data: only nearby players
+        assertEquals(new HearingEstimate(0, 0, 0, 0, 0), HearingEstimate.of(players, 24, states::get, "normal", LinkProtocol.GroupInfo.NONE));
+        assertEquals(new HearingEstimate(3, 3, 0, 0, 0), HearingEstimate.of(players, 24, states::get, "open", LinkProtocol.GroupInfo.NONE));
+    }
+
+    @Test
+    @DisplayName("The nearby message carries the group: mates, isolated players and totals; old messages have none")
+    void nearbyGroupProtocol() {
+        UUID mate = UUID.randomUUID();
+        UUID isolated = UUID.randomUUID();
+        UUID other = UUID.randomUUID();
+        Map<UUID, VoiceState> states = new java.util.LinkedHashMap<>();
+        states.put(mate, VoiceState.GROUP);
+        states.put(isolated, VoiceState.GROUP);
+        states.put(other, VoiceState.CONNECTED);
+        String text = LinkProtocol.nearby(states, new LinkProtocol.GroupInfo(Set.of(mate), Set.of(isolated), 4, 1));
+        assertEquals(states, LinkProtocol.parseNearby(text));
+        LinkProtocol.GroupInfo g = LinkProtocol.parseNearbyGroup(text);
+        assertEquals(Set.of(mate), g.mates());
+        assertEquals(Set.of(isolated), g.isolated());
+        assertEquals(4, g.groupHear());
+        assertEquals(1, g.groupDeaf());
+
+        LinkProtocol.GroupInfo old = LinkProtocol.parseNearbyGroup(LinkProtocol.nearby(states));
+        assertFalse(old.hasTotals());
+        assertTrue(old.mates().isEmpty() && old.isolated().isEmpty());
+        assertEquals(LinkProtocol.GroupInfo.NONE, LinkProtocol.parseNearbyGroup(null));
+
+        ServerLink link = new ServerLink();
+        long t = 1_000_000_000L;
+        link.onNearby(text, t);
+        assertEquals(4, link.group(t).groupHear());
+        assertFalse(link.group(t + java.util.concurrent.TimeUnit.MINUTES.toNanos(1)).hasTotals());
     }
 
     @Test
