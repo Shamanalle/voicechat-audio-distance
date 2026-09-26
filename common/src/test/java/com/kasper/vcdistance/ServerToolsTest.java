@@ -86,10 +86,10 @@ public class ServerToolsTest {
         link.onProfile(LinkProtocol.profile(s, null, 48, 24));
         assertNull(link.consumeZoneNotice());
         link.onProfile(LinkProtocol.profile(s, s.zones().get("world:world_nether"), 48, 24));
-        assertEquals("world_nether", link.consumeZoneNotice());
+        assertEquals("world_nether", link.consumeZoneNotice().name());
         assertNull(link.consumeZoneNotice());
         link.onProfile(LinkProtocol.profile(s, null, 48, 24));
-        assertEquals("", link.consumeZoneNotice());
+        assertEquals("", link.consumeZoneNotice().name());
     }
 
     @Test

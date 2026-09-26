@@ -15,6 +15,7 @@ import de.maxhenkel.voicechat.api.events.ClientVoicechatConnectionEvent;
 import de.maxhenkel.voicechat.api.events.EntitySoundPacketEvent;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.LocationalSoundPacketEvent;
+import de.maxhenkel.voicechat.api.events.MicrophonePacketEvent;
 import de.maxhenkel.voicechat.api.events.OpenALSoundEvent;
 import de.maxhenkel.voicechat.api.events.PlayerDisconnectedEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
@@ -60,9 +61,9 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     public static final ListenerEnvironment ENVIRONMENT = new ListenerEnvironment();
     /** Server-side settings and wall muffling. */
     public static final ServerSettings SERVER_SETTINGS = new ServerSettings();
-    public static final ServerWalls SERVER_WALLS = new ServerWalls(SERVER_SETTINGS);
     /** Online players for the voice rules, refreshed by the server tick. */
     public static final ServerPlayers PLAYERS = new ServerPlayers();
+    public static final ServerWalls SERVER_WALLS = new ServerWalls(SERVER_SETTINGS, PLAYERS);
     /** The addon requirement (require_addon). */
     public static final AddonCheck ADDON_CHECK = new AddonCheck();
     /** Which sound zone each player with the addon was last sent (server). */
@@ -130,6 +131,7 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         });
         registration.registerEvent(EntitySoundPacketEvent.class, SERVER_WALLS::onEntitySound);
         registration.registerEvent(LocationalSoundPacketEvent.class, SERVER_WALLS::onLocationalSound);
+        registration.registerEvent(MicrophonePacketEvent.class, SERVER_WALLS::onMicrophone);
         // Only the voice connection closed; leaving the game is reported by the platform glue
         registration.registerEvent(PlayerDisconnectedEvent.class, e -> SERVER_WALLS.releaseListener(e.getPlayerUuid()));
     }
@@ -158,6 +160,11 @@ public class AudioDistancePlugin implements VoicechatPlugin {
 
     /** Text of the {@code profile} message for a player in {@code zone} ({@code null}: no zone). */
     public static String serverProfileMessage(Zone zone) {
+        return serverProfileMessage(zone, false);
+    }
+
+    /** As above; {@code admin} shows the player the Server tab. */
+    public static String serverProfileMessage(Zone zone, boolean admin) {
         double voice = FALLBACK_DISTANCE;
         double whisper = FALLBACK_DISTANCE / 2.0;
         VoicechatServerApi s = serverApi;
@@ -168,7 +175,26 @@ public class AudioDistancePlugin implements VoicechatPlugin {
             } catch (Throwable ignored) {
             }
         }
-        return LinkProtocol.profile(SERVER_SETTINGS, zone, voice, whisper);
+        return LinkProtocol.profile(SERVER_SETTINGS, zone, voice, whisper, admin);
+    }
+
+    /** The zone a player is in, from the last refresh of {@link #PLAYERS}, or {@code null}. */
+    public static Zone zoneOf(UUID player) {
+        return SERVER_SETTINGS.zoneOf(PLAYERS.get(player));
+    }
+
+    /** Whether a player has Simple Voice Chat (connected or not), as far as the server knows. */
+    public static boolean hasVoiceChat(UUID player) {
+        VoicechatServerApi s = serverApi;
+        if (s == null) {
+            return false;
+        }
+        try {
+            VoicechatConnection c = s.getConnectionOf(player);
+            return c != null && (c.isInstalled() || c.isConnected());
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     /** Simple Voice Chat's voice range on this server, or 0 when it is not running. */
