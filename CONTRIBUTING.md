@@ -80,7 +80,7 @@ A store is skipped with a warning while its project id or token is missing. Setu
 2. Run `./gradlew :common:test` and `./gradlew build`.
 3. Describe what changed and how you tested it in game (Minecraft, loader and Simple Voice Chat versions; client, server or both).
 4. Add an entry to `CHANGELOG.md` under an *Unreleased* section, in English and in Russian.
-   The changelog becomes the release notes on Modrinth and CurseForge, so write it for players and server owners: what they will hear, see or be able to do, and which problems are gone. Leave out how it works inside (rays, filters, formulas, class names).
+   The changelog becomes the release notes on Modrinth and CurseForge. Keep it like other mods' changelogs: short plain bullets under Added / Changed / Fixed, one change per line, about what players and server owners notice. No internals (rays, filters, formulas, class names) and no advertising tone.
 
 ---
 
@@ -160,4 +160,4 @@ Workflow *Publish to Modrinth & CurseForge* (`.github/workflows/publish.yml`) б
 2. Запустите `./gradlew :common:test` и `./gradlew build`.
 3. Опишите, что изменилось и как вы проверяли в игре (версии Minecraft, загрузчика и Simple Voice Chat; клиент, сервер или оба).
 4. Добавьте запись в `CHANGELOG.md` в раздел *Unreleased* на английском и на русском.
-   Журнал изменений становится описанием версии на Modrinth и CurseForge, поэтому пишите его для игроков и владельцев серверов: что они услышат, увидят или смогут сделать и какие проблемы исчезли. Не описывайте, как это устроено внутри (лучи, фильтры, формулы, имена классов).
+   Журнал изменений становится описанием версии на Modrinth и CurseForge. Пишите его как у других модов: короткие простые пункты в разделах «Добавлено / Изменено / Исправлено», одно изменение на строку, о том, что заметят игроки и владельцы серверов. Без внутреннего устройства (лучи, фильтры, формулы, имена классов) и без рекламного тона.
