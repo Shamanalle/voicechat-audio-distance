@@ -42,9 +42,8 @@ Put it on your server (Fabric, NeoForge, or as a plugin for **Paper, Purpur and 
   - a **library** where voices carry only a few blocks;
   - a **soundproof room** that nobody hears in or out of;
   - a **cathedral** with a constant echo;
-  - a message when players walk in.
-
-  On Paper, WorldGuard regions work as zones too.
+  - a message when players walk in;
+  - on Paper, WorldGuard regions work as zones too.
 - **Game rules:**
   - sneaking players are heard less far;
   - dead players are silent until they respawn;
@@ -121,9 +120,8 @@ Guides, all settings and the changelog: [GitHub](https://github.com/Shamanalle/v
   - **библиотека**, где голос слышно всего на пару блоков;
   - **звукоизолированная комната**, из которой и в которую ничего не слышно;
   - **собор** с постоянным эхом;
-  - сообщение при входе.
-
-  На Paper зонами могут быть и регионы WorldGuard.
+  - сообщение при входе;
+  - на Paper зонами могут быть и регионы WorldGuard.
 - **Правила игры:**
   - на корточках вас слышно не так далеко;
   - мёртвых не слышно, пока не возродятся;
