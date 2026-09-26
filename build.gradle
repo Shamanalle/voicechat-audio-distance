@@ -22,7 +22,7 @@ tasks.register('buildAll') {
         outDir.mkdirs()
         releaseTargets.each { t ->
             def version = "${project.mod_version}+${t.target}"
-            def jar = file("${project(t.project).layout.buildDirectory.get().asFile}/libs/voicechat-audio-distance-fabric-${version}.jar")
+            def jar = file("${project(t.project).layout.buildDirectory.get().asFile}/libs/voice-physics-fabric-${version}.jar")
             if (!jar.exists()) {
                 throw new GradleException("Expected release jar is missing: ${jar}")
             }
@@ -34,12 +34,12 @@ tasks.register('buildAll') {
                 copy {
                     from jar
                     into outDir
-                    rename { "voicechat-audio-distance-${loader}-${version}.jar" }
+                    rename { "voice-physics-${loader}-${version}.jar" }
                 }
             }
         }
         // Bukkit / Spigot / Paper / Purpur plugin (server side, every supported Minecraft version)
-        def plugin = file("${project(':bukkit').layout.buildDirectory.get().asFile}/libs/voicechat-audio-distance-bukkit-${project.mod_version}.jar")
+        def plugin = file("${project(':bukkit').layout.buildDirectory.get().asFile}/libs/voice-physics-bukkit-${project.mod_version}.jar")
         if (!plugin.exists()) {
             throw new GradleException("Expected release jar is missing: ${plugin}")
         }

@@ -41,7 +41,7 @@ jobs:
       - name: Upload jars
         uses: actions/upload-artifact@v4
         with:
-          name: voicechat-audio-distance
+          name: voice-physics
           path: build/libs/*.jar
           if-no-files-found: error
 

@@ -79,7 +79,7 @@ jobs:
         run: |
           ./gradlew :bukkit:jar :bukkit:writeCompatClasspath --no-daemon
           version=$(grep '^mod_version=' gradle.properties | cut -d= -f2)
-          cp "bukkit/build/libs/voicechat-audio-distance-bukkit-${version}.jar" "${RUNNER_TEMP}/plugin.jar"
+          cp "bukkit/build/libs/voice-physics-bukkit-${version}.jar" "${RUNNER_TEMP}/plugin.jar"
           cp bukkit/build/compat-classpath.txt "${RUNNER_TEMP}/reference-classpath.txt"
 
       # Some old Paper API snapshots can no longer be resolved (1.20.5 names an adventure-bom

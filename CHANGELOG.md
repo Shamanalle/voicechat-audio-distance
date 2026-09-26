@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [1.5.1] - 2026-09-26
+
+### English
+
+#### Changed
+- **Files are now named after Voice Physics:** `voice-physics-fabric-…`, `voice-physics-neoforge-…`, `voice-physics-forge-…` and `voice-physics-bukkit-…` instead of `voicechat-audio-distance-…`. Delete the old file when you update, so the game or server does not load both. Settings are kept.
+
+### Русский
+
+#### Изменено
+- **Файлы теперь называются по имени Voice Physics:** `voice-physics-fabric-…`, `voice-physics-neoforge-…`, `voice-physics-forge-…` и `voice-physics-bukkit-…` вместо `voicechat-audio-distance-…`. При обновлении удалите старый файл, чтобы игра или сервер не загрузили оба. Настройки сохраняются.
+
 ## [1.5.0] - 2026-09-26
 
 ### English

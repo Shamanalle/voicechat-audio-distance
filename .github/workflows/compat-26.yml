@@ -83,7 +83,7 @@ jobs:
         run: |
           ./gradlew :fabric-26:assemble :fabric-26:writeCompileClasspath --no-daemon
           version=$(grep '^mod_version=' gradle.properties | cut -d= -f2)
-          cp "fabric-26/build/libs/voicechat-audio-distance-fabric-${version}+mc26.x.jar" "${RUNNER_TEMP}/mod.jar"
+          cp "fabric-26/build/libs/voice-physics-fabric-${version}+mc26.x.jar" "${RUNNER_TEMP}/mod.jar"
           cp fabric-26/build/compile-classpath.txt "${RUNNER_TEMP}/reference-classpath.txt"
 
       - name: Classpath of Minecraft ${{ matrix.mc }}

@@ -8,7 +8,7 @@ def target = "mc1.20.1"
 version = "${project.mod_version}+${target}"
 
 base {
-    archivesName = "voicechat-audio-distance-fabric"
+    archivesName = "voice-physics-fabric"
 }
 
 repositories {
