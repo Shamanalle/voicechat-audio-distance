@@ -7,6 +7,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import com.kasper.vcdistance.server.ServerBridge;
 import com.kasper.vcdistance.server.ServerZones;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -49,6 +50,28 @@ public final class ModNetworking {
         }
     }
 
+    /** Client to server: a command from the Server tab. */
+    public record Admin(String text) implements CustomPacketPayload {
+        public static final Type<Admin> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(LinkProtocol.NAMESPACE, LinkProtocol.ADMIN));
+        public static final StreamCodec<ByteBuf, Admin> CODEC = ByteBufCodecs.stringUtf8(LinkProtocol.MAX_LENGTH).map(Admin::new, Admin::text);
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    /** Server to client: the reply and the server's settings, for the Server tab. */
+    public record AdminReply(String text) implements CustomPacketPayload {
+        public static final Type<AdminReply> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(LinkProtocol.NAMESPACE, LinkProtocol.ADMIN_REPLY));
+        public static final StreamCodec<ByteBuf, AdminReply> CODEC = ByteBufCodecs.stringUtf8(LinkProtocol.MAX_LENGTH).map(AdminReply::new, AdminReply::text);
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     private ModNetworking() {
     }
 
@@ -57,17 +80,19 @@ public final class ModNetworking {
         PayloadTypeRegistry.playC2S().register(Hello.TYPE, Hello.CODEC);
         PayloadTypeRegistry.playS2C().register(Profile.TYPE, Profile.CODEC);
         PayloadTypeRegistry.playS2C().register(Nearby.TYPE, Nearby.CODEC);
+        PayloadTypeRegistry.playC2S().register(Admin.TYPE, Admin.CODEC);
+        PayloadTypeRegistry.playS2C().register(AdminReply.TYPE, AdminReply.CODEC);
     }
 
     public static void registerServer() {
         ServerPlayNetworking.registerGlobalReceiver(Hello.TYPE, (payload, context) -> onHello(context.player(), payload.text()));
+        ServerPlayNetworking.registerGlobalReceiver(Admin.TYPE, (payload, context) -> onAdmin(context.player(), payload.text()));
     }
 
     private static void onHello(ServerPlayer player, String text) {
-        if (LinkProtocol.parseHello(text) < 1) {
+        if (!ServerHooks.hello(player.getUUID(), text)) {
             return;
         }
-        AudioDistancePlugin.SERVER_WALLS.markAddonListener(player.getUUID());
         Zone zone = ServerZones.of(player);
         AudioDistancePlugin.ZONES.set(player.getUUID(), zone);
         sendProfile(player, zone);
@@ -76,7 +101,15 @@ public final class ModNetworking {
     /** Sends the profile as it applies in {@code zone} ({@code null}: the main profile). */
     public static void sendProfile(ServerPlayer player, Zone zone) {
         if (ServerPlayNetworking.canSend(player, Profile.TYPE)) {
-            ServerPlayNetworking.send(player, new Profile(AudioDistancePlugin.serverProfileMessage(zone)));
+            ServerPlayNetworking.send(player, new Profile(AudioDistancePlugin.serverProfileMessage(zone, ServerBridge.isAdmin(player))));
+        }
+    }
+
+    /** A command from the player's Server tab; answered only for admins. */
+    private static void onAdmin(ServerPlayer player, String text) {
+        String reply = ServerBridge.admin(player, text, AudioDistanceMod::resendProfiles);
+        if (reply != null && ServerPlayNetworking.canSend(player, AdminReply.TYPE)) {
+            ServerPlayNetworking.send(player, new AdminReply(reply));
         }
     }
 

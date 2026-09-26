@@ -6,6 +6,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [1.8.0] - 2026-09-26
+
+### English
+
+#### Added
+- **Sound zones do much more.** Besides a world or a WorldGuard region, a zone can now be a **box** you draw in game (`/vcd zone pos1`, `pos2`, `create`, or `create <name> <radius>` around you). A zone can set:
+  - how far voices carry: `range_multiplier` (a stage ×2, a library ×0.4) or `voice_range` / `whisper_range` in blocks. It works for every player, with or without the addon, because the server itself decides who gets a voice;
+  - `isolated`: voices neither leave nor enter the zone (a soundproof booth);
+  - `walls_strength`, `echo` (always this much echo, like a cathedral, or none), `enter_message` and `priority` for overlapping zones.
+- **Game rules:**
+  - sneaking players carry less far (`sneak_range_multiplier`);
+  - dead players are silent until they respawn;
+  - spectators are heard only by spectators;
+  - an item held in hand works as a **megaphone** (`megaphone_item`, `megaphone_multiplier`).
+- **Addon requirement** (`require_addon`): players who have Simple Voice Chat but not the addon, or a version below `min_addon_version`, can get a message once, on every join, or be disconnected. Players without Simple Voice Chat are never affected.
+- **Server tab.** Operators with the addon get a *Server* tab in the settings screen with the profile, preset, walls, rules, the requirement and zones as buttons.
+- **New commands:**
+  - `/vcd zone …`, `/vcd rule …` and `/vcd require …`;
+  - `/vcd debug <player>`, which shows whom a player hears and who hears them, and why not.
+- **Server messages in seven languages.** `/vcd` replies and messages to players come in each player's own game language (1.21+). The texts are written to `vc-audio-distance-lang/` next to the server settings file, where any line can be changed or a language added.
+
+#### Changed
+- `messages_language` now takes `auto` (the default) or a language code such as `ru_ru`; `en` and `ru` still work.
+- Old server settings files are rewritten with the new sections on the first start, keeping their values.
+
+### Русский
+
+#### Добавлено
+- **Звуковые зоны умеют гораздо больше.** Кроме мира или региона WorldGuard, зоной теперь может быть **бокс**, который вы рисуете в игре (`/vcd zone pos1`, `pos2`, `create` или `create <имя> <радиус>` вокруг себя). Зона может задать:
+  - как далеко слышно голоса: `range_multiplier` (сцена ×2, библиотека ×0.4) или `voice_range` / `whisper_range` в блоках. Это работает для всех игроков, с аддоном и без, потому что сервер сам решает, кому доставлять голос;
+  - `isolated`: голоса не выходят из зоны и не заходят в неё (звуконепроницаемая кабинка);
+  - `walls_strength`, `echo` (всегда такое эхо, как в соборе, или никакого), `enter_message` и `priority` для пересекающихся зон.
+- **Правила игры:**
+  - на корточках голос слышно ближе (`sneak_range_multiplier`);
+  - мёртвых не слышно до возрождения;
+  - наблюдателей слышат только наблюдатели;
+  - предмет в руке работает как **мегафон** (`megaphone_item`, `megaphone_multiplier`).
+- **Требование аддона** (`require_addon`): игрокам с Simple Voice Chat, но без аддона или с версией ниже `min_addon_version` можно один раз написать, напоминать при каждом входе или отключать их. Игроков без Simple Voice Chat это не касается.
+- **Вкладка «Сервер».** Операторы с аддоном видят в экране настроек вкладку «Сервер»: профиль, пресет, стены, правила, требование аддона и зоны — кнопками.
+- **Новые команды:**
+  - `/vcd zone …`, `/vcd rule …` и `/vcd require …`;
+  - `/vcd debug <игрок>`: показывает, кого слышит игрок и кто слышит его, и почему нет.
+- **Серверные сообщения на семи языках.** Ответы `/vcd` и сообщения игрокам приходят на языке игры самого игрока (1.21+). Тексты записываются в `vc-audio-distance-lang/` рядом с файлом настроек сервера — там можно поменять любую строку или добавить язык.
+
+#### Изменено
+- `messages_language` теперь принимает `auto` (по умолчанию) или код языка, например `ru_ru`; `en` и `ru` тоже работают.
+- Старые файлы настроек сервера при первом запуске дописываются новыми разделами с сохранением значений.
+
 ## [1.7.0] - 2026-09-26
 
 ### English
