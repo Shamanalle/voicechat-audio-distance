@@ -46,22 +46,35 @@ See [What works where](#what-works-where) for the full list.
   - One stone wall at the default strength: about −8 dB, muffled above ~2.5 kHz.
   - Three stone walls: about −18 dB and ~600 Hz.
 - **Real block shapes:** slabs, open doors, fences and carpets do not count as full cubes.
-- **Soft edges:** 5 parallel rays instead of one, so a voice around a corner or through a doorway fades gradually instead of switching.
+- **Soft edges:** 5 parallel rays instead of one, so a voice around a corner or through a doorway fades gradually instead of switching. The side rays stay in the air: in a two-block tunnel or next to a wall they are pulled in instead of running through the ceiling, so players side by side hear each other clearly.
+- **Grazed blocks count less:** a ray that only clips a block's corner counts it by how far it runs inside (fully from 0.4 blocks); doors, trapdoors, fences and bars count fully.
 - **Materials:** 13 groups — stone, metal, earth & sand, wood, wool, soft blocks, glass, ice, doors, leaves, bars & fences, water & lava, and *other blocks* for everything else (bedrock, blocks from other mods). Wool and metal muffle more than stone, glass and leaves less. Every group's weight is adjustable on the *Materials* tab.
 - **Smooth:** filter changes glide over ~90 ms without clicks. Without a wall the audio passes through bit for bit.
 - **Sound Physics Remastered:** when it is installed, our wall muffling turns itself off so voices are not muffled twice.
 
 #### Echo, water and weather (client)
-- **Echo in caves and halls:** every half second 18 rays from your head measure how closed and how big the space around you is. A big cave or hall gives a long echo, a small room a short one, the open air none. The echo glides as you walk and has its own strength setting.
+- **Echo that fits the place:** every half second 34 rays from your head measure the space around you and the blocks they hit. Each surface swallows part of the sound by its material (stone, ice and metal almost nothing, wood a little, wool, hay and leaves most of it), and a ray that escapes into the open is lost. From that come the echo's length, loudness and warmth:
+  - a small stone room rings for about a second, a big hall or cave for 2 – 3 s;
+  - a wooden house answers briefly and warmly;
+  - a forest, a field, a village street or a wool room stay dry or nearly so.
+
+  Nearby walls add a few distinct early reflections. The *Effects* tab names the place you are in ("Cave or big hall: a long rolling echo") and how long its echo lasts.
+- **Echo in the mountains:** under the open sky, hard cliffs 17 – 64 blocks away send the voice back 0.1 – 0.4 s later, and across a canyon once more.
+- **The speaker's side counts too:** the space around each speaker is measured as well, so a friend shouting in a cave echoes even when you stand outside.
+- **Close voices stay clear:** the echo share grows with distance, so the voice next to you is dry and a far one sounds like the room. The echo glides as you walk and has its own strength setting.
 - **Under water:** when your head or the speaker's is under water, voices become dull (~600 Hz) and 10 dB quieter.
 - **Rain and thunder:** under the open sky, rain takes up to 6 dB off far voices and a thunderstorm up to about 10 dB; close voices stay clear.
-- **Around corners:** when a wall is between you, the addon looks for a way round it through open blocks (air, water, open doors and gates, fences). If a doorway or window is close, the voice comes through it: less muffled than through the wall, and from the doorway's side, like a voice from the next room through an open door.
+- **Around corners:** when a wall is between you, the addon looks for a way round it through open blocks (air, water, open doors and gates, fences), four times a second. The voice goes both ways at once and they add up:
+  - through the wall, muffled;
+  - round through the doorway or window, further, and duller the sharper it bends (a right angle muffles like half a stone wall).
+
+  The clearer way takes over the sound, the direction and the distance the volume follows, so a voice from the next room comes from the doorway, at the length of the way round. Nothing flips: the direction glides, so passing a doorway pans smoothly. The HUD says *round a corner* when most of a voice comes through an opening.
 - The *Effects* tab has a switch for each, the echo strength, and a live view of what is around you right now.
 - With Sound Physics Remastered installed, our echo and water stay off (it does them itself); rain still works.
 
 #### Voice HUD (client)
 A small panel in a corner of the screen:
-- who is talking nearby, how far away and from which direction (an arrow), whispering or behind a wall;
+- who is talking nearby, how far away and from which direction (an arrow), whispering, behind a wall or round a corner;
 - **while you talk: how many players hear you** — within your voice range, or your whisper range while you whisper — and how many cannot (no voice chat, sound off). In a Simple Voice Chat group it follows the group's rules: your group counts wherever it is ("· 3 in the group"), players nearby count only when the group is open, and a player in another isolated group does not hear you. The group count needs the addon on the server;
 - modes: off, while talking (default: only when someone speaks), always (also how many are in range); any of the four corners; a key in Controls cycles the modes;
 - size (50–150%), background opacity (down to none) and a **compact** mode with one line for everyone talking — on the Monitor tab.
@@ -190,18 +203,18 @@ The addon can be installed on the client (the player's game), on the server, or 
 
 | Loader | Minecraft | File | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.3+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.20.2 – 1.20.4 | `voice-physics-fabric-2.0.3+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
-| **Fabric / Quilt** | 1.20.5 – 1.20.6 | `voice-physics-fabric-2.0.3+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.3+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.3.jar` | 17+ | Bukkit version |
-| Forge | 1.20.1 | `voice-physics-forge-2.0.3+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.20.2 – 1.20.4 | `voice-physics-{neoforge,forge}-2.0.3+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
-| NeoForge / Forge | 1.20.5 – 1.20.6 | `voice-physics-{neoforge,forge}-2.0.3+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.3+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.1.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.20.2 – 1.20.4 | `voice-physics-fabric-2.1.0+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| **Fabric / Quilt** | 1.20.5 – 1.20.6 | `voice-physics-fabric-2.1.0+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.1.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.1.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.1.0.jar` | 17+ | Bukkit version |
+| Forge | 1.20.1 | `voice-physics-forge-2.1.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.20.2 – 1.20.4 | `voice-physics-{neoforge,forge}-2.1.0+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| NeoForge / Forge | 1.20.5 – 1.20.6 | `voice-physics-{neoforge,forge}-2.1.0+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.1.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.1.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-2.1.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** is the full version, on the client and on the server. It needs [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 - **Paper / Purpur / Spigot / Bukkit** is the server side as a plugin: walls for players without the addon, and the server profile for players with it. Players can join with any client: with the Fabric addon, without it, or without mods at all. The plugin is compiled against the 1.20.1 API and checked in CI against every Paper release from 1.20.1 to 26.3: every class, method, field and override it uses resolves the same way (Paper 1.20.5 cannot be checked: its API snapshot is no longer downloadable).
@@ -226,7 +239,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 3. Walls for players without the addon are on by default. To share a profile, set `profile_mode` to `suggest` or `enforce` and pick a `profile_preset`. Every key in the file has a comment in English and Russian, and the file is re-read automatically.
 
 **Server (Paper / Purpur / Spigot / Bukkit)**
-1. Put `voice-physics-bukkit-2.0.3.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
+1. Put `voice-physics-bukkit-2.1.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
 2. Start the server once; it creates `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. The settings are the same as on Fabric (see below), and the file is also re-read automatically.
 
@@ -406,22 +419,35 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
   - Одна каменная стена при силе по умолчанию — около −8 дБ, глухо выше ~2,5 кГц.
   - Три каменные стены — около −18 дБ и ~600 Гц.
 - **Реальная форма блоков:** полублоки, открытые двери, заборы и ковры не считаются целым кубом.
-- **Мягкие края:** 5 параллельных лучей вместо одного, поэтому голос из-за угла или через дверной проём глохнет плавно, а не рывком.
+- **Мягкие края:** 5 параллельных лучей вместо одного, поэтому голос из-за угла или через дверной проём глохнет плавно, а не рывком. Боковые лучи не уходят в блоки: в тоннеле высотой в два блока или у стены они придвигаются, а не идут сквозь потолок, поэтому стоящие рядом слышат друг друга чисто.
+- **Задетые блоки считаются меньше:** луч, который лишь цепляет угол блока, учитывает его по тому, сколько проходит внутри (целиком — от 0,4 блока); двери, люки, заборы и решётки считаются полностью.
 - **Материалы:** 13 групп — камень, металл, земля и песок, дерево, шерсть, мягкие блоки, стекло, лёд, двери, листва, решётки и заборы, вода и лава и *остальные блоки* для всего прочего (бедрок, блоки из других модов). Шерсть и металл глушат сильнее камня, стекло и листва — слабее. Вес каждой группы меняется на вкладке «Материалы».
 - **Плавно:** параметры фильтра меняются за ~90 мс, без щелчков. Без стены звук проходит без изменений, бит в бит.
 - **Sound Physics Remastered:** если он установлен, наше приглушение стенами выключается само, чтобы голос не глушился дважды.
 
 #### Эхо, вода и погода (клиент)
-- **Эхо в пещерах и залах:** раз в полсекунды 18 лучей от вашей головы измеряют, насколько пространство вокруг закрытое и большое. Большая пещера или зал дают долгое эхо, маленькая комната — короткое, открытый воздух — никакого. Эхо плавно меняется, пока вы идёте, у него своя настройка силы.
+- **Эхо по месту:** раз в полсекунды 34 луча от вашей головы измеряют пространство вокруг и блоки, в которые попадают. Каждая поверхность поглощает часть звука по своему материалу (камень, лёд и металл почти ничего, дерево немного, шерсть, сено и листва — большую часть), а луч, ушедший в открытое небо, потерян. Из этого получаются длина, громкость и «теплота» эха:
+  - маленькая каменная комната звенит около секунды, большой зал или пещера — 2 – 3 с;
+  - деревянный дом отвечает коротко и тепло;
+  - в лесу, в поле, на деревенской улице и в комнате из шерсти эха нет или почти нет.
+
+  Ближние стены добавляют несколько отчётливых ранних отражений. Вкладка «Эффекты» называет место, где вы стоите («Пещера или большой зал: долгое гулкое эхо»), и сколько длится его эхо.
+- **Эхо в горах:** под открытым небом твёрдые скалы в 17 – 64 блоках возвращают голос через 0,1 – 0,4 с, а в каньоне — ещё раз.
+- **Место говорящего тоже важно:** пространство вокруг каждого говорящего тоже измеряется, поэтому крик друга в пещере гулкий, даже если вы снаружи.
+- **Близкие голоса остаются чистыми:** доля эха растёт с расстоянием, поэтому голос рядом звучит сухо, а дальний — как помещение. Эхо плавно меняется, пока вы идёте, у него своя настройка силы.
 - **Под водой:** когда ваша голова или голова говорящего под водой, голоса становятся глухими (~600 Гц) и на 10 дБ тише.
 - **Дождь и гроза:** под открытым небом дождь отнимает у дальних голосов до 6 дБ, гроза — примерно до 10 дБ; близкие голоса остаются чёткими.
-- **Из-за угла:** если между вами стена, аддон ищет путь в обход через открытые блоки (воздух, вода, открытые двери и калитки, заборы). Если рядом есть проём или окно, голос проходит через него: глушится меньше, чем сквозь стену, и слышен со стороны проёма — как голос из соседней комнаты через открытую дверь.
+- **Из-за угла:** если между вами стена, аддон четыре раза в секунду ищет путь в обход через открытые блоки (воздух, вода, открытые двери и калитки, заборы). Голос идёт обоими путями сразу, и они складываются:
+  - сквозь стену — приглушённо;
+  - в обход через проём или окно — дальше и тем глуше, чем круче поворот (прямой угол глушит как половина каменной стены).
+
+  Более чистый путь забирает себе звук, направление и расстояние, по которому считается громкость: голос из соседней комнаты звучит со стороны проёма и на длину обхода. Ничего не переключается рывком: направление смещается плавно, поэтому, проходя мимо проёма, вы слышите, как голос «переезжает». HUD пишет *из-за угла*, когда большая часть голоса идёт через проём.
 - На вкладке «Эффекты» — переключатель для каждого, сила эха и живая панель того, что вокруг вас сейчас.
 - Если установлен Sound Physics Remastered, наши эхо и вода выключены (он делает их сам); дождь работает.
 
 #### HUD голоса (клиент)
 Небольшая панель в углу экрана:
-- кто рядом говорит, как далеко и с какой стороны (стрелка), шепчет ли и не за стеной ли;
+- кто рядом говорит, как далеко и с какой стороны (стрелка), шепчет ли, за стеной ли он или из-за угла;
 - **пока говорите вы — сколько игроков вас слышат**: в радиусе голоса, а когда шепчете — в радиусе шёпота, и сколько не слышат (нет голосового чата, выключен звук). В группе Simple Voice Chat счёт идёт по правилам группы: ваша группа считается, где бы она ни была («· 3 в группе»), игроки рядом — только если группа открытая, а игрок из чужой изолированной группы вас не слышит. Для счёта группы нужен аддон на сервере;
 - режимы: выкл., когда говорят (по умолчанию: только пока кто-то говорит), всегда (ещё и сколько человек в радиусе); любой из четырёх углов; клавиша в «Управлении» переключает режимы;
 - размер (50–150%), прозрачность фона (вплоть до полного отсутствия) и **компактный** режим — одна строка на всех говорящих — на вкладке «Монитор».
@@ -550,18 +576,18 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 | Загрузчик | Minecraft | Файл | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.3+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.20.2 – 1.20.4 | `voice-physics-fabric-2.0.3+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
-| **Fabric / Quilt** | 1.20.5 – 1.20.6 | `voice-physics-fabric-2.0.3+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.3+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.3.jar` | 17+ | версия для Bukkit |
-| Forge | 1.20.1 | `voice-physics-forge-2.0.3+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.20.2 – 1.20.4 | `voice-physics-{neoforge,forge}-2.0.3+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
-| NeoForge / Forge | 1.20.5 – 1.20.6 | `voice-physics-{neoforge,forge}-2.0.3+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.3+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.1.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.20.2 – 1.20.4 | `voice-physics-fabric-2.1.0+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| **Fabric / Quilt** | 1.20.5 – 1.20.6 | `voice-physics-fabric-2.1.0+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.1.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.1.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.1.0.jar` | 17+ | версия для Bukkit |
+| Forge | 1.20.1 | `voice-physics-forge-2.1.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.20.2 – 1.20.4 | `voice-physics-{neoforge,forge}-2.1.0+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| NeoForge / Forge | 1.20.5 – 1.20.6 | `voice-physics-{neoforge,forge}-2.1.0+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.1.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.1.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-2.1.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** — полная версия, на клиенте и на сервере. Нужен [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
 - **Paper / Purpur / Spigot / Bukkit** — серверная часть в виде плагина: стены для игроков без аддона и профиль сервера для игроков с ним. Заходить можно с любым клиентом: с аддоном для Fabric, без него или совсем без модов. Плагин собран против API 1.20.1 и в CI проверяется на каждом релизе Paper от 1.20.1 до 26.3: каждый класс, метод, поле и переопределение, которые он использует, разрешаются одинаково (Paper 1.20.5 проверить нельзя: снимок его API больше не скачивается).
@@ -586,7 +612,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 3. Стены для игроков без аддона включены по умолчанию. Чтобы передавать профиль, поставьте `profile_mode` в `suggest` или `enforce` и выберите `profile_preset`. У каждого ключа в файле есть комментарий на английском и русском, файл перечитывается автоматически.
 
 **Сервер (Paper / Purpur / Spigot / Bukkit)**
-1. Положите `voice-physics-bukkit-2.0.3.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
+1. Положите `voice-physics-bukkit-2.1.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
 2. Запустите сервер один раз — он создаст `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. Настройки те же, что на Fabric (см. ниже), файл тоже перечитывается автоматически.
 

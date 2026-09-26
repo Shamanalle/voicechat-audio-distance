@@ -134,6 +134,9 @@ public class LangConsistencyTest {
         for (EnvironmentEffects.Weather w : EnvironmentEffects.Weather.values()) {
             used.add(PREFIX + "effects.weather." + w.name().toLowerCase(Locale.ROOT));
         }
+        for (RoomEstimate.Kind k : RoomEstimate.Kind.values()) {
+            used.add(k.getTranslationKey());
+        }
         used.add(PREFIX + "effects.sound_physics.detail");
         used.add("message.vc-audio-distance.server_profile.suggest");
         used.add("message.vc-audio-distance.server_profile.enforce");

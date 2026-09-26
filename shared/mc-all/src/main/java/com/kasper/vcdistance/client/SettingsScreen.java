@@ -1214,16 +1214,23 @@ public abstract class SettingsScreen extends Screen {
         c.text(tr("effects.now"), x, y + 5, Palette.TEXT_DIM);
         int rowY = y + 20;
 
-        // Echo: the room around you
+        // Echo: what kind of place you are in and what it does to voices
         RoomEstimate room = env.room();
         boolean reverbOn = shown.isReverbEnabled() && status != AudioDistancePlugin.OcclusionStatus.SOUND_PHYSICS;
-        double level = room.wet() * shown.getReverbStrength();
-        Component roomText = room.wet() < 0.02
-                ? tr("effects.room.open")
-                : tr("effects.room.closed", pct(room.enclosure()), blocks(room.meanFree()),
-                String.format(Locale.ROOT, "%.1f", room.decaySeconds()));
-        c.text(fit(c, roomText, w), x, rowY, reverbOn ? Palette.TEXT : Palette.TEXT_MUTED);
+        double level = (room.wet() > 0.0 ? room.wet() : room.echoes().loudest()) * shown.getReverbStrength();
+        c.text(fit(c, Component.translatable(room.kind().getTranslationKey()), w), x, rowY,
+                reverbOn && room.isAudible() ? Palette.TEXT : Palette.TEXT_MUTED);
         rowY += 12;
+        Component detail = null;
+        if (!room.echoes().isEmpty()) {
+            detail = tr("effects.room.repeat", String.format(Locale.ROOT, "%.2f", room.echoes().delays()[0]));
+        } else if (room.wet() > 0.0) {
+            detail = tr("effects.room.detail", String.format(Locale.ROOT, "%.1f", room.decaySeconds()), blocks(room.meanFree()));
+        }
+        if (detail != null && contentBottom - rowY > 72) {
+            c.text(fit(c, detail, w), x, rowY, Palette.TEXT_DIM);
+            rowY += 12;
+        }
         int barRight = right - 8 - c.width(Component.literal("100%")) - 4;
         c.fill(x, rowY + 1, barRight, rowY + 7, 0x22FFFFFF);
         c.fill(x, rowY + 1, x + (int) Math.round(Math.min(1.0, reverbOn ? level : 0.0) * (barRight - x)), rowY + 7,
