@@ -431,6 +431,22 @@ public final class ServerSettings {
         profilePreset = nameOf(preset);
     }
 
+    /**
+     * Takes the whole profile (curve, walls, materials, effects) from a {@link ProfileCode}; the
+     * preset becomes {@link #CUSTOM_PRESET}. Call {@link #save()} to keep it.
+     *
+     * @return {@code false} when the code is not valid (nothing changes)
+     */
+    public boolean importProfile(String code) {
+        DistanceConfig imported = profile.copy();
+        if (!ProfileCode.decode(code, imported)) {
+            return false;
+        }
+        profile.copyFrom(imported);
+        profilePreset = CUSTOM_PRESET;
+        return true;
+    }
+
     public void setServerWalls(boolean enabled) {
         this.serverWalls = enabled;
     }

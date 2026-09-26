@@ -61,7 +61,8 @@ It works on either side, and each side is useful alone:
 A small panel in a corner of the screen:
 - who is talking nearby, how far away and from which direction (an arrow), whispering or behind a wall;
 - **while you talk: how many players hear you** — within your voice range, or your whisper range while you whisper — and how many cannot (no voice chat, sound off);
-- modes: off, while talking (default: only when someone speaks), always (also how many are in range); any of the four corners; a key in Controls cycles the modes.
+- modes: off, while talking (default: only when someone speaks), always (also how many are in range); any of the four corners; a key in Controls cycles the modes;
+- size (50–150%), background opacity (down to none) and a **compact** mode with one line for everyone talking — on the Monitor tab.
 
 #### Monitor (client)
 Shows live:
@@ -70,7 +71,13 @@ Shows live:
 - who has no Simple Voice Chat, has it disconnected, turned the sound off, or is in a voice chat group — from your own Simple Voice Chat (2.6.1+: disconnected, sound off) and, when the server has the addon, from the server (all of them);
 - whether the server has the addon.
 
-Talking players come first, then the others by distance. A **radar** view shows the same from above, with the voice and whisper range as rings. Only players you can see are listed: spectators (unless you are one), invisible players and, on Paper, players hidden by vanish plugins are left out.
+Talking players come first, then the others by distance. A **radar** view shows the same from above, with the voice and whisper range as rings; marks differ in shape as well as color (square talking, cross whispering, diamond behind a wall). The monitor also shows how long the addon's own work takes per tick; above 2 ms it spaces that work out by itself. Only players you can see are listed: spectators (unless you are one), invisible players and, on Paper, players hidden by vanish plugins are left out.
+
+#### Colors for color blindness (client)
+*Colors: colorblind* on the Monitor tab switches the HUD, the monitor and the radar to colors that stay apart with red-green color blindness (Okabe–Ito): blue for talking, purple for whispers, orange for walls.
+
+#### Profile codes (client and server)
+*Copy profile code* on the Distance tab puts your curve, walls, materials and effects on the clipboard as one line (`VP1:…`); *Paste profile code* takes them from one. Friends can share their sound this way, and a server admin can load a player's code with `/vcd preset import <code>` (or give theirs out with `/vcd preset export`).
 
 #### Listen to the curve (client)
 *Listen* on the Distance tab plays a voice walking away from you along the current curve, with a marker moving over the graph, so you hear the fade before you use it.
@@ -105,6 +112,7 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
   | `/vcd reload` | Re-read the settings file |
   | `/vcd profile off\|suggest\|enforce` | How the profile is offered |
   | `/vcd preset vanilla\|realistic\|clear\|stealth\|custom` | The server's sound |
+  | `/vcd preset export` / `/vcd preset import <code>` | The server's profile as a profile code |
   | `/vcd walls 0-100\|off` | Wall strength for everyone, in % |
   | `/vcd serverwalls on\|off` | Walls for players without the addon |
   | `/vcd zones` | Worlds and regions with their own profile |
@@ -125,14 +133,14 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 
 | Loader | Minecraft | File | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.6.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.6.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.6.0.jar` | 17+ | Bukkit version |
-| Forge | 1.20.1 | `voice-physics-forge-1.6.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.6.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.7.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.7.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.7.0.jar` | 17+ | Bukkit version |
+| Forge | 1.20.1 | `voice-physics-forge-1.7.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.7.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** is the full version, on the client and on the server. It needs [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 - **Paper / Purpur / Spigot / Bukkit** is the server side as a plugin: walls for players without the addon, and the server profile for players with it. Players can join with any client: with the Fabric addon, without it, or without mods at all. The plugin is compiled against the 1.20.1 API and checked in CI against every Paper release from 1.20.1 to 26.3: every class, method, field and override it uses resolves the same way (Paper 1.20.5 cannot be checked: its API snapshot is no longer downloadable).
@@ -156,7 +164,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 3. Walls for players without the addon are on by default. To share a profile, set `profile_mode` to `suggest` or `enforce` and pick a `profile_preset`. Every key in the file has a comment in English and Russian, and the file is re-read automatically.
 
 **Server (Paper / Purpur / Spigot / Bukkit)**
-1. Put `voice-physics-bukkit-1.6.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
+1. Put `voice-physics-bukkit-1.7.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
 2. Start the server once; it creates `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. The settings are the same as on Fabric (see below), and the file is also re-read automatically.
 
@@ -179,6 +187,10 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 | `diffraction_enabled` | true / false | true | Voices come round walls through doorways |
 | `hud_mode` | `off` / `talking` / `always` | `talking` | Voice HUD |
 | `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_right` | Corner of the voice HUD |
+| `hud_scale` | 0.5 – 1.5 | 1.0 | Size of the voice HUD |
+| `hud_background` | 0.0 – 1.0 | 0.55 | Opacity of the HUD's background |
+| `hud_compact` | `true` / `false` | `false` | One HUD line for everyone talking |
+| `colorblind` | `true` / `false` | `false` | Colors for red-green color blindness |
 
 ### Server settings — `config/vc-audio-distance-server.properties`
 
@@ -294,7 +306,8 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 Небольшая панель в углу экрана:
 - кто рядом говорит, как далеко и с какой стороны (стрелка), шепчет ли и не за стеной ли;
 - **пока говорите вы — сколько игроков вас слышат**: в радиусе голоса, а когда шепчете — в радиусе шёпота, и сколько не слышат (нет голосового чата, выключен звук);
-- режимы: выкл., когда говорят (по умолчанию: только пока кто-то говорит), всегда (ещё и сколько человек в радиусе); любой из четырёх углов; клавиша в «Управлении» переключает режимы.
+- режимы: выкл., когда говорят (по умолчанию: только пока кто-то говорит), всегда (ещё и сколько человек в радиусе); любой из четырёх углов; клавиша в «Управлении» переключает режимы;
+- размер (50–150%), прозрачность фона (вплоть до полного отсутствия) и **компактный** режим — одна строка на всех говорящих — на вкладке «Монитор».
 
 #### Монитор (клиент)
 Показывает в реальном времени:
@@ -303,7 +316,13 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 - у кого нет Simple Voice Chat, у кого он не подключён, кто выключил звук и кто в группе голосового чата — от вашего Simple Voice Chat (2.6.1+: не подключён, звук выключен) и, если на сервере есть аддон, от сервера (всё);
 - есть ли аддон на сервере.
 
-Сначала идут те, кто говорит, затем остальные по расстоянию. Вид **«радар»** показывает то же сверху, кольца — дальность голоса и шёпота. В списке только те, кого вы видите: наблюдатели (если вы сами не наблюдатель), невидимые игроки и, на Paper, игроки, скрытые плагинами ваниша, не показываются.
+Сначала идут те, кто говорит, затем остальные по расстоянию. Вид **«радар»** показывает то же сверху, кольца — дальность голоса и шёпота; метки различаются не только цветом, но и формой (квадрат — говорит, крестик — шепчет, ромб — за стеной). Монитор показывает и сколько времени за тик занимает работа самого аддона; если больше 2 мс, аддон сам начинает делать её реже. В списке только те, кого вы видите: наблюдатели (если вы сами не наблюдатель), невидимые игроки и, на Paper, игроки, скрытые плагинами ваниша, не показываются.
+
+#### Цвета для дальтоников (клиент)
+Кнопка «Цвета: для дальтоников» на вкладке «Монитор» переключает HUD, монитор и радар на цвета, которые различимы при красно-зелёном дальтонизме (палитра Окабе–Ито): синий — говорит, фиолетовый — шёпот, оранжевый — стены.
+
+#### Коды профиля (клиент и сервер)
+Кнопка «Скопировать код профиля» на вкладке «Дистанция» кладёт вашу кривую, стены, материалы и эффекты в буфер обмена одной строкой (`VP1:…`), а «Вставить код профиля» берёт их из такой строки. Так друзья могут делиться звуком, а админ сервера — загрузить код игрока через `/vcd preset import <код>` (или раздать свой через `/vcd preset export`).
 
 #### Прослушивание кривой (клиент)
 Кнопка «Прослушать» на вкладке «Дистанция» проигрывает голос, который уходит от вас по текущей кривой, а по графику движется метка, — спад слышно ещё до игры.
@@ -338,6 +357,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
   | `/vcd reload` | Перечитать файл настроек |
   | `/vcd profile off\|suggest\|enforce` | Как предлагать профиль |
   | `/vcd preset vanilla\|realistic\|clear\|stealth\|custom` | Звук сервера |
+  | `/vcd preset export` / `/vcd preset import <код>` | Профиль сервера в виде кода профиля |
   | `/vcd walls 0-100\|off` | Сила стен для всех, в % |
   | `/vcd serverwalls on\|off` | Стены для игроков без аддона |
   | `/vcd zones` | Миры и регионы со своим профилем |
@@ -358,14 +378,14 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 | Загрузчик | Minecraft | Файл | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.6.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.6.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.6.0.jar` | 17+ | версия для Bukkit |
-| Forge | 1.20.1 | `voice-physics-forge-1.6.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.6.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.7.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.7.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.7.0.jar` | 17+ | версия для Bukkit |
+| Forge | 1.20.1 | `voice-physics-forge-1.7.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.7.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-1.7.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** — полная версия, на клиенте и на сервере. Нужен [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
 - **Paper / Purpur / Spigot / Bukkit** — серверная часть в виде плагина: стены для игроков без аддона и профиль сервера для игроков с ним. Заходить можно с любым клиентом: с аддоном для Fabric, без него или совсем без модов. Плагин собран против API 1.20.1 и в CI проверяется на каждом релизе Paper от 1.20.1 до 26.3: каждый класс, метод, поле и переопределение, которые он использует, разрешаются одинаково (Paper 1.20.5 проверить нельзя: снимок его API больше не скачивается).
@@ -389,7 +409,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 3. Стены для игроков без аддона включены по умолчанию. Чтобы передавать профиль, поставьте `profile_mode` в `suggest` или `enforce` и выберите `profile_preset`. У каждого ключа в файле есть комментарий на английском и русском, файл перечитывается автоматически.
 
 **Сервер (Paper / Purpur / Spigot / Bukkit)**
-1. Положите `voice-physics-bukkit-1.6.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
+1. Положите `voice-physics-bukkit-1.7.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
 2. Запустите сервер один раз — он создаст `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. Настройки те же, что на Fabric (см. ниже), файл тоже перечитывается автоматически.
 
@@ -412,6 +432,10 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 | `diffraction_enabled` | true / false | true | Голоса обходят стены через проёмы |
 | `hud_mode` | `off` / `talking` / `always` | `talking` | HUD голоса |
 | `hud_corner` | `top_left` / `top_right` / `bottom_left` / `bottom_right` | `top_right` | Угол экрана для HUD |
+| `hud_scale` | 0.5 – 1.5 | 1.0 | Размер HUD голоса |
+| `hud_background` | 0.0 – 1.0 | 0.55 | Непрозрачность фона HUD |
+| `hud_compact` | `true` / `false` | `false` | Одна строка HUD на всех говорящих |
+| `colorblind` | `true` / `false` | `false` | Цвета для красно-зелёного дальтонизма |
 
 ### Настройки сервера — `config/vc-audio-distance-server.properties`
 
