@@ -88,7 +88,7 @@ public final class LinkProtocol {
         if (zone != null) {
             p.setProperty("zone", zone.name());
         }
-        settings.profileIn(zone).writeTo(p, PROFILE_PREFIX);
+        settings.profileIn(zone, voiceDistance).writeTo(p, PROFILE_PREFIX);
         return write(p);
     }
 

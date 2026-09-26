@@ -103,16 +103,35 @@ final class BlockAcoustics {
         }
         String name = m.name().toLowerCase(Locale.ROOT);
         Sound sound = breakSound(block);
+        // Ice sounds like glass, so it is checked first
+        if (Tag.ICE.isTagged(m)) {
+            return AcousticMaterial.ICE;
+        }
         if (name.contains("glass") || isGlass(sound)) {
             return AcousticMaterial.GLASS;
         }
         if (name.endsWith("_bars")) {
             return AcousticMaterial.THIN;
         }
-        if (Tag.LOGS.isTagged(m) || Tag.PLANKS.isTagged(m) || name.contains("bamboo") || isWood(sound)) {
+        if (isMetal(sound) || name.contains("copper") || name.equals("iron_block") || name.equals("gold_block")
+                || name.equals("netherite_block") || name.endsWith("anvil")) {
+            return AcousticMaterial.METAL;
+        }
+        if (Tag.LOGS.isTagged(m) || Tag.PLANKS.isTagged(m) || Tag.MINEABLE_AXE.isTagged(m) || name.contains("bamboo")
+                || isWood(sound)) {
             return AcousticMaterial.WOOD;
         }
-        return AcousticMaterial.STONE;
+        // Everything else by the tool that mines it
+        if (Tag.MINEABLE_HOE.isTagged(m)) {
+            return AcousticMaterial.SOFT;
+        }
+        if (Tag.MINEABLE_SHOVEL.isTagged(m)) {
+            return AcousticMaterial.EARTH;
+        }
+        if (Tag.MINEABLE_PICKAXE.isTagged(m)) {
+            return AcousticMaterial.STONE;
+        }
+        return AcousticMaterial.OTHER;
     }
 
     // Sound was an enum and became a registry interface in 1.21.3, so sounds are compared through
@@ -131,6 +150,17 @@ final class BlockAcoustics {
     private static boolean isGlass(Sound sound) {
         try {
             return sound != null && Objects.equals(sound, Sound.BLOCK_GLASS_BREAK);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    private static boolean isMetal(Sound sound) {
+        try {
+            return sound != null && (Objects.equals(sound, Sound.BLOCK_METAL_BREAK)
+                    || Objects.equals(sound, Sound.BLOCK_COPPER_BREAK)
+                    || Objects.equals(sound, Sound.BLOCK_NETHERITE_BLOCK_BREAK)
+                    || Objects.equals(sound, Sound.BLOCK_ANVIL_BREAK));
         } catch (Throwable t) {
             return false;
         }

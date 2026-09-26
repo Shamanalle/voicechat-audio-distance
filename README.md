@@ -45,7 +45,7 @@ It works on either side, and each side is useful alone:
   - Three stone walls: about −18 dB and ~600 Hz.
 - **Real block shapes:** slabs, open doors, fences and carpets do not count as full cubes.
 - **Soft edges:** 5 parallel rays instead of one, so a voice around a corner or through a doorway fades gradually instead of switching.
-- **Materials:** wool muffles more than stone, glass and leaves less. Every material's weight is adjustable on the *Materials* tab.
+- **Materials:** 13 groups — stone, metal, earth & sand, wood, wool, soft blocks, glass, ice, doors, leaves, bars & fences, water & lava, and *other blocks* for everything else (bedrock, blocks from other mods). Wool and metal muffle more than stone, glass and leaves less. Every group's weight is adjustable on the *Materials* tab.
 - **Smooth:** filter changes glide over ~90 ms without clicks. Without a wall the audio passes through bit for bit.
 - **Sound Physics Remastered:** when it is installed, our wall muffling turns itself off so voices are not muffled twice.
 
@@ -79,12 +79,12 @@ Talking players come first, then the others by distance. A **radar** view shows 
 English, Russian, Ukrainian, German, Spanish, Brazilian Portuguese and Chinese (Simplified).
 
 #### Presets (client)
-- **Vanilla** — exactly like Simple Voice Chat.
-- **Realistic** — natural falloff with walls.
-- **Clear** — everyone stays understandable, for events.
-- **Stealth** — hide-and-seek, horror.
+- **Vanilla** — exactly like Simple Voice Chat: full volume over half the range, then a straight fade.
+- **Realistic** — natural 1/r falloff with walls; full volume up to about 12 blocks.
+- **Clear** — everyone stays understandable, for events; full volume up to about 24 blocks.
+- **Stealth** — hide-and-seek, horror; only people within about 7 blocks are loud.
 
-The preset that matches your current settings is highlighted.
+Realistic, Clear and Stealth set the full-volume zone in blocks, kept within sensible limits of the server's voice range (Realistic: 5–40% of it, Clear: 30–80%, Stealth: 5–30%). A voice at a given distance therefore sounds the same on servers with different ranges. When you join a server with another range, the preset you picked is fitted to it, unless you changed the values yourself. The preset that matches your current settings is highlighted.
 
 #### Server side (optional)
 Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot and Bukkit**. Both work the same way and work with the same client.
@@ -125,14 +125,14 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 
 | Loader | Minecraft | File | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.5.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.5.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voicechat-audio-distance-bukkit-1.5.0.jar` | 17+ | Bukkit version |
-| Forge | 1.20.1 | `voicechat-audio-distance-forge-1.5.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.5.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voicechat-audio-distance-neoforge-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voicechat-audio-distance-forge-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.6.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.6.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.6.0.jar` | 17+ | Bukkit version |
+| Forge | 1.20.1 | `voice-physics-forge-1.6.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.6.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** is the full version, on the client and on the server. It needs [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 - **Paper / Purpur / Spigot / Bukkit** is the server side as a plugin: walls for players without the addon, and the server profile for players with it. Players can join with any client: with the Fabric addon, without it, or without mods at all. The plugin is compiled against the 1.20.1 API and checked in CI against every Paper release from 1.20.1 to 26.3: every class, method, field and override it uses resolves the same way (Paper 1.20.5 cannot be checked: its API snapshot is no longer downloadable).
@@ -156,7 +156,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 3. Walls for players without the addon are on by default. To share a profile, set `profile_mode` to `suggest` or `enforce` and pick a `profile_preset`. Every key in the file has a comment in English and Russian, and the file is re-read automatically.
 
 **Server (Paper / Purpur / Spigot / Bukkit)**
-1. Put `voicechat-audio-distance-bukkit-1.5.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
+1. Put `voice-physics-bukkit-1.6.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
 2. Start the server once; it creates `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. The settings are the same as on Fabric (see below), and the file is also re-read automatically.
 
@@ -191,7 +191,7 @@ The file has six sections, and every key has a comment in English and Russian. C
 | Key | Values | Default | What it does |
 |---|---|---|---|
 | `walls_strength` | 0.0 – 1.0 | 0.6 | How strongly walls muffle voices; 0 turns walls off |
-| `material.<id>` | 0.0 – 3.0 | stone 1.0, wood 0.7, wool 1.4, glass 0.4, door 0.6, leaves 0.15, thin 0.2, liquid 0.35 | How much one block muffles; stone = 1.0 |
+| `material.<id>` | 0.0 – 3.0 | stone 1.0, metal 1.3, earth 0.9, wood 0.7, wool 1.4, soft 1.2, glass 0.4, ice 0.7, door 0.6, leaves 0.15, thin 0.2, liquid 0.35, other 1.0 | How much one block muffles; stone = 1.0 |
 
 **2. Players without the addon**
 
@@ -278,7 +278,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
   - Три каменные стены — около −18 дБ и ~600 Гц.
 - **Реальная форма блоков:** полублоки, открытые двери, заборы и ковры не считаются целым кубом.
 - **Мягкие края:** 5 параллельных лучей вместо одного, поэтому голос из-за угла или через дверной проём глохнет плавно, а не рывком.
-- **Материалы:** шерсть глушит сильнее камня, стекло и листва — слабее. Вес каждого материала меняется на вкладке «Материалы».
+- **Материалы:** 13 групп — камень, металл, земля и песок, дерево, шерсть, мягкие блоки, стекло, лёд, двери, листва, решётки и заборы, вода и лава и *остальные блоки* для всего прочего (бедрок, блоки из других модов). Шерсть и металл глушат сильнее камня, стекло и листва — слабее. Вес каждой группы меняется на вкладке «Материалы».
 - **Плавно:** параметры фильтра меняются за ~90 мс, без щелчков. Без стены звук проходит без изменений, бит в бит.
 - **Sound Physics Remastered:** если он установлен, наше приглушение стенами выключается само, чтобы голос не глушился дважды.
 
@@ -312,12 +312,12 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 Английский, русский, украинский, немецкий, испанский, португальский (Бразилия) и китайский (упрощённый).
 
 #### Пресеты (клиент)
-- **Ваниль** — ровно как Simple Voice Chat.
-- **Реализм** — естественный спад со стенами.
-- **Чётко** — всех хорошо слышно, для ивентов.
-- **Стелс** — прятки, хорроры.
+- **Ваниль** — ровно как Simple Voice Chat: полная громкость на половине дальности, дальше ровный спад.
+- **Реализм** — естественный спад 1/r со стенами; полная громкость примерно до 12 блоков.
+- **Чётко** — всех хорошо слышно, для ивентов; полная громкость примерно до 24 блоков.
+- **Стелс** — прятки, хорроры; громко слышно только тех, кто ближе 7 блоков.
 
-Пресет, совпадающий с текущими настройками, подсвечивается.
+«Реализм», «Чётко» и «Стелс» задают зону полной громкости в блоках, в разумных пределах от дальности голоса сервера («Реализм» — 5–40% от неё, «Чётко» — 30–80%, «Стелс» — 5–30%). Поэтому голос на одном и том же расстоянии звучит одинаково на серверах с разной дальностью. Когда вы заходите на сервер с другой дальностью, выбранный пресет подгоняется под неё, если вы не меняли значения сами. Пресет, совпадающий с текущими настройками, подсвечивается.
 
 #### Серверная часть (по желанию)
 Есть в составе мода для Fabric и в виде плагина для **Paper, Purpur, Spigot и Bukkit**. Оба варианта работают одинаково и с тем же клиентом.
@@ -358,14 +358,14 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 | Загрузчик | Minecraft | Файл | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voicechat-audio-distance-fabric-1.5.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voicechat-audio-distance-fabric-1.5.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voicechat-audio-distance-fabric-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voicechat-audio-distance-bukkit-1.5.0.jar` | 17+ | версия для Bukkit |
-| Forge | 1.20.1 | `voicechat-audio-distance-forge-1.5.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voicechat-audio-distance-{neoforge,forge}-1.5.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voicechat-audio-distance-neoforge-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voicechat-audio-distance-forge-1.5.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.6.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.6.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.6.0.jar` | 17+ | версия для Bukkit |
+| Forge | 1.20.1 | `voice-physics-forge-1.6.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.6.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-1.6.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** — полная версия, на клиенте и на сервере. Нужен [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
 - **Paper / Purpur / Spigot / Bukkit** — серверная часть в виде плагина: стены для игроков без аддона и профиль сервера для игроков с ним. Заходить можно с любым клиентом: с аддоном для Fabric, без него или совсем без модов. Плагин собран против API 1.20.1 и в CI проверяется на каждом релизе Paper от 1.20.1 до 26.3: каждый класс, метод, поле и переопределение, которые он использует, разрешаются одинаково (Paper 1.20.5 проверить нельзя: снимок его API больше не скачивается).
@@ -389,7 +389,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 3. Стены для игроков без аддона включены по умолчанию. Чтобы передавать профиль, поставьте `profile_mode` в `suggest` или `enforce` и выберите `profile_preset`. У каждого ключа в файле есть комментарий на английском и русском, файл перечитывается автоматически.
 
 **Сервер (Paper / Purpur / Spigot / Bukkit)**
-1. Положите `voicechat-audio-distance-bukkit-1.5.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
+1. Положите `voice-physics-bukkit-1.6.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
 2. Запустите сервер один раз — он создаст `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. Настройки те же, что на Fabric (см. ниже), файл тоже перечитывается автоматически.
 
@@ -424,7 +424,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 | Ключ | Значения | По умолчанию | Что делает |
 |---|---|---|---|
 | `walls_strength` | 0.0 – 1.0 | 0.6 | Насколько сильно стены глушат голоса; 0 выключает стены |
-| `material.<id>` | 0.0 – 3.0 | камень 1.0, дерево 0.7, шерсть 1.4, стекло 0.4, двери 0.6, листва 0.15, решётки и заборы 0.2, жидкости 0.35 | Насколько глушит один блок; камень = 1.0 |
+| `material.<id>` | 0.0 – 3.0 | камень 1.0, металл 1.3, земля 0.9, дерево 0.7, шерсть 1.4, мягкие 1.2, стекло 0.4, лёд 0.7, двери 0.6, листва 0.15, решётки и заборы 0.2, жидкости 0.35, остальные 1.0 | Насколько глушит один блок; камень = 1.0 |
 
 **2. Игроки без аддона**
 

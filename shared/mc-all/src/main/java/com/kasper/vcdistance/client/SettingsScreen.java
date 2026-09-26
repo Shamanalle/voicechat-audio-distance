@@ -68,13 +68,16 @@ public abstract class SettingsScreen extends Screen {
     }
 
     private static final Example[] EXAMPLES = {
+            // Roughly from the weakest to the strongest with the default weights
             new Example("glass", AcousticMaterial.GLASS, 1),
+            new Example("leaves", AcousticMaterial.LEAVES, 3),
             new Example("wood", AcousticMaterial.WOOD, 1),
+            new Example("earth", AcousticMaterial.EARTH, 1),
             new Example("stone1", AcousticMaterial.STONE, 1),
-            new Example("stone2", AcousticMaterial.STONE, 2),
-            new Example("stone3", AcousticMaterial.STONE, 3),
+            new Example("metal", AcousticMaterial.METAL, 1),
             new Example("wool", AcousticMaterial.WOOL, 1),
-            new Example("leaves", AcousticMaterial.LEAVES, 3)
+            new Example("stone2", AcousticMaterial.STONE, 2),
+            new Example("stone3", AcousticMaterial.STONE, 3)
     };
 
     protected final Screen parent;
@@ -226,7 +229,9 @@ public abstract class SettingsScreen extends Screen {
             Preset p = presets[i];
             int x = i == presets.length - 1 ? right - pw : left + i * (pw + GAP);
             Button b = Button.builder(Component.translatable(p.getTranslationKey()), btn -> {
-                p.apply(config);
+                double range = AudioDistancePlugin.getServerMaxDistance();
+                p.apply(config, range);
+                config.setChosenPreset(p, range);
                 rebuild();
             }).bounds(x, contentTop, pw, 20).tooltip(Tooltip.create(Component.translatable(p.getTooltipKey()))).build();
             presetButtons.add(b);
@@ -236,15 +241,18 @@ public abstract class SettingsScreen extends Screen {
         }
         refreshPresetButtons();
 
-        int rows = contentBottom - ROW * 3 + GAP;
+        // The graph keeps a readable shape instead of filling tall windows; the sliders follow it
         graphTop = contentTop + ROW + 2;
-        graphBottom = rows - 6;
+        int room = contentBottom - graphTop - 6 - (ROW * 3 - GAP);
+        graphBottom = graphTop + Math.min(room, Math.max(120, w * 2 / 5));
+        int rows = graphBottom + 6;
 
-        // Not an edit widget: listening is allowed while the server enforces its profile
-        // One width for both labels, so the button does not jump when it toggles
+        // Not an edit widget: listening is allowed while the server enforces its profile.
+        // It sits in the header strip above the graph panel, with one width for both labels so it
+        // does not jump when it toggles.
         int lw = Math.max(this.font.width(tr("listen")), this.font.width(tr("listen.stop"))) + 12;
         listenButton = Button.builder(previewStep >= 0 ? tr("listen.stop") : tr("listen"), b -> togglePreview())
-                .bounds(right - lw - 3, graphTop + 3, lw, 14).tooltip(tip("listen.tooltip")).build();
+                .bounds(right - lw, graphTop, lw, 14).tooltip(tip("listen.tooltip")).build();
         addRenderableWidget(listenButton);
 
         edit(Button.builder(modelLabel(), b -> {
@@ -298,25 +306,35 @@ public abstract class SettingsScreen extends Screen {
 
     private void initMaterials() {
         int w = right - left;
-        int colW = (w - GAP) / 2;
-        int top = contentTop + 14;
+        int top = contentTop + 25;
         AcousticMaterial[] materials = AcousticMaterial.values();
-        for (int i = 0; i < materials.length; i++) {
+        // Materials fill the grid; the reset button takes the cell after the last one
+        int cells = materials.length + 1;
+        int cols = 2;
+        if (top + ((cells + 1) / 2) * ROW - GAP > contentBottom && (w - GAP * 2) / 3 >= 110) {
+            cols = 3;
+        }
+        int colW = (w - GAP * (cols - 1)) / cols;
+        for (int i = 0; i < cells; i++) {
+            int col = i % cols;
+            int x = col == cols - 1 ? right - colW : left + col * (colW + GAP);
+            int y = top + (i / cols) * ROW;
+            if (y + 20 > contentBottom) {
+                break;
+            }
+            if (i == materials.length) {
+                edit(Button.builder(tr("materials.reset"), b -> {
+                    config.resetMaterials();
+                    rebuild();
+                }).bounds(x, y, colW, 20).build());
+                break;
+            }
             AcousticMaterial m = materials[i];
-            int x = i % 2 == 0 ? left : right - colW;
-            int y = top + (i / 2) * ROW;
             RangeSlider slider = new RangeSlider(x, y, colW, 20, 0.0, AcousticMaterial.MAX_WEIGHT, 0.05,
                     () -> shown().getMaterialWeight(m), v -> config.setMaterialWeight(m, v),
                     v -> tr("material.value", Component.translatable(m.getTranslationKey()), pct(v)));
             slider.setTooltip(Tooltip.create(Component.translatable(m.getTooltipKey())));
             edit(slider);
-        }
-        int resetY = top + ((materials.length + 1) / 2) * ROW;
-        if (resetY + 20 <= contentBottom) {
-            edit(Button.builder(tr("materials.reset"), b -> {
-                config.resetMaterials();
-                rebuild();
-            }).bounds(left, resetY, colW, 20).build());
         }
     }
 
@@ -448,7 +466,7 @@ public abstract class SettingsScreen extends Screen {
     private void refreshPresetButtons() {
         boolean enforced = AudioDistancePlugin.LINK.isEnforced();
         for (int i = 0; i < presetButtons.size(); i++) {
-            presetButtons.get(i).active = !enforced && !presetOrder.get(i).matches(config);
+            presetButtons.get(i).active = !enforced && !presetOrder.get(i).matches(config, AudioDistancePlugin.getServerMaxDistance());
         }
     }
 
@@ -490,7 +508,7 @@ public abstract class SettingsScreen extends Screen {
         }
         c.fill(activeTabX1 + 2, tabsBottom + 1, activeTabX2 - 2, tabsBottom + 3, Palette.ACCENT);
         for (int i = 0; i < presetBounds.size(); i++) {
-            if (presetOrder.get(i).matches(shown())) {
+            if (presetOrder.get(i).matches(shown(), AudioDistancePlugin.getServerMaxDistance())) {
                 int[] b = presetBounds.get(i);
                 c.fill(b[0] + 2, b[2] + 1, b[1] - 2, b[2] + 3, Palette.ACCENT);
             }
@@ -498,7 +516,10 @@ public abstract class SettingsScreen extends Screen {
         switch (tab) {
             case DISTANCE -> paintDistance(c, mouseX, mouseY);
             case WALLS -> paintWalls(c);
-            case MATERIALS -> c.text(fit(c, tr("materials.hint"), right - left), left, contentTop, Palette.TEXT_MUTED);
+            case MATERIALS -> {
+                c.text(fit(c, tr("materials.hint"), right - left), left, contentTop, Palette.TEXT_DIM);
+                c.text(fit(c, tr("materials.hint_other"), right - left), left, contentTop + 11, Palette.TEXT_MUTED);
+            }
             case EFFECTS -> paintEffects(c);
             case MONITOR -> paintMonitor(c, mouseX, mouseY);
         }
@@ -509,12 +530,13 @@ public abstract class SettingsScreen extends Screen {
     private void paintDistance(Canvas c, int mouseX, int mouseY) {
         int x1 = left;
         int x2 = right;
-        int y1 = graphTop;
+        // Header strip (summary, legend, listen button) above the panel
+        int headerY = graphTop + 3;
+        int y1 = graphTop + 17;
         int y2 = graphBottom;
-        if (y2 - y1 < 44) {
+        if (y2 - y1 < 40) {
             return;
         }
-        c.frame(x1, y1, x2, y2, Palette.PANEL, Palette.PANEL_BORDER);
 
         double maxDist = AudioDistancePlugin.getServerMaxDistance();
         DistanceConfig shown = shown();
@@ -532,23 +554,24 @@ public abstract class SettingsScreen extends Screen {
         Component voice = tr("legend.voice");
         Component whisper = tr("legend.whisper");
         int legendW = c.width(voice) + c.width(whisper) + 36;
-        int headerY = y1 + 5;
-        // The header ends where the listen button starts
-        int headRight = listenButton != null ? listenButton.getX() - 6 : x2 - 6;
+        int headRight = listenButton != null ? listenButton.getX() - 8 : x2;
         boolean legend = c.width(summary) + legendW + 14 <= headRight - x1;
-        c.text(fit(c, summary, (legend ? headRight - legendW : headRight) - x1 - 6), x1 + 6, headerY, Palette.TEXT_DIM);
+        c.text(fit(c, summary, (legend ? headRight - legendW : headRight) - x1 - 2), x1 + 1, headerY, Palette.TEXT_DIM);
         if (legend) {
             int lx = headRight - c.width(whisper);
             c.text(whisper, lx, headerY, Palette.TEXT_DIM);
-            c.fill(lx - 11, headerY + 3, lx - 4, headerY + 5, Palette.WHISPER);
+            c.dashedHLine(lx - 12, lx - 3, headerY + 4, 2, Palette.WHISPER);
             lx -= 16 + c.width(voice);
             c.text(voice, lx, headerY, Palette.TEXT_DIM);
-            c.fill(lx - 11, headerY + 3, lx - 4, headerY + 5, Palette.ACCENT_LINE);
+            c.fill(lx - 12, headerY + 3, lx - 3, headerY + 5, Palette.ACCENT_LINE);
         }
 
-        int px1 = x1 + 8;
+        c.frame(x1, y1, x2, y2, Palette.PANEL, Palette.PANEL_BORDER);
+        // Volume scale on the left, distance scale along the bottom
+        int scaleW = c.width(Component.literal("100%")) + 4;
+        int px1 = x1 + 4 + scaleW;
         int px2 = x2 - 8;
-        int py1 = y1 + 20;
+        int py1 = y1 + 8;
         int py2 = y2 - 13;
         int pw = px2 - px1;
         int ph = py2 - py1;
@@ -556,12 +579,22 @@ public abstract class SettingsScreen extends Screen {
             return;
         }
 
-        for (int i = 1; i < 4; i++) {
-            c.hLine(px1, px2, py2 - ph * i / 4, Palette.GRID);
-            c.vLine(px1 + pw * i / 4, py1, py2, Palette.GRID);
+        for (int i = 1; i <= 4; i++) {
+            int gy = py2 - ph * i / 4;
+            if (i < 4) {
+                c.hLine(px1, px2, gy, Palette.GRID);
+                c.vLine(px1 + pw * i / 4, py1, py2, Palette.GRID);
+            }
+            if (i % 2 == 0 || ph >= 60) {
+                c.right(Component.literal((25 * i) + "%"), px1 - 3, gy - 3, Palette.TEXT_MUTED);
+            }
         }
+        // Full-volume zone: shaded, with its edge marked
         int refX = px1 + (int) Math.round(ref * pw);
         c.fill(px1, py1, refX, py2, Palette.ACCENT_ZONE);
+        if (ref > 0.0 && refX < px2) {
+            c.dashedVLine(refX, py1, py2, 2, Palette.withAlpha(Palette.ACCENT, 0x70));
+        }
         c.hLine(px1, px2 + 1, py2, Palette.PANEL_BORDER);
 
         // Voice curve: filled area + line
@@ -579,20 +612,29 @@ public abstract class SettingsScreen extends Screen {
             prevY = y;
         }
 
-        // Whisper curve (dashed) over the whisper range
+        // Whisper curve over the whisper range, dashed along its length so steep parts stay dashed too
         double whisperRolloff = AudioDistancePlugin.effectiveRolloff(true);
         int whisperEnd = Math.max(1, (int) Math.round(AudioDistancePlugin.LINK.whisperShare() * pw));
         prevY = -1;
+        int run = 0;
         for (int i = 0; i <= whisperEnd; i++) {
             double g = AudioPhysics.calculateGain((double) i / whisperEnd, model, whisperRolloff, floor, ref);
             int y = py2 - (int) Math.round(g * ph);
-            if ((i / 3) % 2 == 0) {
-                int top = prevY < 0 ? y : Math.min(prevY, y);
-                int bottom = prevY < 0 ? y : Math.max(prevY, y);
-                c.fill(px1 + i, top, px1 + i + 1, bottom + 1, Palette.WHISPER);
+            int x = px1 + i;
+            int from = prevY < 0 ? y : prevY;
+            int dir = y >= from ? 1 : -1;
+            for (int yy = from; ; yy += dir) {
+                if ((run++ / 4) % 2 == 0) {
+                    c.fill(x, yy, x + 1, yy + 1, Palette.WHISPER);
+                }
+                if (yy == y) {
+                    break;
+                }
             }
             prevY = y;
         }
+        // Where the whisper range ends, on the distance scale
+        c.fill(px1 + whisperEnd, py2 + 1, px1 + whisperEnd + 1, py2 + 4, Palette.WHISPER);
 
         // Walk-away preview: where the voice is now
         if (previewStep >= 0) {
@@ -603,7 +645,7 @@ public abstract class SettingsScreen extends Screen {
             c.vLine(sx, py1, py2, Palette.withAlpha(Palette.ACCENT, 0xA0));
             c.fill(sx - 2, sy - 2, sx + 3, sy + 3, 0xFF000000);
             c.fill(sx - 1, sy - 1, sx + 2, sy + 2, Palette.ACCENT_LINE);
-            badge(c, tr("listen.at", blocks(f * maxDist), pct(g)), sx, sy - 17 >= y1 + 15 ? sy - 17 : sy + 5);
+            badge(c, tr("listen.at", blocks(f * maxDist), pct(g)), sx, sy - 17 >= y1 + 2 ? sy - 17 : sy + 5);
         }
 
         if (floor > 0.0) {
@@ -652,14 +694,14 @@ public abstract class SettingsScreen extends Screen {
         if (hovered != null) {
             double g = AudioDistancePlugin.curveGain(hovered.getDistance(), hovered.getMaxDistance(), hovered.isWhispering());
             badge(c, tr("inspect.speaker", speakerName(hovered), blocks(hovered.getDistance()), pct(g)),
-                    hoverX, hoverY - 17 >= y1 + 15 ? hoverY - 17 : hoverY + 5);
+                    hoverX, hoverY - 17 >= y1 + 2 ? hoverY - 17 : hoverY + 5);
         } else if (mouseX >= px1 && mouseX <= px2 && mouseY >= py1 && mouseY <= py2) {
             double f = (double) (mouseX - px1) / pw;
             double g = AudioPhysics.calculateGain(f, model, rolloff, floor, ref);
             int gy = py2 - (int) Math.round(g * ph);
             c.vLine(mouseX, py1, py2, 0x66FFFFFF);
             c.fill(mouseX - 1, gy - 1, mouseX + 2, gy + 2, 0xFFFFFFFF);
-            int badgeY = gy - 17 >= y1 + 15 ? gy - 17 : Math.min(py2 - 12, gy + 5);
+            int badgeY = gy - 17 >= y1 + 2 ? gy - 17 : Math.min(py2 - 12, gy + 5);
             badge(c, tr("inspect", blocks(f * maxDist), pct(g), db(g)), mouseX, badgeY);
         }
     }
@@ -682,7 +724,9 @@ public abstract class SettingsScreen extends Screen {
 
         DistanceConfig shown = shown();
         boolean on = shown.isOcclusionEnabled();
-        c.frame(left, y, right, contentBottom, Palette.PANEL, Palette.PANEL_BORDER);
+        // The panel is as tall as its rows, not the whole window
+        int panelBottom = Math.min(contentBottom, y + 20 + EXAMPLES.length * 14 + 18);
+        c.frame(left, y, right, panelBottom, Palette.PANEL, Palette.PANEL_BORDER);
         Component header = on ? tr("walls.preview") : tr("walls.preview_off");
         c.text(fit(c, header, right - left - 12), left + 6, y + 5, on ? Palette.TEXT_DIM : Palette.TEXT_MUTED);
 
@@ -702,7 +746,7 @@ public abstract class SettingsScreen extends Screen {
         double strength = shown.getOcclusionStrength();
         int rowY = y + 20;
         for (Example e : EXAMPLES) {
-            if (rowY + 10 > contentBottom - 4) {
+            if (rowY + 10 > panelBottom - 4) {
                 break;
             }
             double thickness = e.blocks * shown.getMaterialWeight(e.material);
@@ -721,8 +765,8 @@ public abstract class SettingsScreen extends Screen {
             }
             rowY += 14;
         }
-        if (rowY + 22 <= contentBottom - 4) {
-            c.text(fit(c, tr("walls.hint"), right - left - 16), left + 8, contentBottom - 14, Palette.TEXT_MUTED);
+        if (rowY + 18 <= panelBottom) {
+            c.text(fit(c, tr("walls.hint"), right - left - 16), left + 8, panelBottom - 14, Palette.TEXT_MUTED);
         }
     }
 

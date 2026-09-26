@@ -47,4 +47,11 @@ public interface Canvas {
             fill(x, y, Math.min(x + dash, x2), y + 1, argb);
         }
     }
+
+    /** Dashed vertical line: {@code dash} pixels on, {@code dash} off. */
+    default void dashedVLine(int x, int y1, int y2, int dash, int argb) {
+        for (int y = y1; y < y2; y += dash * 2) {
+            fill(x, y, x + 1, Math.min(y + dash, y2), argb);
+        }
+    }
 }

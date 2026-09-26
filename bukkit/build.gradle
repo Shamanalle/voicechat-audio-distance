@@ -10,7 +10,7 @@ evaluationDependsOn(':common')
 version = project.mod_version
 
 base {
-    archivesName = "voicechat-audio-distance-bukkit"
+    archivesName = "voice-physics-bukkit"
 }
 
 repositories {

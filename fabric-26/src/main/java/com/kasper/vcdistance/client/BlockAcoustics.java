@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.IronBarsBlock;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.StainedGlassBlock;
 import net.minecraft.world.level.block.StainedGlassPaneBlock;
 import net.minecraft.world.level.block.TransparentBlock;
@@ -76,6 +77,10 @@ public final class BlockAcoustics {
         if (state.is(BlockTags.DOORS) || state.is(BlockTags.TRAPDOORS)) {
             return AcousticMaterial.DOOR;
         }
+        // Ice sounds like glass, so it is checked first
+        if (state.is(BlockTags.ICE)) {
+            return AcousticMaterial.ICE;
+        }
         if (block instanceof TransparentBlock || block instanceof StainedGlassBlock || block instanceof StainedGlassPaneBlock) {
             return AcousticMaterial.GLASS;
         }
@@ -85,9 +90,28 @@ public final class BlockAcoustics {
         if (!state.canOcclude()) {
             return null;
         }
-        if (state.is(BlockTags.LOGS) || state.is(BlockTags.PLANKS)) {
+        return byTool(state);
+    }
+
+    /** Solid blocks by their sound and by the tool that mines them. */
+    static AcousticMaterial byTool(BlockState state) {
+        SoundType sound = state.getSoundType();
+        if (sound == SoundType.METAL || sound == SoundType.COPPER || sound == SoundType.NETHERITE_BLOCK
+                || sound == SoundType.ANVIL) {
+            return AcousticMaterial.METAL;
+        }
+        if (state.is(BlockTags.LOGS) || state.is(BlockTags.PLANKS) || state.is(BlockTags.MINEABLE_WITH_AXE)) {
             return AcousticMaterial.WOOD;
         }
-        return AcousticMaterial.STONE;
+        if (state.is(BlockTags.MINEABLE_WITH_HOE)) {
+            return AcousticMaterial.SOFT;
+        }
+        if (state.is(BlockTags.MINEABLE_WITH_SHOVEL)) {
+            return AcousticMaterial.EARTH;
+        }
+        if (state.is(BlockTags.MINEABLE_WITH_PICKAXE)) {
+            return AcousticMaterial.STONE;
+        }
+        return AcousticMaterial.OTHER;
     }
 }

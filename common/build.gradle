@@ -3,7 +3,7 @@ plugins {
 }
 
 base {
-    archivesName = "voicechat-audio-distance-common"
+    archivesName = "voice-physics-common"
 }
 
 repositories {
