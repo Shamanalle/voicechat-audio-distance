@@ -139,7 +139,11 @@ public final class AudioDistanceBukkit extends JavaPlugin implements Listener {
             public void message(UUID player, String text) {
                 Player p = getServer().getPlayer(player);
                 if (p != null) {
-                    p.sendMessage(text);
+                    try {
+                        ChatLink.send(p, text);
+                    } catch (LinkageError e) {
+                        p.sendMessage(text); // Spigot: no Adventure, the link stays plain text
+                    }
                 }
             }
 

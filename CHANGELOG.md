@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - *Where to upload* when uploading a release to the stores by hand.
 
 #### Fixed
+- The addon requirement's message now has a **clickable link** to the download page (Fabric, NeoForge and Paper; plain text on Spigot).
 - In **open** groups the voice nearby players hear now follows zone range, sneaking and the megaphone (`open_group_range`, on by default).
 
 ### Русский
@@ -36,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Выбор площадки (*Where to upload*) при ручной выгрузке релиза.
 
 #### Исправлено
+- В сообщении о требовании аддона ссылка на скачивание теперь **кликабельная** (Fabric, NeoForge и Paper; на Spigot — простым текстом).
 - В **открытых** группах голос, который слышат игроки рядом, теперь подчиняется дальности зон, корточкам и мегафону (`open_group_range`, по умолчанию включено).
 
 ## [2.0.0] - 2026-09-26
