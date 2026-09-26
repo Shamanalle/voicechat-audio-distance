@@ -104,7 +104,7 @@ public class DistanceConfigTest {
         DistanceConfig c = new DistanceConfig(file);
         c.load();
         assertEquals(Preset.REALISTIC, c.getChosenPreset());
-        assertEquals(8.0 / 48, c.getOpenalReferenceRatio(), 1e-9);
+        assertEquals(12.0 / 48, c.getOpenalReferenceRatio(), 1e-9);
         assertEquals(0.4, c.getOcclusionStrength(), 1e-9);
 
         // Own values are left alone

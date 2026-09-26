@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 #### Changed
 - **Presets fit the server's voice range:**
-  - Realistic, Clear and Stealth now set full volume in blocks: about 8, 24 and 5. Before, it was 60%, 80% and 35% of the range, so on a 48-block server Realistic stayed at full volume up to 29 blocks and Stealth up to 17.
+  - Realistic, Clear and Stealth now set full volume in blocks: about 12, 24 and 7. Before, it was 60%, 80% and 35% of the range, so on a 48-block server Realistic stayed at full volume up to 29 blocks and Stealth up to 17.
   - The zone is kept within limits of the server's range, so a voice at a given distance sounds the same on servers with different ranges.
   - The preset you picked is fitted again when you join a server with another range, unless you changed the values yourself.
   - Settings that still hold one of the old presets move to the new one; walls are kept.
@@ -48,7 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 #### Изменено
 - **Пресеты подстраиваются под дальность голоса сервера:**
-  - «Реализм», «Чётко» и «Стелс» теперь задают полную громкость в блоках: примерно 8, 24 и 5. Раньше это было 60%, 80% и 35% от дальности, поэтому на сервере с 48 блоками «Реализм» держал полную громкость до 29 блоков, а «Стелс» — до 17.
+  - «Реализм», «Чётко» и «Стелс» теперь задают полную громкость в блоках: примерно 12, 24 и 7. Раньше это было 60%, 80% и 35% от дальности, поэтому на сервере с 48 блоками «Реализм» держал полную громкость до 29 блоков, а «Стелс» — до 17.
   - Зона не выходит за пределы, заданные от дальности сервера, поэтому голос на одном и том же расстоянии звучит одинаково на серверах с разной дальностью.
   - Выбранный пресет подгоняется заново, когда вы заходите на сервер с другой дальностью, если вы не меняли значения сами.
   - Настройки, в которых остался один из старых пресетов, переходят на новый; стены сохраняются.

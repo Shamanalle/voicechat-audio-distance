@@ -10,13 +10,13 @@ public enum Preset {
     VANILLA("default", AttenuationModel.LINEAR, 1.00, 0.00, FullVolume.share(0.50), 1.00, false, 0.60),
     /**
      * Natural 1/r falloff with a soft floor and wall muffling. Loudness depends on the distance in
-     * blocks, as in real life, so full volume ends about 8 blocks away whatever the server's range.
+     * blocks, as in real life, so full volume ends about 12 blocks away whatever the server's range.
      */
-    REALISTIC("realistic", AttenuationModel.REALISTIC_INVERSE, 0.70, 0.05, FullVolume.blocks(8, 0.05, 0.35), 1.10, true, 0.70),
+    REALISTIC("realistic", AttenuationModel.REALISTIC_INVERSE, 0.70, 0.05, FullVolume.blocks(12, 0.05, 0.40), 1.10, true, 0.70),
     /** Everyone stays understandable: gentle falloff, high floor, no walls. */
     CLEAR("high_audibility", AttenuationModel.LINEAR, 0.35, 0.25, FullVolume.blocks(24, 0.30, 0.80), 0.90, false, 0.30),
     /** Short, tense range for horror and stealth maps: only people right next to you are loud. */
-    ATMOSPHERIC("atmospheric", AttenuationModel.EXPONENTIAL, 1.00, 0.00, FullVolume.blocks(5, 0.05, 0.25), 1.40, true, 0.85);
+    ATMOSPHERIC("atmospheric", AttenuationModel.EXPONENTIAL, 1.00, 0.00, FullVolume.blocks(7, 0.05, 0.30), 1.40, true, 0.85);
 
     /**
      * The full-volume zone of a preset: a share of the server's voice range, or a distance in blocks
