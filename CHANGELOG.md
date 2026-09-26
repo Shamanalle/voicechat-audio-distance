@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [2.0.0] - 2026-09-26
+
+### English
+
+The first **beta**. Every version before it is an alpha.
+
+#### Added
+- **Lock only part of the server's profile.** With `profile_mode=enforce`, `profile_locked` (or `/vcd lock`) picks which parts players cannot change: the curve, walls, materials, effects, all of them or none. The parts left out stay the player's own, and the settings screen locks only the tabs that are locked.
+- **No seeing through walls.** `allow_monitor=false` (or `/vcd monitor off`) turns off the monitor, the radar and nearby players in the HUD for players with the addon, for PvP. Their own messages stay.
+- Both are on the Server tab, and `/vcd status` shows them.
+
+### Русский
+
+Первая **бета**. Все версии до неё считаются альфа-версиями.
+
+#### Добавлено
+- **Закрепление части профиля сервера.** При `profile_mode=enforce` настройка `profile_locked` (или `/vcd lock`) выбирает, что игроки не могут менять: кривую, стены, материалы, эффекты, всё сразу или ничего. Остальное остаётся как у игрока, а на экране настроек блокируются только закреплённые вкладки.
+- **Без взгляда сквозь стены.** `allow_monitor=false` (или `/vcd monitor off`) выключает монитор, радар и игроков рядом в HUD у игроков с аддоном, для PvP. Собственные сообщения остаются.
+- Обе настройки есть на вкладке «Сервер» и в `/vcd status`.
+
 ## [1.8.0] - 2026-09-26
 
 ### English

@@ -59,7 +59,8 @@ public final class LinkProtocol {
      */
     public record ServerProfile(ServerSettings.ProfileMode mode, DistanceConfig config,
                                 double voiceDistance, double whisperDistance, boolean serverWalls, String zone,
-                                String zoneMessage, Double echo, boolean admin) {
+                                String zoneMessage, Double echo, boolean admin,
+                                java.util.Set<DistanceConfig.Part> locked, boolean monitor) {
 
         /** Whisper range as a share of the voice range, for the distance graph. */
         public double whisperShare() {
@@ -115,6 +116,8 @@ public final class LinkProtocol {
         if (admin) {
             p.setProperty("admin", "true");
         }
+        p.setProperty("locked", DistanceConfig.Part.format(settings.getLockedParts()));
+        p.setProperty("monitor", String.valueOf(settings.isMonitorAllowed()));
         settings.profileIn(zone, voiceDistance).writeTo(p, PROFILE_PREFIX);
         return write(p);
     }
@@ -137,7 +140,15 @@ public final class LinkProtocol {
                 p.getProperty("zone_message"),
                 p.getProperty("zone_echo") == null ? null
                         : DistanceConfig.clamp(DistanceConfig.parseDouble(p, "zone_echo", 0.0), 0.0, 1.0),
-                DistanceConfig.parseBoolean(p, "admin", false));
+                DistanceConfig.parseBoolean(p, "admin", false),
+                // Servers before 1.9.0 lock the whole profile and allow the monitor
+                lockedOf(p.getProperty("locked")),
+                DistanceConfig.parseBoolean(p, "monitor", true));
+    }
+
+    private static java.util.Set<DistanceConfig.Part> lockedOf(String text) {
+        java.util.Set<DistanceConfig.Part> parts = DistanceConfig.Part.parseSet(text);
+        return parts == null ? java.util.EnumSet.allOf(DistanceConfig.Part.class) : parts;
     }
 
     /** The addon version in a hello message ("1.8.0+mc26.x"), or "" when missing. */

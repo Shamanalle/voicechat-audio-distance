@@ -18,6 +18,8 @@ public final class ServerLink {
     public static final long NEARBY_STALE_NANOS = TimeUnit.SECONDS.toNanos(4);
 
     private volatile LinkProtocol.ServerProfile profile;
+    /** The last effective configuration while enforced, rebuilt when the profile or the player's own settings change. */
+    private volatile Merged merged;
     private volatile boolean noticePending;
     private volatile ZoneNotice zoneNotice;
     private volatile Nearby nearby;
@@ -33,6 +35,9 @@ public final class ServerLink {
      * @param message the zone's own entry message, or {@code null}
      */
     public record ZoneNotice(String name, String message) {
+    }
+
+    private record Merged(LinkProtocol.ServerProfile profile, DistanceConfig own, int ownRevision, DistanceConfig config) {
     }
 
     private record Nearby(Map<UUID, VoiceState> states, long receivedNanos) {
@@ -106,10 +111,37 @@ public final class ServerLink {
         return p != null && p.mode() == ServerSettings.ProfileMode.SUGGEST;
     }
 
-    /** The configuration to use right now: the server's when enforced, otherwise the player's own. */
+    /**
+     * The configuration to use right now: while the server enforces its profile, the player's own
+     * with the locked parts taken from the server; otherwise the player's own.
+     */
     public DistanceConfig effective(DistanceConfig own) {
         LinkProtocol.ServerProfile p = profile;
-        return p != null && p.mode() == ServerSettings.ProfileMode.ENFORCE ? p.config() : own;
+        if (p == null || p.mode() != ServerSettings.ProfileMode.ENFORCE) {
+            return own;
+        }
+        Merged m = merged;
+        if (m != null && m.profile == p && m.own == own && m.ownRevision == own.getRevision()) {
+            return m.config;
+        }
+        DistanceConfig c = own.copy();
+        for (DistanceConfig.Part part : p.locked()) {
+            c.copyPart(part, p.config());
+        }
+        merged = new Merged(p, own, own.getRevision(), c);
+        return c;
+    }
+
+    /** {@code true} while the server enforces its profile and keeps {@code part} of it locked. */
+    public boolean isLocked(DistanceConfig.Part part) {
+        LinkProtocol.ServerProfile p = profile;
+        return p != null && p.mode() == ServerSettings.ProfileMode.ENFORCE && p.locked().contains(part);
+    }
+
+    /** {@code false} when the server turned off the monitor, the radar and nearby players in the HUD. */
+    public boolean isMonitorAllowed() {
+        LinkProtocol.ServerProfile p = profile;
+        return p == null || p.monitor();
     }
 
     /** Whisper range as a share of the voice range; 0.5 (Simple Voice Chat's default) when unknown. */
