@@ -61,6 +61,10 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     /** Server-side settings and wall muffling. */
     public static final ServerSettings SERVER_SETTINGS = new ServerSettings();
     public static final ServerWalls SERVER_WALLS = new ServerWalls(SERVER_SETTINGS);
+    /** Online players for the voice rules, refreshed by the server tick. */
+    public static final ServerPlayers PLAYERS = new ServerPlayers();
+    /** The addon requirement (require_addon). */
+    public static final AddonCheck ADDON_CHECK = new AddonCheck();
     /** Which sound zone each player with the addon was last sent (server). */
     public static final ZoneTracker ZONES = new ZoneTracker();
 
