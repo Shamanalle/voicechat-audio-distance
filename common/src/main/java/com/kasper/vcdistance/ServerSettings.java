@@ -104,7 +104,7 @@ public final class ServerSettings {
     }
 
     public static final double DEFAULT_MEGAPHONE_MULTIPLIER = 2.5;
-    public static final String DEFAULT_ADDON_URL = "https://github.com/Shamanalle/voicechat-audio-distance/releases";
+    public static final String DEFAULT_ADDON_URL = "https://github.com/Shamanalle/voice-physics/releases";
 
     private final Path path;
     private final DistanceConfig profile;

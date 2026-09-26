@@ -59,7 +59,7 @@ jobs:
             exit 0
           fi
           api=https://api.modrinth.com/v2
-          agent="Shamanalle/voicechat-audio-distance (release notes sync)"
+          agent="Shamanalle/voice-physics (release notes sync)"
           curl -fsS -A "${agent}" -H "Authorization: ${MODRINTH_TOKEN}" "${api}/project/${project}/version" > versions.json
           failed=0
           while IFS=$'\t' read -r id number; do

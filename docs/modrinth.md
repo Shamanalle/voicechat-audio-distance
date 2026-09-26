@@ -73,7 +73,7 @@ It works on **either side alone**:
 
 Minecraft 1.20.1, 1.21.x and 26.x.
 
-Guides, all settings and the changelog: [GitHub](https://github.com/Shamanalle/voicechat-audio-distance).
+Guides, all settings and the changelog: [GitHub](https://github.com/Shamanalle/voice-physics).
 
 ---
 
@@ -152,4 +152,4 @@ Guides, all settings and the changelog: [GitHub](https://github.com/Shamanalle/v
 
 Minecraft 1.20.1, 1.21.x и 26.x.
 
-Инструкции, все настройки и список изменений: [GitHub](https://github.com/Shamanalle/voicechat-audio-distance).
+Инструкции, все настройки и список изменений: [GitHub](https://github.com/Shamanalle/voice-physics).

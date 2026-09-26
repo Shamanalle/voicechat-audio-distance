@@ -1,7 +1,7 @@
 blank_issues_enabled: true
 contact_links:
   - name: "📖 README — installation and settings / установка и настройки"
-    url: https://github.com/Shamanalle/voicechat-audio-distance#readme
+    url: https://github.com/Shamanalle/voice-physics#readme
     about: "Versions, files per loader, client and server settings / Версии, файлы для загрузчиков, настройки клиента и сервера"
   - name: "🎙️ Simple Voice Chat"
     url: https://github.com/henkelmax/simple-voice-chat/issues

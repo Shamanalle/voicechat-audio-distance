@@ -58,7 +58,7 @@ jobs:
           status=$(curl -sS -o response.txt -w '%{http_code}' -X PATCH \
             -H "Authorization: ${MODRINTH_TOKEN}" \
             -H "Content-Type: application/json" \
-            -H "User-Agent: Shamanalle/voicechat-audio-distance (GitHub Actions)" \
+            -H "User-Agent: Shamanalle/voice-physics (GitHub Actions)" \
             --data @request.json \
             "https://api.modrinth.com/v2/project/${project}")
           if [ "${status}" = "204" ]; then

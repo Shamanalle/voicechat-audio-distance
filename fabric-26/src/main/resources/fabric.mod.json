@@ -9,9 +9,9 @@
     "Shamanalle"
   ],
   "contact": {
-    "homepage": "https://github.com/Shamanalle/voicechat-audio-distance",
-    "sources": "https://github.com/Shamanalle/voicechat-audio-distance",
-    "issues": "https://github.com/Shamanalle/voicechat-audio-distance/issues"
+    "homepage": "https://github.com/Shamanalle/voice-physics",
+    "sources": "https://github.com/Shamanalle/voice-physics",
+    "issues": "https://github.com/Shamanalle/voice-physics/issues"
   },
   "license": "MIT",
   "environment": "*",
