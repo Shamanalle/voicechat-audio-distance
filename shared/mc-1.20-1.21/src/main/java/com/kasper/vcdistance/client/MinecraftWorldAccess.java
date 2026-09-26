@@ -132,19 +132,7 @@ public final class MinecraftWorldAccess implements WorldAccess {
 
     @Override
     public boolean isOpenForSound(int x, int y, int z) {
-        Level level = Minecraft.getInstance().level;
-        if (level == null) {
-            return true;
-        }
-        BlockPos pos = new BlockPos(x, y, z);
-        BlockState state = level.getBlockState(pos);
-        if (state.isAir() || state.getCollisionShape(level, pos).isEmpty()) {
-            return true;
-        }
-        if (state.hasProperty(BlockStateProperties.OPEN) && state.getValue(BlockStateProperties.OPEN)) {
-            return true;
-        }
-        return BlockAcoustics.classify(state) == AcousticMaterial.THIN;
+        return BlockAcoustics.isOpenForSound(Minecraft.getInstance().level, x, y, z);
     }
 
     @Override

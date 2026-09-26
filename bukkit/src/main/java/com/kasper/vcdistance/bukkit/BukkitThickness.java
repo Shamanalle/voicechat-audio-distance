@@ -53,6 +53,7 @@ final class BukkitThickness implements ServerWalls.ThicknessProvider {
         return RayBundle.trace(
                 (fx, fy, fz, tx, ty, tz) -> BlockAcoustics.traceRay(world, fx, fy, fz, tx, ty, tz,
                         AudioDistancePlugin.SERVER_SETTINGS.profile()),
+                (bx, by, bz) -> BlockAcoustics.isOpenForSound(world, bx, by, bz),
                 ear.getX(), ear.getY(), ear.getZ(), sx, sy, sz);
     }
 }

@@ -82,6 +82,24 @@ public final class VoxelRay {
                 && clip(fromZ, toZ - fromZ, minZ, maxZ, range);
     }
 
+    /**
+     * Length of the part of the segment inside the box, in blocks (0 when it misses). A ray that only
+     * clips a block's corner passes through a short chord; one that crosses it straight, through a whole block.
+     */
+    public static double chord(double fromX, double fromY, double fromZ, double toX, double toY, double toZ,
+                               double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+        double[] range = {0.0, 1.0};
+        if (!clip(fromX, toX - fromX, minX, maxX, range)
+                || !clip(fromY, toY - fromY, minY, maxY, range)
+                || !clip(fromZ, toZ - fromZ, minZ, maxZ, range)) {
+            return 0.0;
+        }
+        double dx = toX - fromX;
+        double dy = toY - fromY;
+        double dz = toZ - fromZ;
+        return (range[1] - range[0]) * Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
     private static boolean clip(double start, double delta, double min, double max, double[] range) {
         if (Math.abs(delta) < EPSILON) {
             return start >= min && start <= max;

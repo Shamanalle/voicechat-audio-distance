@@ -52,6 +52,6 @@ public final class ServerThickness implements ServerWalls.ThicknessProvider {
         }
         return OcclusionTracer.trace(
                 (from, to) -> BlockAcoustics.traceRay(level, from, to, AudioDistancePlugin.SERVER_SETTINGS.profile()),
-                ear, source);
+                (bx, by, bz) -> BlockAcoustics.isOpenForSound(level, bx, by, bz), ear, source);
     }
 }

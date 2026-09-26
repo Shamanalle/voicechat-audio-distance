@@ -129,7 +129,7 @@ public final class SpeakerTicker {
                     s.clearOcclusion();
                 } else if (budget > 0 && (configChanged || !s.isOcclusionKnown()
                         || now - s.getLastTraceNanos() >= TRACE_INTERVAL_NANOS * slow)) {
-                    s.setOcclusion(OcclusionTracer.trace(access::traceRay, listener, source), now);
+                    s.setOcclusion(OcclusionTracer.trace(access::traceRay, grid, listener, source), now);
                     budget--;
                 }
                 // Behind a wall: is there a doorway round it?

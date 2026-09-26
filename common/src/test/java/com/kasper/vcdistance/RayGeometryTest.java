@@ -97,4 +97,52 @@ public class RayGeometryTest {
         assertEquals(0.0, RayBundle.trace((a, b, c, d, e, f) -> 1.0, 0, 0, 0, 0, 0.2, 0));
         assertEquals(1.0, RayBundle.trace((a, b, c, d, e, f) -> 1.0, 0, 0, 0, 0, 20, 0), 1e-9);
     }
+
+    /** Thickness along a ray through a block world: full blocks, each weighted by the chord it runs inside. */
+    private static double blocks(java.util.function.Predicate<int[]> solid, double fx, double fy, double fz,
+                                 double tx, double ty, double tz) {
+        double[] t = {0.0};
+        VoxelRay.walk(fx, fy, fz, tx, ty, tz, 1000, (x, y, z) -> {
+            if (solid.test(new int[]{x, y, z})) {
+                t[0] += RayBundle.chordWeight(VoxelRay.chord(fx, fy, fz, tx, ty, tz, x, y, z, x + 1, y + 1, z + 1));
+            }
+            return false;
+        });
+        return t[0];
+    }
+
+    @Test
+    @DisplayName("Two players side by side in a 2-high corridor hear each other clearly")
+    void corridorStaysClear() {
+        // Floor at y = 63, air at 64 and 65, ceiling at 66; walls at z = -1 and z = 1 (1-wide tunnel)
+        java.util.function.Predicate<int[]> solid = b -> b[1] <= 63 || b[1] >= 66 || b[2] <= -1 || b[2] >= 1;
+        SoundPath.Grid open = (x, y, z) -> !solid.test(new int[]{x, y, z});
+        RayBundle.RayCaster caster = (fx, fy, fz, tx, ty, tz) -> blocks(solid, fx, fy, fz, tx, ty, tz);
+        // Eyes at 64 + 1.62, the listener hugging the wall at z = 0.3
+        double without = RayBundle.trace(caster, 0.5, 65.62, 0.3, 6.5, 65.62, 0.5);
+        double with = RayBundle.trace(caster, open, 0.5, 65.62, 0.3, 6.5, 65.62, 0.5);
+        assertTrue(without > 0.5, "the old side rays ran inside the ceiling and wall: " + without);
+        assertEquals(0.0, with, 1e-9);
+        // A real wall across the corridor still counts in full
+        java.util.function.Predicate<int[]> walled = b -> solid.test(b) || b[0] == 3;
+        SoundPath.Grid open2 = (x, y, z) -> !walled.test(new int[]{x, y, z});
+        double wall = RayBundle.trace((fx, fy, fz, tx, ty, tz) -> blocks(walled, fx, fy, fz, tx, ty, tz), open2,
+                0.5, 65.62, 0.5, 6.5, 65.62, 0.5);
+        assertEquals(1.0, wall, 1e-9);
+    }
+
+    @Test
+    @DisplayName("A ray grazing a block's corner counts less than one crossing it")
+    void chordWeighting() {
+        // Straight through a block: 1 block inside
+        assertEquals(1.0, VoxelRay.chord(-1, 0.5, 0.5, 2, 0.5, 0.5, 0, 0, 0, 1, 1, 1), 1e-9);
+        assertEquals(1.0, RayBundle.chordWeight(1.0), 1e-9);
+        // Diagonal through the very corner: a short chord
+        double corner = VoxelRay.chord(-1, 2.9, 0.5, 3, -1.1, 0.5, 0, 0, 0, 1, 1, 1);
+        assertTrue(corner > 0.0 && corner < 0.2, "corner chord " + corner);
+        assertTrue(RayBundle.chordWeight(corner) < 0.5);
+        // Missing the block entirely
+        assertEquals(0.0, VoxelRay.chord(-1, 1.5, 0.5, 2, 1.5, 0.5, 0, 0, 0, 1, 1, 1), 1e-9);
+        assertEquals(0.0, RayBundle.chordWeight(0.0), 1e-9);
+    }
 }

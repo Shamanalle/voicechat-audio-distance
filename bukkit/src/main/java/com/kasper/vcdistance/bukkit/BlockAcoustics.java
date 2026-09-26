@@ -11,6 +11,7 @@ import org.bukkit.Tag;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Openable;
 import org.bukkit.block.data.Waterlogged;
 import org.bukkit.util.BoundingBox;
 
@@ -49,8 +50,12 @@ final class BlockAcoustics {
             if (block.isLiquid() || isWaterlogged(block)) {
                 thickness[0] += weights.getMaterialWeight(AcousticMaterial.LIQUID);
             }
-            if (!type.isAir() && !block.isLiquid() && crosses(block, type, fromX, fromY, fromZ, toX, toY, toZ)) {
-                thickness[0] += weights.getMaterialWeight(MATERIALS.computeIfAbsent(type, m -> classify(block)));
+            if (!type.isAir() && !block.isLiquid()) {
+                AcousticMaterial material = MATERIALS.computeIfAbsent(type, m -> classify(block));
+                double share = share(block, type, material, fromX, fromY, fromZ, toX, toY, toZ);
+                if (share > 0.0) {
+                    thickness[0] += weights.getMaterialWeight(material) * share;
+                }
             }
             return thickness[0] >= RayBundle.MAX_RAY_THICKNESS;
         });
@@ -67,24 +72,53 @@ final class BlockAcoustics {
         return data instanceof Waterlogged w && w.isWaterlogged();
     }
 
-    /** Whether the ray crosses the block's collision shape (slabs, open doors and carpets by their real size). */
-    private static boolean crosses(Block block, Material type, double fromX, double fromY, double fromZ,
-                                   double toX, double toY, double toZ) {
-        if (type.isOccluding()) {
-            return true; // full opaque cube: the ray is inside the voxel, so it crosses it
-        }
+    /**
+     * How much of the block's weight the ray takes, 0 when it misses the collision shape (slabs, open
+     * doors and carpets by their real size). A ray that only grazes a corner counts less than one
+     * crossing the block; doors, trapdoors, fences and bars count fully whenever they are crossed.
+     */
+    private static double share(Block block, Material type, AcousticMaterial material, double fromX, double fromY,
+                                double fromZ, double toX, double toY, double toZ) {
+        boolean thin = material == AcousticMaterial.DOOR || material == AcousticMaterial.THIN;
         int bx = block.getX();
         int by = block.getY();
         int bz = block.getZ();
+        if (type.isOccluding()) {
+            // Full opaque cube
+            return thin ? 1.0 : RayBundle.chordWeight(VoxelRay.chord(fromX, fromY, fromZ, toX, toY, toZ,
+                    bx, by, bz, bx + 1.0, by + 1.0, bz + 1.0));
+        }
+        double best = 0.0;
         for (BoundingBox box : block.getCollisionShape().getBoundingBoxes()) {
             // Collision boxes are relative to the block
-            if (VoxelRay.intersects(fromX, fromY, fromZ, toX, toY, toZ,
+            double chord = VoxelRay.chord(fromX, fromY, fromZ, toX, toY, toZ,
+                    bx + box.getMinX(), by + box.getMinY(), bz + box.getMinZ(),
+                    bx + box.getMaxX(), by + box.getMaxY(), bz + box.getMaxZ());
+            if (chord > 0.0 || VoxelRay.intersects(fromX, fromY, fromZ, toX, toY, toZ,
                     bx + box.getMinX(), by + box.getMinY(), bz + box.getMinZ(),
                     bx + box.getMaxX(), by + box.getMaxY(), bz + box.getMaxZ())) {
-                return true;
+                if (thin) {
+                    return 1.0;
+                }
+                best = Math.max(best, Math.max(0.05, RayBundle.chordWeight(chord)));
             }
         }
-        return false;
+        return best;
+    }
+
+    /** {@code true} when sound passes this block freely: air, water, open doors and gates, fences, bars. */
+    static boolean isOpenForSound(World world, int x, int y, int z) {
+        if (y < world.getMinHeight() || y >= world.getMaxHeight() || !world.isChunkLoaded(x >> 4, z >> 4)) {
+            return true;
+        }
+        Block block = world.getBlockAt(x, y, z);
+        if (block.isPassable()) {
+            return true;
+        }
+        if (block.getBlockData() instanceof Openable openable && openable.isOpen()) {
+            return true;
+        }
+        return MATERIALS.computeIfAbsent(block.getType(), m -> classify(block)) == AcousticMaterial.THIN;
     }
 
     static AcousticMaterial classify(Block block) {
