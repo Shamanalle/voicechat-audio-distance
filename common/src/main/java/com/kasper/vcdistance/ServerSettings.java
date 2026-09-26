@@ -166,6 +166,9 @@ public final class ServerSettings {
 
     public synchronized void load() {
         Path file = getPath();
+        // The admin's own texts sit next to the settings file (written on first start)
+        Path parent = file.toAbsolutePath().getParent();
+        ServerText.useFolder(parent == null ? null : parent.resolve(ServerText.FOLDER));
         if (!Files.exists(file)) {
             save();
             loadedModified = lastModified(file);
