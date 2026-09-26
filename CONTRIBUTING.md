@@ -46,7 +46,7 @@ Language files are in `common/src/main/resources/assets/vc-audio-distance/lang/`
 
 ### Documentation
 
-All documentation (README, CHANGELOG, this file, issue and pull request templates) is written in English first, followed by a complete Russian translation.
+The README is two files: `README.md` in English and `README.ru.md` in Russian. They have the same sections and are changed together. The rest of the documentation (CHANGELOG, this file, issue and pull request templates) is written in English first, followed by a complete Russian translation. The README is a reference for players and server owners: what the addon does, how to install it, commands and every setting, without internals.
 
 GitHub release notes are generated from `CHANGELOG.md` by `.github/scripts/release-notes.sh`. When the changelog changes on `main`, the *Sync release notes* workflow updates the notes of already published releases.
 
@@ -126,7 +126,7 @@ cd voice-physics
 
 ### Документация
 
-Вся документация (README, CHANGELOG, этот файл, шаблоны issue и pull request) пишется сначала на английском, затем идёт полный перевод на русский.
+README — это два файла: `README.md` на английском и `README.ru.md` на русском. В них одинаковые разделы, и меняются они вместе. Остальная документация (CHANGELOG, этот файл, шаблоны issue и pull request) пишется сначала на английском, затем идёт полный перевод на русский. README — справочник для игроков и владельцев серверов: что умеет аддон, как его поставить, команды и все настройки, без внутреннего устройства.
 
 Описания релизов на GitHub собираются из `CHANGELOG.md` скриптом `.github/scripts/release-notes.sh`. Когда журнал изменений меняется в `main`, workflow *Sync release notes* обновляет описания уже опубликованных релизов.
 
