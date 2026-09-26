@@ -1,5 +1,5 @@
 {
-  "description": "Simple Voice Chat addon: realistic voice distance curves and wall muffling. Fabric client & server, Paper / Purpur / Spigot plugin. / Аддон Simple Voice Chat: реалистичное затухание голоса и приглушение стенами.",
+  "description": "Simple Voice Chat addon: voices fade with distance, echo in caves and are muffled by walls. HUD, monitor, presets; sound zones and game rules for servers. Fabric, NeoForge, Paper. / Аддон Simple Voice Chat: затухание голоса, эхо и стены, HUD, звуковые зоны для серверов.",
   "topics": [
     "minecraft",
     "minecraft-mod",
@@ -11,6 +11,7 @@
     "spigot-plugin",
     "bukkit-plugin",
     "audio",
-    "occlusion"
+    "occlusion",
+    "neoforge"
   ]
 }
