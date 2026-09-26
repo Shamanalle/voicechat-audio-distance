@@ -10,61 +10,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### English
 
-#### Added
-- **Echo that fits the place.** The rays that measure the space around you now know what they hit. Each surface swallows part of the sound by its material (stone, ice and metal almost nothing, wood a little, wool, hay and leaves most), and a ray that escapes into the open is lost. From that come the echo's length, loudness and warmth:
-  - a small stone room rings for about a second, a big hall or cave for 2 – 3 s;
-  - a wooden house answers briefly and warmly;
-  - a forest, a field or a wool room stay dry.
+#### Echo that sounds like the place
+- **Every place has its own echo.** A stone room rings briefly, a cave or big hall rolls on for a few seconds, a wooden house answers short and warm. In a forest, in an open field or in a room lined with wool there is no echo.
+- **Echo in the mountains.** Shout near a cliff or in a canyon and your friends hear the voice come back a moment later.
+- **A voice from a cave echoes even if you are outside it.**
+- **A friend right next to you stays easy to understand**, even in a big cave. Only far voices sound hollow.
+- The *Effects* tab tells you where you are and what the echo is like there, for example "Cave or big hall: a long rolling echo".
 
-  Nearby walls add a few distinct early reflections, and the reverb itself is fuller (8 comb filters instead of 4, with a pre-delay and damping by material).
-- **Echo in the mountains:** under the open sky, hard cliffs 17 – 64 blocks away send the voice back 0.1 – 0.4 s later, and across a canyon once more. A lone tree or boulder does not.
-- **The speaker's side counts:** the space around each speaker is measured too, so a friend shouting in a cave echoes even when you stand outside.
-- The *Effects* tab names the place you are in ("Cave or big hall: a long rolling echo", "Forest: the leaves swallow the echo"…) and how long its echo lasts, or when the cliffs send the voice back.
-- The HUD says *round a corner* when most of a voice comes through an opening.
+#### Walls and corners
+- **Fixed: players side by side in a tunnel, a mine or a narrow corridor heard each other muffled.** Now they hear each other clearly.
+- **Fixed: voices flickered between muffled and clear** when someone walked along a hill or the edge of a wall.
+- **A voice from the next room comes through the doorway.** You hear it from the doorway's side, and it moves smoothly as you walk past instead of jumping.
+- **Round a sharp corner a voice is duller** than round a slight bend, and a long way round makes it quieter.
+- The HUD shows *round a corner* next to the name of someone you hear through a doorway.
 
-#### Changed
-- **Close voices stay clear:** the echo share grows with distance, so a voice next to you is dry and a far one sounds like the room. Far voices keep more of their echo.
-- **Around corners, both ways at once:** the voice goes through the wall and round it through the doorway, and the two add up instead of switching. The clearer way takes over the muffling, the direction and the distance the volume follows, so a voice from the next room comes from the doorway at the length of the way round.
-  - The sharper the bend, the duller: a right angle muffles like half a stone wall, a slight bend hardly at all.
-  - The direction glides, so walking past a doorway pans smoothly.
-  - Ways round are searched four times a second, and from door-frame-thin walls up.
-- **Edge volume reshapes the curve.** The whole fade is now fitted between 100% and the edge volume, so the curve comes down smoothly and reaches it exactly at the edge of the range. Before, the curve was cut off by it: the voice fell to the edge volume early, stayed flat, then stopped at the edge. The graph, the *Listen* preview and what you hear all follow the new shape. Presets with an edge volume (Realistic, Clear) are a little louder in the middle of the range.
-- **Wall strength in 5% steps** on the Server tab (was 10%); `/vcd walls` suggests every 5%.
-- **"Hear you" in the HUD counts your Simple Voice Chat group.** Group members count wherever they are ("Hear you: 4 · 3 in the group"), players nearby count only when your group is open, and a player in another isolated group counts as not hearing you. The group count needs the addon on the server (2.1.0+).
-
-#### Fixed
-- **Players side by side in a tunnel or next to a wall heard each other muffled.** The side rays of the wall tracer ran inside the ceiling of a two-block corridor or inside the wall beside a player. They now stay in the air (on the client and on the server).
-- **Muffling jittered along terrain edges and hill crests:** a ray that only clips a block's corner now counts it by how far it runs inside.
-- **Forests, village streets and the foot of a hill had a room echo**, and a wool room echoed like a cave.
+#### Also in this version
+- **Edge volume works as expected.** Before, a voice dropped to the edge volume early and stayed flat. Now it fades smoothly all the way and reaches the edge volume only at the edge of the range. The *Realistic* and *Clear* presets become a little louder at medium distance.
+- **"Hear you" in the HUD counts your voice chat group.** Group members count wherever they are ("Hear you: 4 · 3 in the group"). Players outside the group count only if your group is open. The group count needs the addon on the server too.
+- **Server admins:** wall strength can now be set in 5% steps.
 
 ### Русский
 
-#### Добавлено
-- **Эхо по месту.** Лучи, которые измеряют пространство вокруг вас, теперь знают, во что попали. Каждая поверхность поглощает часть звука по своему материалу (камень, лёд и металл почти ничего, дерево немного, шерсть, сено и листва — большую часть), а луч, ушедший в открытое небо, потерян. Из этого получаются длина, громкость и «теплота» эха:
-  - маленькая каменная комната звенит около секунды, большой зал или пещера — 2 – 3 с;
-  - деревянный дом отвечает коротко и тепло;
-  - в лесу, в поле и в комнате из шерсти эха нет.
+#### Эхо звучит как место, где вы стоите
+- **У каждого места своё эхо.** Каменная комната звенит коротко, пещера или большой зал гудят несколько секунд, деревянный дом отвечает коротко и тепло. В лесу, в чистом поле и в комнате, обитой шерстью, эха нет.
+- **Эхо в горах.** Крикните у скалы или в каньоне, и друзья услышат, как голос вернётся через мгновение.
+- **Голос из пещеры звучит с эхом, даже если вы стоите снаружи.**
+- **Друга рядом с вами легко понять** даже в большой пещере. Гулко звучат только дальние голоса.
+- Вкладка «Эффекты» показывает, где вы находитесь и какое там эхо, например: «Пещера или большой зал: долгое гулкое эхо».
 
-  Ближние стены добавляют несколько отчётливых ранних отражений, а сама реверберация стала полнее (8 гребенчатых фильтров вместо 4, с предзадержкой и затуханием верхов по материалу).
-- **Эхо в горах:** под открытым небом твёрдые скалы в 17 – 64 блоках возвращают голос через 0,1 – 0,4 с, а в каньоне — ещё раз. Одинокое дерево или валун эха не дают.
-- **Место говорящего тоже важно:** пространство вокруг каждого говорящего тоже измеряется, поэтому крик друга в пещере гулкий, даже если вы снаружи.
-- Вкладка «Эффекты» называет место, где вы стоите («Пещера или большой зал: долгое гулкое эхо», «Лес: листва глушит эхо»…), и сколько длится его эхо или через сколько скалы возвращают голос.
-- HUD пишет *из-за угла*, когда большая часть голоса идёт через проём.
+#### Стены и углы
+- **Исправлено: двое рядом в тоннеле, шахте или узком коридоре слышали друг друга приглушённо.** Теперь слышат чисто.
+- **Исправлено: голос то глох, то становился чистым**, когда человек шёл вдоль холма или края стены.
+- **Голос из соседней комнаты идёт через дверной проём.** Он слышен со стороны проёма и плавно смещается, когда вы проходите мимо, а не прыгает.
+- **Из-за крутого угла голос глуше**, чем из-за пологого, а длинный обход делает его тише.
+- В HUD рядом с именем того, кого вы слышите через проём, написано *из-за угла*.
 
-#### Изменено
-- **Близкие голоса остаются чистыми:** доля эха растёт с расстоянием, поэтому голос рядом звучит сухо, а дальний — как помещение. Дальние голоса сохраняют больше эха.
-- **Из-за угла — обоими путями сразу:** голос идёт и сквозь стену, и в обход через проём, и эти пути складываются, а не переключаются. Более чистый путь забирает себе приглушение, направление и расстояние, по которому считается громкость: голос из соседней комнаты звучит со стороны проёма и на длину обхода.
-  - Чем круче поворот, тем глуше: прямой угол глушит как половина каменной стены, лёгкий изгиб — почти никак.
-  - Направление смещается плавно, поэтому, проходя мимо проёма, вы слышите, как голос «переезжает».
-  - Путь в обход ищется четыре раза в секунду и уже от стен тонких, как дверной косяк.
-- **Громкость на краю меняет форму кривой.** Теперь всё затухание укладывается между 100% и громкостью на краю, и кривая плавно доходит до неё ровно на границе слышимости. Раньше громкость на краю просто срезала кривую: голос рано падал до неё, шёл ровно, а на границе обрывался. График, кнопка «Прослушать» и то, что вы слышите, следуют новой форме. Пресеты с громкостью на краю («Реализм», «Чётко») стали чуть громче в середине дистанции.
-- **Сила стен с шагом 5%** на вкладке «Сервер» (было 10%); `/vcd walls` подсказывает каждые 5%.
-- **«Вас слышат» в HUD учитывает группу Simple Voice Chat.** Участники группы считаются, где бы они ни были («Вас слышат: 4 · 3 в группе»), игроки рядом — только если ваша группа открытая, а игрок из чужой изолированной группы считается не слышащим. Для счёта группы нужен аддон на сервере (2.1.0+).
-
-#### Исправлено
-- **Игроки рядом в тоннеле или у стены слышали друг друга приглушённо.** Боковые лучи трассировки стен шли внутри потолка коридора высотой в два блока или внутри стены рядом с игроком. Теперь они остаются в воздухе (и на клиенте, и на сервере).
-- **Приглушение дрожало на краях рельефа и гребнях холмов:** луч, который лишь цепляет угол блока, теперь учитывает его по тому, сколько проходит внутри.
-- **В лесу, на деревенской улице и у подножия холма было эхо как в комнате**, а комната из шерсти звенела как пещера.
+#### Ещё в этой версии
+- **Громкость на краю работает как ожидается.** Раньше голос рано падал до громкости на краю и дальше шёл ровно. Теперь он плавно затихает всю дистанцию и доходит до громкости на краю только на её границе. Пресеты «Реализм» и «Чётко» стали чуть громче на средней дистанции.
+- **«Вас слышат» в HUD учитывает вашу группу в голосовом чате.** Участники группы считаются, где бы они ни были («Вас слышат: 4 · 3 в группе»). Игроки не из группы считаются, только если группа открытая. Для подсчёта группы аддон нужен и на сервере.
+- **Администраторам:** силу стен теперь можно задавать с шагом 5%.
 
 ## [2.0.2] - 2026-09-26
 
