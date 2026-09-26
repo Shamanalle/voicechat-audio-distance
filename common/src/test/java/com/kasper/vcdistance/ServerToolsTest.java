@@ -45,8 +45,10 @@ public class ServerToolsTest {
         assertNotNull(nether);
         assertEquals("stealth", nether.preset());
         assertEquals(ServerSettings.ProfileMode.SUGGEST, s.modeIn(nether));
-        assertEquals(AttenuationModel.EXPONENTIAL, s.profileIn(nether).getModel());
-        assertEquals(AttenuationModel.REALISTIC_INVERSE, s.profileIn(null).getModel());
+        assertEquals(AttenuationModel.EXPONENTIAL, s.profileIn(nether, 48).getModel());
+        assertEquals(AttenuationModel.REALISTIC_INVERSE, s.profileIn(null, 48).getModel());
+        // The main preset is fitted to the server's real voice range
+        assertEquals(8.0 / 96, s.profileIn(null, 96).getOpenalReferenceRatio(), 1e-9);
 
         // Fabric dimension ids match a zone written without the namespace
         Zone end = Zone.resolve(s.zones(), "minecraft:the_end", null);

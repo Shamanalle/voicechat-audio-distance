@@ -337,6 +337,32 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         return config().isOcclusionEnabled() ? OcclusionStatus.ACTIVE : OcclusionStatus.OFF;
     }
 
+    /**
+     * Client tick: when the voice range differs from the one the chosen preset was fitted to (another
+     * server), fits the preset again, as long as the values are still the preset's own.
+     */
+    public static void followServerRange() {
+        DistanceConfig c = CONFIG;
+        Preset preset = c.getChosenPreset();
+        if (preset == null || !preset.dependsOnRange()) {
+            return;
+        }
+        double range = getServerMaxDistance();
+        double fitted = c.getPresetRange();
+        if (Math.abs(range - fitted) < 0.01) {
+            return;
+        }
+        if (!preset.matches(c, fitted)) {
+            c.setChosenPreset(null, 0.0); // changed by hand since: own values now
+            c.save();
+            return;
+        }
+        preset.apply(c, range);
+        c.setChosenPreset(preset, range);
+        c.save();
+        DistanceConfig.LOGGER.info("Preset {} fitted to a voice range of {} blocks", preset.getId(), ConfigWriter.number(range));
+    }
+
     /** Voice distance configured on the connected server, in blocks. */
     public static double getServerMaxDistance() {
         VoicechatApi a = api;
