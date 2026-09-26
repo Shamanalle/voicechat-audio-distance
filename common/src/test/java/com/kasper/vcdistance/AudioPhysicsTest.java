@@ -113,12 +113,22 @@ public class AudioPhysicsTest {
 
     @ParameterizedTest
     @EnumSource(AttenuationModel.class)
-    @DisplayName("Volume floor (minVol) clamps lower bound across all models")
-    void testMinVolumeFloor(AttenuationModel model) {
+    @DisplayName("The curve is fitted to the edge volume: it ends there exactly, without a flat part")
+    void testEdgeVolumeReshapesCurve(AttenuationModel model) {
         double minVol = 0.35;
-        // At max distance (1.0) with high rolloff (1.0), calculated gain is below 0.35
-        double gain = AudioPhysics.calculateGain(1.0, model, 1.0, minVol, 0.2);
-        assertTrue(gain >= minVol - EPSILON, "Gain (" + gain + ") must not drop below minVol (" + minVol + ") for " + model);
+        assertEquals(minVol, AudioPhysics.calculateGain(1.0, model, 1.0, minVol, 0.2), EPSILON, "edge for " + model);
+        double prev = 1.0;
+        for (int i = 0; i <= 100; i++) {
+            double d = i / 100.0;
+            double gain = AudioPhysics.calculateGain(d, model, 1.0, minVol, 0.2);
+            double plain = AudioPhysics.calculateGain(d, model, 1.0, 0.0, 0.2);
+            assertEquals(minVol + (1.0 - minVol) * plain, gain, EPSILON, model + " at " + d);
+            assertTrue(gain >= minVol - EPSILON && gain <= prev + EPSILON, model + " at " + d);
+            if (d > 0.2 && d < 1.0) {
+                assertTrue(gain > minVol + EPSILON, "no flat part before the edge: " + model + " at " + d);
+            }
+            prev = gain;
+        }
     }
 
     @ParameterizedTest

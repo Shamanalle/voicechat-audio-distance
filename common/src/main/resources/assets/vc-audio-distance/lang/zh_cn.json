@@ -137,7 +137,7 @@
   "gui.vc-audio-distance.falloff": "衰减：%s",
   "gui.vc-audio-distance.falloff.tooltip": "语音随距离减弱的程度。\n100% = 正常，0% = 范围内处处同样响。",
   "gui.vc-audio-distance.floor": "边缘音量：%s",
-  "gui.vc-audio-distance.floor.tooltip": "语音永远不会低于这个音量，即使在范围边缘。\n按每位玩家自己的音量缩放：已静音的玩家仍保持静音。",
+  "gui.vc-audio-distance.floor.tooltip": "曲线在范围边缘正好降到这个音量：整个衰减都会随之调整。\n按每位玩家自己的音量缩放：已静音的玩家仍保持静音。",
   "gui.vc-audio-distance.floor_label": "最低 %s",
   "gui.vc-audio-distance.hud.background": "背景：%s",
   "gui.vc-audio-distance.hud.background.tooltip": "HUD 背景的可见程度。0% 时只显示文字。",

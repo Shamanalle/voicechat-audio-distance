@@ -137,7 +137,7 @@
   "gui.vc-audio-distance.falloff": "Спад: %s",
   "gui.vc-audio-distance.falloff.tooltip": "Наскільки сильно голос затихає з відстанню.\n100% – звичайно, 0% – однаково гучно в усьому радіусі.",
   "gui.vc-audio-distance.floor": "Гучність на краю: %s",
-  "gui.vc-audio-distance.floor.tooltip": "Тихіше за це голос не стане навіть на межі чутності.\nВраховує гучність кожного гравця: заглушені лишаються без звуку.",
+  "gui.vc-audio-distance.floor.tooltip": "Крива закінчується на цій гучності на межі чутності: усе згасання підлаштовується під неї.\nВраховує гучність кожного гравця: заглушені лишаються без звуку.",
   "gui.vc-audio-distance.floor_label": "мінімум %s",
   "gui.vc-audio-distance.hud.background": "Фон: %s",
   "gui.vc-audio-distance.hud.background.tooltip": "Наскільки видно фон HUD. При 0% лишається тільки текст.",

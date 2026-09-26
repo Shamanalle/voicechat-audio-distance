@@ -137,7 +137,7 @@
   "gui.vc-audio-distance.falloff": "Queda: %s",
   "gui.vc-audio-distance.falloff.tooltip": "O quanto a voz diminui com a distância.\n100% = normal, 0% = mesmo volume em todo o alcance.",
   "gui.vc-audio-distance.floor": "Volume na borda: %s",
-  "gui.vc-audio-distance.floor.tooltip": "As vozes nunca ficam mais baixas que isso, nem na borda do alcance.\nAcompanha o volume de cada jogador: quem está mudo continua mudo.",
+  "gui.vc-audio-distance.floor.tooltip": "A curva termina neste volume na borda do alcance: toda a atenuação se ajusta a ele.\nAcompanha o volume de cada jogador: quem está mudo continua mudo.",
   "gui.vc-audio-distance.floor_label": "mínimo %s",
   "gui.vc-audio-distance.hud.background": "Fundo: %s",
   "gui.vc-audio-distance.hud.background.tooltip": "Quanto o fundo do HUD aparece. Com 0% fica só o texto.",

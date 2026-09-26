@@ -137,7 +137,7 @@
   "gui.vc-audio-distance.falloff": "Abfall: %s",
   "gui.vc-audio-distance.falloff.tooltip": "Wie stark die Stimme mit der Entfernung leiser wird.\n100% = normal, 0% = überall in Reichweite gleich laut.",
   "gui.vc-audio-distance.floor": "Lautstärke am Rand: %s",
-  "gui.vc-audio-distance.floor.tooltip": "Leiser als das werden Stimmen nie, auch nicht am Rand der Reichweite.\nRichtet sich nach der Lautstärke jedes Spielers: stummgeschaltete bleiben stumm.",
+  "gui.vc-audio-distance.floor.tooltip": "Die Kurve endet am Rand der Reichweite bei dieser Lautstärke: das ganze Abklingen passt sich daran an.\nRichtet sich nach der Lautstärke jedes Spielers: stummgeschaltete bleiben stumm.",
   "gui.vc-audio-distance.floor_label": "Minimum %s",
   "gui.vc-audio-distance.hud.background": "Hintergrund: %s",
   "gui.vc-audio-distance.hud.background.tooltip": "Wie sichtbar der HUD-Hintergrund ist. Bei 0 % bleibt nur der Text.",

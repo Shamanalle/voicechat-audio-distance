@@ -137,7 +137,7 @@
   "gui.vc-audio-distance.falloff": "Спад: %s",
   "gui.vc-audio-distance.falloff.tooltip": "Насколько сильно голос затихает с расстоянием.\n100% – обычно, 0% – одинаково громко во всём радиусе.",
   "gui.vc-audio-distance.floor": "Громкость на краю: %s",
-  "gui.vc-audio-distance.floor.tooltip": "Тише этого голос не станет даже на границе слышимости.\nУчитывает громкость каждого игрока: замьюченные остаются без звука.",
+  "gui.vc-audio-distance.floor.tooltip": "Кривая заканчивается на этой громкости на границе слышимости: всё затухание подстраивается под неё.\nУчитывает громкость каждого игрока: замьюченные остаются без звука.",
   "gui.vc-audio-distance.floor_label": "минимум %s",
   "gui.vc-audio-distance.hud.background": "Фон: %s",
   "gui.vc-audio-distance.hud.background.tooltip": "Насколько виден фон HUD. При 0% остаётся только текст.",

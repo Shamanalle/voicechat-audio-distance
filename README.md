@@ -39,7 +39,7 @@ See [What works where](#what-works-where) for the full list.
   - hover it for the exact value in blocks, % and dB;
   - the whisper curve is dashed;
   - the people you hear right now appear as dots.
-- **Edge volume** uses OpenAL `AL_MIN_GAIN` scaled by each player's own volume, so muted players stay muted.
+- **Edge volume** is where the curve ends: the whole fade is fitted between 100% and it, so the voice reaches it exactly at the edge of the range. It is also set as OpenAL `AL_MIN_GAIN`, scaled by each player's own volume, so muted players stay muted.
 
 #### Walls (client)
 - Voices behind walls become **quieter and duller**: a 24 dB/octave low-pass filter plus broadband loss.
@@ -190,18 +190,18 @@ The addon can be installed on the client (the player's game), on the server, or 
 
 | Loader | Minecraft | File | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.2+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.20.2 – 1.20.4 | `voice-physics-fabric-2.0.2+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
-| **Fabric / Quilt** | 1.20.5 – 1.20.6 | `voice-physics-fabric-2.0.2+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.2+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.2.jar` | 17+ | Bukkit version |
-| Forge | 1.20.1 | `voice-physics-forge-2.0.2+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.20.2 – 1.20.4 | `voice-physics-{neoforge,forge}-2.0.2+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
-| NeoForge / Forge | 1.20.5 – 1.20.6 | `voice-physics-{neoforge,forge}-2.0.2+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.2+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.3+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.20.2 – 1.20.4 | `voice-physics-fabric-2.0.3+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| **Fabric / Quilt** | 1.20.5 – 1.20.6 | `voice-physics-fabric-2.0.3+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.3+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.3.jar` | 17+ | Bukkit version |
+| Forge | 1.20.1 | `voice-physics-forge-2.0.3+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.20.2 – 1.20.4 | `voice-physics-{neoforge,forge}-2.0.3+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| NeoForge / Forge | 1.20.5 – 1.20.6 | `voice-physics-{neoforge,forge}-2.0.3+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.3+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** is the full version, on the client and on the server. It needs [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 - **Paper / Purpur / Spigot / Bukkit** is the server side as a plugin: walls for players without the addon, and the server profile for players with it. Players can join with any client: with the Fabric addon, without it, or without mods at all. The plugin is compiled against the 1.20.1 API and checked in CI against every Paper release from 1.20.1 to 26.3: every class, method, field and override it uses resolves the same way (Paper 1.20.5 cannot be checked: its API snapshot is no longer downloadable).
@@ -226,7 +226,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 3. Walls for players without the addon are on by default. To share a profile, set `profile_mode` to `suggest` or `enforce` and pick a `profile_preset`. Every key in the file has a comment in English and Russian, and the file is re-read automatically.
 
 **Server (Paper / Purpur / Spigot / Bukkit)**
-1. Put `voice-physics-bukkit-2.0.2.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
+1. Put `voice-physics-bukkit-2.0.3.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
 2. Start the server once; it creates `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. The settings are the same as on Fabric (see below), and the file is also re-read automatically.
 
@@ -237,7 +237,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 | `distance_model` | `linear` / `realistic_inverse` / `exponential` | `linear` | Shape of the curve |
 | `attenuation_factor` | 0.0 – 1.0 | 1.0 | Falloff strength |
 | `openal_reference_ratio` | 0.05 – 1.0 | 0.5 | Share of the range heard at full volume |
-| `min_volume_fraction` | 0.0 – 0.5 | 0.0 | Volume at the edge of the range |
+| `min_volume_fraction` | 0.0 – 0.5 | 0.0 | Volume at the edge of the range; the curve is fitted to end there |
 | `whisper_multiplier` | 0.5 – 2.0 | 1.0 | Falloff multiplier while whispering |
 | `occlusion_enabled` | true / false | true | Wall muffling |
 | `occlusion_strength` | 0.0 – 1.0 | 0.6 | Wall muffling strength |
@@ -399,7 +399,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
   - при наведении — точное значение в блоках, % и дБ;
   - кривая шёпота нарисована пунктиром;
   - люди, которых вы слышите прямо сейчас, отмечены точками.
-- **Громкость на краю** задаётся через OpenAL `AL_MIN_GAIN` с учётом громкости каждого игрока, поэтому замьюченные остаются замьюченными.
+- **Громкость на краю** — там, где кончается кривая: всё затухание укладывается между 100% и ею, и голос доходит до неё ровно на границе слышимости. Она же задаётся через OpenAL `AL_MIN_GAIN` с учётом громкости каждого игрока, поэтому замьюченные остаются замьюченными.
 
 #### Стены (клиент)
 - Голос за стеной становится **тише и глуше**: фильтр нижних частот 24 дБ/октаву плюс общее ослабление.
@@ -550,18 +550,18 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 | Загрузчик | Minecraft | Файл | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.2+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.20.2 – 1.20.4 | `voice-physics-fabric-2.0.2+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
-| **Fabric / Quilt** | 1.20.5 – 1.20.6 | `voice-physics-fabric-2.0.2+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.2+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.2.jar` | 17+ | версия для Bukkit |
-| Forge | 1.20.1 | `voice-physics-forge-2.0.2+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.20.2 – 1.20.4 | `voice-physics-{neoforge,forge}-2.0.2+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
-| NeoForge / Forge | 1.20.5 – 1.20.6 | `voice-physics-{neoforge,forge}-2.0.2+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.2+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.2+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.3+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.20.2 – 1.20.4 | `voice-physics-fabric-2.0.3+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| **Fabric / Quilt** | 1.20.5 – 1.20.6 | `voice-physics-fabric-2.0.3+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.3+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.3.jar` | 17+ | версия для Bukkit |
+| Forge | 1.20.1 | `voice-physics-forge-2.0.3+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.20.2 – 1.20.4 | `voice-physics-{neoforge,forge}-2.0.3+mc1.20.2-1.20.4.jar` | 17+ | 1.20.2-2.4.0+ |
+| NeoForge / Forge | 1.20.5 – 1.20.6 | `voice-physics-{neoforge,forge}-2.0.3+mc1.20.5-1.20.6.jar` | 21+ | 1.20.5-2.5.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.3+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.3+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** — полная версия, на клиенте и на сервере. Нужен [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
 - **Paper / Purpur / Spigot / Bukkit** — серверная часть в виде плагина: стены для игроков без аддона и профиль сервера для игроков с ним. Заходить можно с любым клиентом: с аддоном для Fabric, без него или совсем без модов. Плагин собран против API 1.20.1 и в CI проверяется на каждом релизе Paper от 1.20.1 до 26.3: каждый класс, метод, поле и переопределение, которые он использует, разрешаются одинаково (Paper 1.20.5 проверить нельзя: снимок его API больше не скачивается).
@@ -586,7 +586,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 3. Стены для игроков без аддона включены по умолчанию. Чтобы передавать профиль, поставьте `profile_mode` в `suggest` или `enforce` и выберите `profile_preset`. У каждого ключа в файле есть комментарий на английском и русском, файл перечитывается автоматически.
 
 **Сервер (Paper / Purpur / Spigot / Bukkit)**
-1. Положите `voice-physics-bukkit-2.0.2.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
+1. Положите `voice-physics-bukkit-2.0.3.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
 2. Запустите сервер один раз — он создаст `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. Настройки те же, что на Fabric (см. ниже), файл тоже перечитывается автоматически.
 
@@ -597,7 +597,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 | `distance_model` | `linear` / `realistic_inverse` / `exponential` | `linear` | Форма кривой |
 | `attenuation_factor` | 0.0 – 1.0 | 1.0 | Сила спада |
 | `openal_reference_ratio` | 0.05 – 1.0 | 0.5 | Доля дальности с полной громкостью |
-| `min_volume_fraction` | 0.0 – 0.5 | 0.0 | Громкость на краю слышимости |
+| `min_volume_fraction` | 0.0 – 0.5 | 0.0 | Громкость на краю слышимости; кривая подстраивается, чтобы закончиться на ней |
 | `whisper_multiplier` | 0.5 – 2.0 | 1.0 | Множитель спада шёпота |
 | `occlusion_enabled` | true / false | true | Приглушение стенами |
 | `occlusion_strength` | 0.0 – 1.0 | 0.6 | Сила приглушения стенами |

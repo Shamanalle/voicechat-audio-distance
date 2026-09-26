@@ -137,7 +137,7 @@
   "gui.vc-audio-distance.falloff": "Falloff: %s",
   "gui.vc-audio-distance.falloff.tooltip": "How strongly the voice fades with distance.\n100% = normal, 0% = same volume everywhere in range.",
   "gui.vc-audio-distance.floor": "Edge volume: %s",
-  "gui.vc-audio-distance.floor.tooltip": "Voices never get quieter than this, even at the edge of the range.\nScaled by each player's own volume, so muted players stay muted.",
+  "gui.vc-audio-distance.floor.tooltip": "The curve ends at this volume at the edge of the range: the whole fade is fitted to it.\nScaled by each player's own volume, so muted players stay muted.",
   "gui.vc-audio-distance.floor_label": "floor %s",
   "gui.vc-audio-distance.hud.background": "Background: %s",
   "gui.vc-audio-distance.hud.background.tooltip": "How visible the HUD's background is. 0% leaves only the text.",
