@@ -48,7 +48,8 @@ Put it on your server (Fabric, NeoForge, or as a plugin for **Paper, Purpur and 
   - sneaking players are heard less far;
   - dead players are silent until they respawn;
   - spectators talk only among themselves;
-  - an item in hand, such as a goat horn, works as a **megaphone**.
+  - an item in hand, such as a goat horn, works as a **megaphone**;
+  - you choose which rules also apply inside Simple Voice Chat groups.
 - **One sound for everyone.** Offer or require the server's sound settings, so a PvP match or an event is fair. Lock all of them or only some (say, distance and walls), and leave the rest to the players.
 - **No seeing through walls.** Turn off the monitor, the radar and nearby players in the HUD for PvP.
 - **Require the addon.** Players without it can get a download link, a reminder on every join, or be kicked. Players without voice chat are never affected.
@@ -126,7 +127,8 @@ Guides, all settings and the changelog: [GitHub](https://github.com/Shamanalle/v
   - на корточках вас слышно не так далеко;
   - мёртвых не слышно, пока не возродятся;
   - зрители говорят только между собой;
-  - предмет в руке, например козий рог, работает как **мегафон**.
+  - предмет в руке, например козий рог, работает как **мегафон**;
+  - вы выбираете, какие правила действуют и внутри групп Simple Voice Chat.
 - **Один звук для всех.** Предложите или сделайте обязательными настройки звука сервера, чтобы PvP или ивент были честными. Закрепите их все или только часть (например, дистанцию и стены), а остальное оставьте игрокам.
 - **Без взгляда сквозь стены.** Для PvP можно выключить монитор, радар и игроков рядом в HUD.
 - **Обязательный аддон.** Игроку без него можно дать ссылку на скачивание, напоминать при каждом входе или кикать. Игроков без голосового чата это не касается.

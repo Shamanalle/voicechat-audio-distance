@@ -1,5 +1,6 @@
 package com.kasper.vcdistance;
 
+import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
@@ -7,11 +8,14 @@ import de.maxhenkel.voicechat.api.events.EntitySoundPacketEvent;
 import de.maxhenkel.voicechat.api.events.LocationalSoundPacketEvent;
 import de.maxhenkel.voicechat.api.events.MicrophonePacketEvent;
 import de.maxhenkel.voicechat.api.events.SoundPacketEvent;
+import de.maxhenkel.voicechat.api.events.StaticSoundPacketEvent;
 import de.maxhenkel.voicechat.api.opus.OpusDecoder;
 import de.maxhenkel.voicechat.api.opus.OpusEncoder;
 import de.maxhenkel.voicechat.api.packets.EntitySoundPacket;
 import de.maxhenkel.voicechat.api.packets.LocationalSoundPacket;
 import de.maxhenkel.voicechat.api.packets.MicrophonePacket;
+import de.maxhenkel.voicechat.api.packets.SoundPacket;
+import de.maxhenkel.voicechat.api.packets.StaticSoundPacket;
 
 import java.util.Map;
 import java.util.Set;
@@ -164,7 +168,7 @@ public final class ServerWalls {
 
     public void onEntitySound(EntitySoundPacketEvent event) {
         EntitySoundPacket p = event.getPacket();
-        if (p == null) {
+        if (p == null || groupSilenced(event, p.getEntityUuid())) {
             return;
         }
         long start = System.nanoTime();
@@ -210,6 +214,76 @@ public final class ServerWalls {
         }
     }
 
+    /** Group voices sent without a position (normal and isolated groups): only the group rules apply. */
+    public void onStaticSound(StaticSoundPacketEvent event) {
+        StaticSoundPacket p = event.getPacket();
+        if (p != null) {
+            groupSilenced(event, senderOf(p));
+        }
+    }
+
+    /**
+     * Applies the rules the admin chose for Simple Voice Chat groups to a group voice.
+     *
+     * @return {@code true} when the packet was cancelled
+     */
+    private boolean groupSilenced(SoundPacketEvent<?> event, UUID speaker) {
+        if (resending.get() || !SoundPacketEvent.SOURCE_GROUP.equals(event.getSource()) || !settings.hasGroupRules()) {
+            return false;
+        }
+        long start = System.nanoTime();
+        try {
+            VoicechatConnection receiver = event.getReceiverConnection();
+            if (speaker == null || receiver == null || receiver.getPlayer() == null) {
+                return false;
+            }
+            ServerPlayers.Info from = players.get(speaker);
+            ServerPlayers.Info to = players.get(receiver.getPlayer().getUuid());
+            if (from == null || to == null || ServerRange.decideGroup(settings, from, to).hears()) {
+                return false;
+            }
+            event.cancel();
+            return true;
+        } catch (Throwable t) {
+            logFailure(t);
+            return false;
+        } finally {
+            perf.add(System.nanoTime() - start);
+        }
+    }
+
+    /** The player who spoke: the sender, or the channel on Simple Voice Chat versions without it. */
+    private static UUID senderOf(SoundPacket p) {
+        try {
+            UUID sender = p.getSender();
+            if (sender != null) {
+                return sender;
+            }
+        } catch (Throwable ignored) {
+            // older Simple Voice Chat
+        }
+        return p.getChannelId();
+    }
+
+    /**
+     * Whether {@code sender}'s nearby voice follows the range rules: yes outside a group, and in an
+     * open group (heard by nearby players too) when the admin allows it.
+     */
+    private boolean rangeRulesFor(VoicechatConnection sender) {
+        if (!sender.isInGroup()) {
+            return true;
+        }
+        if (!settings.isOpenGroupRange()) {
+            return false;
+        }
+        try {
+            Group group = sender.getGroup();
+            return group != null && group.getType() == Group.Type.OPEN;
+        } catch (Throwable t) {
+            return false; // Simple Voice Chat without group types
+        }
+    }
+
     /**
      * What the server's voice rules say about {@code speaker}'s voice reaching this receiver, or
      * {@code null} when there are no rules or either player is unknown.
@@ -233,7 +307,7 @@ public final class ServerWalls {
     public void onMicrophone(MicrophonePacketEvent event) {
         MicrophonePacket packet = event.getPacket();
         VoicechatConnection sender = event.getSenderConnection();
-        if (packet == null || sender == null || sender.getPlayer() == null || sender.isInGroup()
+        if (packet == null || sender == null || sender.getPlayer() == null || !rangeRulesFor(sender)
                 || !settings.hasVoiceRules()) {
             return;
         }
@@ -298,7 +372,7 @@ public final class ServerWalls {
 
     public void onLocationalSound(LocationalSoundPacketEvent event) {
         LocationalSoundPacket p = event.getPacket();
-        if (p == null || p.getPosition() == null) {
+        if (p == null || groupSilenced(event, senderOf(p)) || p.getPosition() == null) {
             return;
         }
         long start = System.nanoTime();

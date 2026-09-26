@@ -372,4 +372,24 @@ public class ServerWallsTest {
         walls.clear();
         assertEquals(0, walls.activeStreams());
     }
+
+    @Test
+    @DisplayName("Group voices: untouched by default, cancelled by the group rules the admin turned on")
+    void groupRules() {
+        ServerPlayers players = new ServerPlayers();
+        walls = new ServerWalls(settings, players);
+        players.update(new ServerPlayers.Info(speaker, "Dead", "world", 0, 64, 0, false, false, false, "", "", List.of(), ""));
+        players.update(new ServerPlayers.Info(listener, "Friend", "world", 500, 64, 0, false, true, false, "", "", List.of(), ""));
+        EntitySoundPacket p = packet(channel, 0, pack(tone(0)), false, 48F);
+
+        settings.setDeadSilent(true);
+        assertFalse(fire(p, listener, SoundPacketEvent.SOURCE_GROUP), "dead_players_silent alone leaves groups alone");
+        settings.setGroupDeadSilent(true);
+        assertTrue(fire(p, listener, SoundPacketEvent.SOURCE_GROUP));
+        assertTrue(sent.isEmpty());
+
+        // Proximity packets from far away are Simple Voice Chat's business; group rules only touch group audio
+        settings.setDeadSilent(false);
+        assertFalse(fire(p, listener, SoundPacketEvent.SOURCE_SPECTATOR));
+    }
 }

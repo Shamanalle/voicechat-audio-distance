@@ -15,6 +15,7 @@ import de.maxhenkel.voicechat.api.events.ClientVoicechatConnectionEvent;
 import de.maxhenkel.voicechat.api.events.EntitySoundPacketEvent;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.LocationalSoundPacketEvent;
+import de.maxhenkel.voicechat.api.events.StaticSoundPacketEvent;
 import de.maxhenkel.voicechat.api.events.MicrophonePacketEvent;
 import de.maxhenkel.voicechat.api.events.OpenALSoundEvent;
 import de.maxhenkel.voicechat.api.events.PlayerDisconnectedEvent;
@@ -131,6 +132,7 @@ public class AudioDistancePlugin implements VoicechatPlugin {
         });
         registration.registerEvent(EntitySoundPacketEvent.class, SERVER_WALLS::onEntitySound);
         registration.registerEvent(LocationalSoundPacketEvent.class, SERVER_WALLS::onLocationalSound);
+        registration.registerEvent(StaticSoundPacketEvent.class, SERVER_WALLS::onStaticSound);
         registration.registerEvent(MicrophonePacketEvent.class, SERVER_WALLS::onMicrophone);
         // Only the voice connection closed; leaving the game is reported by the platform glue
         registration.registerEvent(PlayerDisconnectedEvent.class, e -> SERVER_WALLS.releaseListener(e.getPlayerUuid()));
@@ -181,6 +183,38 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     /** The zone a player is in, from the last refresh of {@link #PLAYERS}, or {@code null}. */
     public static Zone zoneOf(UUID player) {
         return SERVER_SETTINGS.zoneOf(PLAYERS.get(player));
+    }
+
+    /**
+     * A player's Simple Voice Chat group as {name, type} ("normal", "open", "isolated", or "" when
+     * this Simple Voice Chat has no group types), or {@code null} when they are in none.
+     */
+    public static String[] groupOf(UUID player) {
+        VoicechatServerApi s = serverApi;
+        if (s == null) {
+            return null;
+        }
+        try {
+            VoicechatConnection c = s.getConnectionOf(player);
+            de.maxhenkel.voicechat.api.Group g = c == null ? null : c.getGroup();
+            if (g == null) {
+                return null;
+            }
+            return new String[]{g.getName(), groupType(g)};
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** "normal", "open" or "isolated"; "" on Simple Voice Chat versions without group types. */
+    public static String groupType(de.maxhenkel.voicechat.api.Group g) {
+        try {
+            de.maxhenkel.voicechat.api.Group.Type t = g.getType();
+            return t == de.maxhenkel.voicechat.api.Group.Type.OPEN ? "open"
+                    : t == de.maxhenkel.voicechat.api.Group.Type.ISOLATED ? "isolated" : "normal";
+        } catch (Throwable t) {
+            return "";
+        }
     }
 
     /** Whether a player has Simple Voice Chat (connected or not), as far as the server knows. */
@@ -289,6 +323,20 @@ public class AudioDistancePlugin implements VoicechatPlugin {
     }
 
     /** Name of the Simple Voice Chat group you are in, or {@code null}. */
+    /** Type of the Simple Voice Chat group you are in ({@link #groupType}), or {@code null}. */
+    public static String selfGroupType() {
+        VoicechatClientApi c = clientApi;
+        if (c == null) {
+            return null;
+        }
+        try {
+            de.maxhenkel.voicechat.api.Group group = c.getGroup();
+            return group == null ? null : groupType(group);
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
     public static String selfGroupName() {
         VoicechatClientApi c = clientApi;
         if (c == null) {

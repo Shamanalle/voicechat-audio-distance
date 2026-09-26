@@ -595,6 +595,21 @@ public abstract class SettingsScreen extends Screen {
                 "lock " + next(SERVER_LOCKS, locked));
         serverButton(tr("server.monitor", yesNo(monitor)), "server.monitor.tooltip", x2, y, third,
                 "monitor " + ("true".equalsIgnoreCase(monitor) ? "off" : "on"));
+        String openRange = st.getProperty("open_group_range", "true");
+        serverButton(tr("server.group.open_range", yesNo(openRange)), "server.group.open_range.tooltip", x3, y, third,
+                "group open_range " + ("true".equalsIgnoreCase(openRange) ? "off" : "on"));
+
+        // Rules inside Simple Voice Chat groups
+        y += ROW;
+        String groupDead = st.getProperty("group_dead_silent", "false");
+        String groupSpectators = st.getProperty("group_spectators_apart", "false");
+        String groupZones = st.getProperty("group_isolated_zones", "false");
+        serverButton(tr("server.group.dead", yesNo(groupDead)), "server.group.dead.tooltip", left, y, third,
+                "group dead " + ("true".equalsIgnoreCase(groupDead) ? "off" : "on"));
+        serverButton(tr("server.group.spectators", yesNo(groupSpectators)), "server.group.spectators.tooltip", x2, y, third,
+                "group spectators " + ("true".equalsIgnoreCase(groupSpectators) ? "off" : "on"));
+        serverButton(tr("server.group.zones", yesNo(groupZones)), "server.group.zones.tooltip", x3, y, third,
+                "group zones " + ("true".equalsIgnoreCase(groupZones) ? "off" : "on"));
 
         // Zones: a list to pick from, the picked zone's settings under it
         y += ROW + 4;

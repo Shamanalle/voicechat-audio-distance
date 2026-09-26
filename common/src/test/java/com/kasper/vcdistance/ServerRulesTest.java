@@ -344,4 +344,45 @@ public class ServerRulesTest {
         assertTrue(r.state().getProperty("zone.0").startsWith("box|x|"), r.state().toString());
         assertEquals("1.8.0", LinkProtocol.helloVersion(LinkProtocol.hello("1.8.0")));
     }
+
+    @Test
+    @DisplayName("Group rules: each one on its own, and /vcd group saves them")
+    void groupRules() throws IOException {
+        ServerSettings s = settings("""
+                zone.box.booth.world=world
+                zone.box.booth.from=0,0,0
+                zone.box.booth.to=4,100,4
+                zone.box.booth.isolated=true
+                """);
+        ServerPlayers.Info inside = player("In", "world", 2, 2);
+        ServerPlayers.Info outside = player("Out", "world", 300, 300);
+        ServerPlayers.Info dead = player("Dead", "world", 300, 300, false, false, false, "");
+        ServerPlayers.Info ghost = player("Ghost", "world", 300, 300, false, true, true, "");
+
+        // Nothing applies to groups by default, open groups keep the range rules
+        assertFalse(s.hasGroupRules());
+        assertTrue(s.isOpenGroupRange());
+        assertTrue(ServerRange.decideGroup(s, inside, outside).hears());
+        assertTrue(ServerRange.decideGroup(s, dead, outside).hears());
+        assertTrue(ServerRange.decideGroup(s, ghost, outside).hears());
+
+        UUID admin = UUID.randomUUID();
+        AdminCommands.run("group zones on", s, ctx(admin));
+        AdminCommands.run("group dead on", s, ctx(admin));
+        AdminCommands.run("group spectators on", s, ctx(admin));
+        AdminCommands.run("group open_range off", s, ctx(admin));
+        assertTrue(s.hasGroupRules());
+        assertEquals(ServerRange.Reason.ISOLATED, ServerRange.decideGroup(s, inside, outside).reason());
+        assertEquals(ServerRange.Reason.DEAD, ServerRange.decideGroup(s, dead, outside).reason());
+        assertEquals(ServerRange.Reason.SPECTATOR, ServerRange.decideGroup(s, ghost, outside).reason());
+        assertTrue(ServerRange.decideGroup(s, ghost, player("Ghost2", "world", 300, 300, false, true, true, "")).hears());
+
+        ServerSettings again = new ServerSettings(s.getPath());
+        again.load();
+        assertTrue(again.isGroupDeadSilent());
+        assertTrue(again.isGroupSpectatorsApart());
+        assertTrue(again.isGroupIsolatedZones());
+        assertFalse(again.isOpenGroupRange());
+        assertTrue(AdminCommands.run("status", again, ctx(admin)).stream().anyMatch(l -> l.startsWith("Groups:")));
+    }
 }
