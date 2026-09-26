@@ -209,11 +209,23 @@ public abstract class SettingsScreen extends Screen {
         }
 
         initServerChip(w);
-        if (AudioDistancePlugin.LINK.isEnforced()) {
+        DistanceConfig.Part part = lockedPartOf(tab);
+        if (part != null && AudioDistancePlugin.LINK.isLocked(part)) {
             for (AbstractWidget widget : editWidgets) {
                 widget.active = false;
             }
         }
+    }
+
+    /** The part of the sound settings a tab changes, which the server may lock; {@code null} for the others. */
+    private static DistanceConfig.Part lockedPartOf(Tab tab) {
+        return switch (tab) {
+            case DISTANCE -> DistanceConfig.Part.CURVE;
+            case WALLS -> DistanceConfig.Part.WALLS;
+            case MATERIALS -> DistanceConfig.Part.MATERIALS;
+            case EFFECTS -> DistanceConfig.Part.EFFECTS;
+            default -> null;
+        };
     }
 
     /** Top-right corner: what the server offers, when it has the addon. */
@@ -514,6 +526,19 @@ public abstract class SettingsScreen extends Screen {
         };
     }
 
+    /** What {@code /vcd lock} cycles through on the Server tab. */
+    private static final String[] SERVER_LOCKS = {"all", "curve,walls", "curve", "none"};
+
+    private static Component lockedName(String locked) {
+        return switch (locked) {
+            case "all" -> tr("server.locked.all");
+            case "none" -> tr("server.locked.none");
+            case "curve" -> tr("server.locked.curve");
+            case "curve,walls" -> tr("server.locked.curve_walls");
+            default -> Component.literal(locked);
+        };
+    }
+
     private static Component yesNo(String bool) {
         boolean on = Boolean.parseBoolean(bool);
         return tr(on ? "on" : "off");
@@ -562,6 +587,14 @@ public abstract class SettingsScreen extends Screen {
                 "rule dead " + ("true".equalsIgnoreCase(dead) ? "off" : "on"));
         serverButton(tr("server.spectators", yesNo(spectators)), "server.spectators.tooltip", x3, y, third,
                 "rule spectators " + ("true".equalsIgnoreCase(spectators) ? "off" : "on"));
+
+        y += ROW;
+        String locked = st.getProperty("profile_locked", "all");
+        String monitor = st.getProperty("allow_monitor", "true");
+        serverButton(tr("server.locked", lockedName(locked)), "server.locked.tooltip", left, y, third,
+                "lock " + next(SERVER_LOCKS, locked));
+        serverButton(tr("server.monitor", yesNo(monitor)), "server.monitor.tooltip", x2, y, third,
+                "monitor " + ("true".equalsIgnoreCase(monitor) ? "off" : "on"));
 
         // Zones: a list to pick from, the picked zone's settings under it
         y += ROW + 4;
@@ -807,7 +840,7 @@ public abstract class SettingsScreen extends Screen {
     }
 
     private void refreshPresetButtons() {
-        boolean enforced = AudioDistancePlugin.LINK.isEnforced();
+        boolean enforced = AudioDistancePlugin.LINK.isLocked(DistanceConfig.Part.CURVE);
         for (int i = 0; i < presetButtons.size(); i++) {
             presetButtons.get(i).active = !enforced && !presetOrder.get(i).matches(config, AudioDistancePlugin.getServerMaxDistance());
         }
@@ -845,7 +878,10 @@ public abstract class SettingsScreen extends Screen {
         if (serverChip) {
             c.text(this.title, left, 8, Palette.TEXT);
             if (AudioDistancePlugin.LINK.isEnforced()) {
-                c.right(tr("server.enforced"), right, 8, Palette.WARN);
+                DistanceConfig.Part part = lockedPartOf(tab);
+                boolean lockedHere = part == null || AudioDistancePlugin.LINK.isLocked(part);
+                c.right(tr(lockedHere ? "server.enforced" : "server.enforced.free"), right, 8,
+                        lockedHere ? Palette.WARN : Palette.TEXT_MUTED);
             }
         } else {
             c.centered(this.title, this.width / 2, 8, Palette.TEXT);
@@ -1017,7 +1053,9 @@ public abstract class SettingsScreen extends Screen {
         SpeakerRegistry.Speaker hovered = null;
         int hoverX = 0;
         int hoverY = 0;
-        for (SpeakerRegistry.Speaker s : AudioDistancePlugin.SPEAKERS.active(System.nanoTime())) {
+        List<SpeakerRegistry.Speaker> dots = AudioDistancePlugin.LINK.isMonitorAllowed()
+                ? AudioDistancePlugin.SPEAKERS.active(System.nanoTime()) : List.of();
+        for (SpeakerRegistry.Speaker s : dots) {
             if (s.getDistance() < 0.0) {
                 continue;
             }
@@ -1221,6 +1259,10 @@ public abstract class SettingsScreen extends Screen {
         c.right(perf, right - 6, y, AudioDistancePlugin.CLIENT_PERF.isBusy() ? Palette.WARN : Palette.TEXT_MUTED);
         c.text(fit(c, serverLine, right - left - 18 - c.width(perf)), left + 6, y, Palette.TEXT_MUTED);
 
+        if (!AudioDistancePlugin.LINK.isMonitorAllowed()) {
+            c.centered(tr("monitor.off_by_server"), midX, (y + contentBottom) / 2, Palette.TEXT_DIM);
+            return;
+        }
         long now = System.nanoTime();
         List<NearbyPlayers.Row> rows = NearbyPlayers.rows(AudioDistancePlugin.SPEAKERS.active(now),
                 AudioDistancePlugin.NEARBY.players(), id -> AudioDistancePlugin.voiceState(id, now));

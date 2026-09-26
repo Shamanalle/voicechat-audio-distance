@@ -407,6 +407,117 @@ public final class DistanceConfig {
         changed();
     }
 
+    /** A part of the sound settings that a server can lock while it enforces its profile. */
+    public enum Part {
+        /** Curve: model, falloff, full-volume distance, edge volume, whisper falloff. */
+        CURVE("curve"),
+        /** Walls on or off and their strength. */
+        WALLS("walls"),
+        /** How much each material muffles. */
+        MATERIALS("materials"),
+        /** Echo, water, weather and voices round corners. */
+        EFFECTS("effects");
+
+        private final String id;
+
+        Part(String id) {
+            this.id = id;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public static Part fromId(String id) {
+            if (id != null) {
+                String s = id.trim().toLowerCase(Locale.ROOT);
+                for (Part p : values()) {
+                    if (p.id.equals(s)) {
+                        return p;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Parses "all", "none" or a list like "curve, walls".
+         *
+         * @return the parts, or {@code null} when the text has an unknown part
+         */
+        public static java.util.EnumSet<Part> parseSet(String text) {
+            String s = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
+            if (s.isEmpty() || s.equals("all")) {
+                return java.util.EnumSet.allOf(Part.class);
+            }
+            java.util.EnumSet<Part> set = java.util.EnumSet.noneOf(Part.class);
+            if (s.equals("none")) {
+                return set;
+            }
+            for (String item : s.split("[,\\s]+")) {
+                if (item.isEmpty()) {
+                    continue;
+                }
+                Part p = fromId(item);
+                if (p == null) {
+                    return null;
+                }
+                set.add(p);
+            }
+            return set;
+        }
+
+        /** "all", "none" or the parts joined by commas. */
+        public static String format(java.util.Set<Part> parts) {
+            if (parts.size() == values().length) {
+                return "all";
+            }
+            if (parts.isEmpty()) {
+                return "none";
+            }
+            StringBuilder b = new StringBuilder();
+            for (Part p : values()) {
+                if (parts.contains(p)) {
+                    b.append(b.length() == 0 ? "" : ",").append(p.id);
+                }
+            }
+            return b.toString();
+        }
+    }
+
+    /** Copies one part of the sound settings from {@code other}. */
+    public void copyPart(Part part, DistanceConfig other) {
+        switch (part) {
+            case CURVE -> {
+                model = other.model;
+                attenuationFactor = other.attenuationFactor;
+                minVolumeFraction = other.minVolumeFraction;
+                openalReferenceRatio = other.openalReferenceRatio;
+                whisperMultiplier = other.whisperMultiplier;
+            }
+            case WALLS -> {
+                occlusionEnabled = other.occlusionEnabled;
+                occlusionStrength = other.occlusionStrength;
+            }
+            case MATERIALS -> {
+                for (AcousticMaterial m : AcousticMaterial.values()) {
+                    double w = other.getMaterialWeight(m);
+                    synchronized (materialWeights) {
+                        materialWeights[m.ordinal()] = w;
+                    }
+                }
+            }
+            case EFFECTS -> {
+                reverbEnabled = other.reverbEnabled;
+                reverbStrength = other.reverbStrength;
+                underwaterEnabled = other.underwaterEnabled;
+                weatherEnabled = other.weatherEnabled;
+                diffractionEnabled = other.diffractionEnabled;
+            }
+        }
+        changed();
+    }
+
     // -------------------------------------------------------------------------
     // Persistence
     // -------------------------------------------------------------------------

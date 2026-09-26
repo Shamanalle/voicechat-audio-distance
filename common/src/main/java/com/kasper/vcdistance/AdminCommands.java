@@ -21,6 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * /vcd preset export | import &lt;code&gt;             the profile as a code players can paste
  * /vcd walls 0-100|off                         wall strength for everyone, in %
  * /vcd serverwalls on|off                      walls for players without the addon
+ * /vcd lock all|none|curve,walls,...           what players cannot change while the profile is enforced
+ * /vcd monitor on|off                          monitor, radar and nearby players in the HUD
  * /vcd zones                                   every zone
  * /vcd zone pos1|pos2 | create &lt;name&gt; [radius] | set &lt;name&gt; &lt;setting&gt; &lt;value&gt; | delete &lt;name&gt; | info
  * /vcd rule sneak|dead|spectators|megaphone|megaphone_range &lt;value&gt;
@@ -31,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class AdminCommands {
 
     public static final String NAME = "vcd";
-    static final String[] SUBCOMMANDS = {"status", "reload", "profile", "preset", "walls", "serverwalls", "zones", "zone",
+    static final String[] SUBCOMMANDS = {"status", "reload", "profile", "preset", "walls", "serverwalls", "lock", "monitor", "zones", "zone",
             "rule", "require", "debug", "help"};
     static final String[] MODES = {"off", "suggest", "enforce"};
     static final String[] PRESETS = {"vanilla", "realistic", "clear", "stealth", "custom", "export", "import"};
@@ -127,6 +129,25 @@ public final class AdminCommands {
                 settings.setServerWalls(on);
                 saved(settings, ctx, out, m.get(on ? "serverwalls_on" : "serverwalls_off"));
             }
+            case "lock" -> {
+                java.util.Set<DistanceConfig.Part> parts = args.length > 1
+                        ? DistanceConfig.Part.parseSet(String.join(",", java.util.Arrays.copyOfRange(args, 1, args.length))) : null;
+                if (parts == null) {
+                    out.add(m.get("usage", "/vcd lock all|none|curve,walls,materials,effects"));
+                    break;
+                }
+                settings.setLockedParts(parts);
+                saved(settings, ctx, out, m.get("lock_set", DistanceConfig.Part.format(parts)));
+            }
+            case "monitor" -> {
+                Boolean on = args.length > 1 ? parseOnOff(args[1]) : null;
+                if (on == null) {
+                    out.add(m.get("usage", "/vcd monitor on|off"));
+                    break;
+                }
+                settings.setMonitorAllowed(on);
+                saved(settings, ctx, out, m.get(on ? "monitor_on" : "monitor_off"));
+            }
             case "zones" -> zones(settings, m, out);
             case "zone" -> zone(args, settings, ctx, me, m, out);
             case "rule" -> rule(args, settings, ctx, m, out);
@@ -149,7 +170,8 @@ public final class AdminCommands {
                 case "profile" -> MODES;
                 case "preset" -> PRESETS;
                 case "walls" -> new String[]{"off", "30", "60", "85", "100"};
-                case "serverwalls" -> new String[]{"on", "off"};
+                case "serverwalls", "monitor" -> new String[]{"on", "off"};
+                case "lock" -> new String[]{"all", "none", "curve", "walls", "materials", "effects", "curve,walls"};
                 case "zone" -> ZONE_ACTIONS;
                 case "rule" -> RULES;
                 case "require" -> REQUIRE;
@@ -189,6 +211,8 @@ public final class AdminCommands {
         out.add(m.get("status.players", ctx.addonPlayers(), ctx.onlinePlayers()));
         out.add(m.get("status.profile", settings.getProfileMode().getId(), settings.getProfilePreset(),
                 p.getModel().getId(), p.isReverbEnabled() ? pct(p.getReverbStrength()) : m.get("off")));
+        out.add(m.get("status.locks", DistanceConfig.Part.format(settings.getLockedParts()),
+                settings.isMonitorAllowed() ? m.get("on") : m.get("off")));
         out.add(m.get("status.rules", pct(settings.getSneakMultiplier()),
                 settings.isDeadSilent() ? m.get("on") : m.get("off"),
                 settings.isSpectatorsOnly() ? m.get("on") : m.get("off"),
@@ -539,7 +563,7 @@ public final class AdminCommands {
 
     private static void help(Messages m, List<String> out) {
         out.add(m.get("help.title"));
-        for (String line : new String[]{"status", "reload", "profile", "preset", "walls", "serverwalls", "zones", "zone",
+        for (String line : new String[]{"status", "reload", "profile", "preset", "walls", "serverwalls", "lock", "monitor", "zones", "zone",
                 "rule", "require", "debug"}) {
             out.add(m.get("help." + line));
         }

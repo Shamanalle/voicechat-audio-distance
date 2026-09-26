@@ -32,7 +32,7 @@ public final class ServerSettings {
      * 3: echo, water and weather; 4: zones and messages_language; 5: more materials;
      * 6: boxes and zone rules, game rules, the addon requirement, messages in every language.
      */
-    private static final int SETTINGS_VERSION = 6;
+    private static final int SETTINGS_VERSION = 7;
     private static final String ZONE_PREFIX = "zone.";
     public static final String CUSTOM_PRESET = "custom";
 
@@ -118,6 +118,8 @@ public final class ServerSettings {
     private volatile String addonUrl = DEFAULT_ADDON_URL;
     private volatile ProfileMode profileMode = ProfileMode.OFF;
     private volatile String profilePreset = CUSTOM_PRESET;
+    private volatile java.util.Set<DistanceConfig.Part> lockedParts = java.util.EnumSet.allOf(DistanceConfig.Part.class);
+    private volatile boolean allowMonitor = true;
     private volatile boolean serverWalls = true;
     private volatile int maxStreams = DEFAULT_MAX_STREAMS;
     private volatile long loadedModified = Long.MIN_VALUE;
@@ -154,6 +156,16 @@ public final class ServerSettings {
         return profilePreset;
     }
 
+    /** The parts of the profile players cannot change while it is enforced. */
+    public java.util.Set<DistanceConfig.Part> getLockedParts() {
+        return lockedParts;
+    }
+
+    /** Players with the addon may see the monitor, the radar and nearby players in the HUD. */
+    public boolean isMonitorAllowed() {
+        return allowMonitor;
+    }
+
     /** Server-side wall muffling for players without the addon. */
     public boolean isServerWalls() {
         return serverWalls;
@@ -182,6 +194,13 @@ public final class ServerSettings {
             return;
         }
         profileMode = ProfileMode.fromId(props.getProperty("profile_mode"), ProfileMode.OFF);
+        java.util.Set<DistanceConfig.Part> locked = DistanceConfig.Part.parseSet(props.getProperty("profile_locked", "all"));
+        if (locked == null) {
+            DistanceConfig.LOGGER.warn("Unknown part in profile_locked '{}' in {}, locking all of it", props.getProperty("profile_locked"), file);
+            locked = java.util.EnumSet.allOf(DistanceConfig.Part.class);
+        }
+        lockedParts = locked;
+        allowMonitor = DistanceConfig.parseBoolean(props, "allow_monitor", true);
         String language = props.getProperty("messages_language", "auto").trim().toLowerCase(Locale.ROOT);
         messagesLanguage = language.isEmpty() || language.equals("auto") ? "auto" : ServerText.language(language);
         zones = readZones(props, file);
@@ -273,6 +292,18 @@ public final class ServerSettings {
                         "  enforce - профиль ниже действует, пока они играют здесь (честная игра в PvP и на ивентах).",
                         "По умолчанию off.")
                 .value("profile_mode", profileMode.getId())
+                .comment("With enforce: which parts of the profile players cannot change.",
+                        "  all, or any of: curve, walls, materials, effects (e.g. \"curve, walls\").",
+                        "  The parts left out stay the player's own. Default all.",
+                        "При enforce: какие части профиля игроки не могут менять.",
+                        "  all или любые из: curve, walls, materials, effects (например \"curve, walls\").",
+                        "  Остальные части остаются как у игрока. По умолчанию all.")
+                .value("profile_locked", DistanceConfig.Part.format(lockedParts))
+                .comment("false: players with the addon see no monitor, no radar and no nearby players in the HUD",
+                        "(no seeing through walls in PvP). Their own talking and how many hear them stay. Default true.",
+                        "false: у игроков с аддоном нет монитора, радара и игроков рядом в HUD",
+                        "(нельзя видеть сквозь стены в PvP). Их собственная речь и сколько их слышат остаются. По умолчанию true.")
+                .value("allow_monitor", allowMonitor)
                 .comment("The server's sound profile:",
                         "  vanilla   - like plain Simple Voice Chat;",
                         "  realistic - natural falloff;",
@@ -580,6 +611,8 @@ public final class ServerSettings {
     public void writeState(Properties p, String prefix) {
         p.setProperty(prefix + "profile_mode", profileMode.getId());
         p.setProperty(prefix + "profile_preset", profilePreset);
+        p.setProperty(prefix + "profile_locked", DistanceConfig.Part.format(lockedParts));
+        p.setProperty(prefix + "allow_monitor", String.valueOf(allowMonitor));
         p.setProperty(prefix + "walls_strength", DistanceConfig.format(profile.isOcclusionEnabled() ? profile.getOcclusionStrength() : 0.0));
         p.setProperty(prefix + "server_walls", String.valueOf(serverWalls));
         p.setProperty(prefix + "sneak_range_multiplier", DistanceConfig.format(sneakMultiplier));
@@ -848,6 +881,19 @@ public final class ServerSettings {
         profile.copyFrom(imported);
         profilePreset = CUSTOM_PRESET;
         return true;
+    }
+
+    /** The parts players cannot change while the profile is enforced; call {@link #save()} to keep it. */
+    public void setLockedParts(java.util.Set<DistanceConfig.Part> parts) {
+        java.util.EnumSet<DistanceConfig.Part> copy = java.util.EnumSet.noneOf(DistanceConfig.Part.class);
+        if (parts != null) {
+            copy.addAll(parts);
+        }
+        this.lockedParts = copy;
+    }
+
+    public void setMonitorAllowed(boolean allowed) {
+        this.allowMonitor = allowed;
     }
 
     public void setServerWalls(boolean enabled) {

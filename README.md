@@ -23,9 +23,11 @@
 An addon for **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)** that shapes how voices fade with distance and muffles them through walls.
 
 It works on either side, and each side is useful alone:
-- **Client only** — you choose how *you* hear voices; nothing is needed on the server.
-- **Server only** — players with plain Simple Voice Chat hear voices muffled through walls.
-- **Both** — the server can share its sound profile, and the client gets exact whisper ranges while doing the wall muffling itself.
+- **Client only** — you choose how *you* hear voices: curve, walls, echo, HUD. Nothing is needed on the server.
+- **Server only** — players with plain Simple Voice Chat hear voices muffled through walls, and the server gets sound zones and game rules.
+- **Both** — everything, plus the server's sound profile, zones with echo and entry messages, and the Server tab for admins.
+
+See [What works where](#what-works-where) for the full list.
 
 ### Features
 
@@ -99,7 +101,8 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 - **CPU limit:** at most `server_walls_max_streams` voices (default 24) are processed at once; everything above that passes through. Any error falls back to the original audio, so voice chat never goes silent because of the addon.
 - **Server sound profile** for players who have the addon:
   - `suggest` — they get a chat notice and an *Apply server profile* button;
-  - `enforce` — the server's profile is used while they play there (fair play for PvP and events); their own settings return when they leave.
+  - `enforce` — the server's profile is used while they play there (fair play for PvP and events); their own settings return when they leave. The server can lock only some parts (`profile_locked`: curve, walls, materials, effects) and leave the rest to the player.
+  - **No seeing through walls:** `allow_monitor=false` turns off the monitor, the radar and nearby players in the HUD for everyone, for PvP.
 - **Exact whisper range:** the server sends its real voice and whisper distances, so the whisper curve on the graph is exact.
 - **Voice chat state of nearby players:** once a second the server tells each player with the addon who within voice range has no Simple Voice Chat, has it disconnected, turned the sound off, or is in a group, for the monitor.
 - **Hot reload:** edits to the server settings file are picked up without a restart and sent to connected players.
@@ -124,6 +127,8 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
   | `/vcd preset export` / `/vcd preset import <code>` | The server's profile as a profile code |
   | `/vcd walls 0-100\|off` | Wall strength for everyone, in % |
   | `/vcd serverwalls on\|off` | Walls for players without the addon |
+  | `/vcd lock all\|none\|curve,walls,materials,effects` | What players cannot change while the profile is enforced |
+  | `/vcd monitor on\|off` | Monitor, radar and nearby players in the HUD for players with the addon |
   | `/vcd zones` | Every zone |
   | `/vcd zone pos1` / `pos2`, `/vcd zone create <name> [radius]` | Make a box zone from two corners, or around you |
   | `/vcd zone set <name> <setting> <value\|default>` | `mode`, `preset`, `voice_range`, `whisper_range`, `range_multiplier`, `walls`, `echo`, `isolated`, `message`, `priority` |
@@ -136,26 +141,61 @@ Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot a
 
 ### What works where
 
+The addon can be installed on the client (the player's game), on the server, or on both. Each way works on its own.
+
+**🎮 Addon on your client, server without it** (any server with Simple Voice Chat)
+- ✅ Distance curve and presets: how *you* hear voices fading.
+- ✅ Walls, doors and glass muffle voices, and voices come through doorways.
+- ✅ Echo in caves and halls, dull voices under water, rain and thunder.
+- ✅ Voice HUD, monitor and radar with every nearby player.
+- ✅ Profile codes, colors for color blindness, all settings.
+- ⚠️ Only you hear the difference: other players hear as usual.
+- ⚠️ The whisper curve on the graph is approximate (half the range), and the monitor knows less about other players' voice chat.
+- ❌ No sound zones, game rules, server profile or Server tab: these need the addon on the server.
+
+**🖥️ Addon on the server, players without it** (plain Simple Voice Chat on their side)
+- ✅ Voices are muffled through walls for every player: the server does it for them.
+- ✅ Sound zones that change the voice range (stage, library), wall strength, or isolate an area.
+- ✅ Game rules: sneaking, dead players, spectators, megaphone.
+- ✅ `/vcd` commands for admins, messages in each player's language.
+- ✅ Can suggest or require the addon, with a download link.
+- ❌ No curve choice, echo, water, weather, HUD or monitor: these need the addon on the client.
+
+**🤝 Addon on both** (everything)
+- ✅ Everything above.
+- ✅ The server can share its sound profile (suggest it with a button, or enforce it for fair PvP and events), lock all of it or only some parts, and turn off the monitor and radar.
+- ✅ Zones also set a fixed echo (a cathedral) and show a message on entering.
+- ✅ Exact whisper range on the graph.
+- ✅ The monitor shows every nearby player's voice chat state, from the server.
+- ✅ Admins get the **Server** tab: zones, rules and settings with buttons.
+- The client does the wall muffling itself, and the server skips these players, so voices are never muffled twice.
+
 | | Client only | Server only | Both |
 |---|---|---|---|
-| Distance curve | ✅ | — | ✅ (the server profile can be suggested or enforced) |
-| Wall muffling | ✅ locally | ✅ for players without the addon | ✅ locally; the server skips these players |
-| Settings screen, monitor, HUD | ✅ | — | ✅ plus server status and every nearby player's voice chat state |
-| Echo, water, weather | ✅ | — | ✅ (can be part of the server profile) |
-| Whisper curve on the graph | approximate (½ of the range) | — | exact |
+| Distance curve, presets | ✅ | — | ✅ + server profile |
+| Walls | ✅ for you | ✅ for players without the addon | ✅ |
+| Echo, water, weather | ✅ | — | ✅ |
+| HUD, monitor, radar | ✅ | — | ✅ + state of every player |
+| Sound zones: voice range, walls, isolation | — | ✅ | ✅ |
+| Sound zones: echo, message on entering | — | — | ✅ |
+| Game rules (sneak, dead, spectators, megaphone) | — | ✅ | ✅ |
+| Addon requirement, `/vcd` | — | ✅ | ✅ |
+| Server tab in game | — | — | ✅ (admins) |
+| Server locks settings, turns off the monitor | — | — | ✅ |
+| Whisper curve on the graph | approximate | — | exact |
 
 ### Versions and files
 
 | Loader | Minecraft | File | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.8.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.8.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.8.0.jar` | 17+ | Bukkit version |
-| Forge | 1.20.1 | `voice-physics-forge-1.8.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.8.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (server) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.0.jar` | 17+ | Bukkit version |
+| Forge | 1.20.1 | `voice-physics-forge-2.0.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** is the full version, on the client and on the server. It needs [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 - **Paper / Purpur / Spigot / Bukkit** is the server side as a plugin: walls for players without the addon, and the server profile for players with it. Players can join with any client: with the Fabric addon, without it, or without mods at all. The plugin is compiled against the 1.20.1 API and checked in CI against every Paper release from 1.20.1 to 26.3: every class, method, field and override it uses resolves the same way (Paper 1.20.5 cannot be checked: its API snapshot is no longer downloadable).
@@ -179,7 +219,7 @@ Changes are heard immediately. *Done* or `Esc` saves; *Cancel* restores everythi
 3. Walls for players without the addon are on by default. To share a profile, set `profile_mode` to `suggest` or `enforce` and pick a `profile_preset`. Every key in the file has a comment in English and Russian, and the file is re-read automatically.
 
 **Server (Paper / Purpur / Spigot / Bukkit)**
-1. Put `voice-physics-bukkit-1.8.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
+1. Put `voice-physics-bukkit-2.0.0.jar` into the server's `plugins/` folder, next to the Bukkit version of Simple Voice Chat.
 2. Start the server once; it creates `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. The settings are the same as on Fabric (see below), and the file is also re-read automatically.
 
@@ -232,6 +272,8 @@ The file has eight sections, and every key has a comment in English and Russian.
 | Key | Values | Default | What it does |
 |---|---|---|---|
 | `profile_mode` | `off` / `suggest` / `enforce` | `off` | Keep their own settings / offer the profile / use it while they play here |
+| `profile_locked` | `all`, `none` or any of `curve`, `walls`, `materials`, `effects` | `all` | With `enforce`: the parts players cannot change; the rest stays their own |
+| `allow_monitor` | `true` / `false` | `true` | `false`: no monitor, no radar and no nearby players in the HUD (no seeing others through walls) |
 | `profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` / `custom` | `custom` | The server's sound profile; `custom` uses the `profile.*` values |
 | `profile.*` | the curve keys of the client file | client defaults | Custom profile: `distance_model`, `attenuation_factor`, `openal_reference_ratio`, `min_volume_fraction`, `whisper_multiplier` |
 
@@ -323,9 +365,11 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 Аддон для **[Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat)**: настраивает, как голоса затихают с расстоянием, и глушит их за стенами.
 
 Работает на любой стороне, и каждая сторона полезна сама по себе:
-- **Только клиент** — вы сами решаете, как слышите голоса *вы*; на сервер ничего ставить не нужно.
-- **Только сервер** — игроки с обычным Simple Voice Chat слышат голоса приглушёнными за стенами.
-- **Вместе** — сервер может передать свой профиль звука, а клиент получает точную дальность шёпота и сам глушит стены.
+- **Только клиент** — вы сами решаете, как слышите голоса: кривая, стены, эхо, HUD. На сервер ничего ставить не нужно.
+- **Только сервер** — игроки с обычным Simple Voice Chat слышат голоса приглушёнными за стенами, а у сервера есть звуковые зоны и правила игры.
+- **Вместе** — всё сразу, плюс профиль звука сервера, зоны с эхом и сообщениями при входе и вкладка «Сервер» для админов.
+
+Полный список — в разделе [Что где работает](#что-где-работает).
 
 ### Возможности
 
@@ -399,7 +443,8 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Ограничение нагрузки:** одновременно обрабатывается не больше `server_walls_max_streams` голосов (по умолчанию 24), остальные проходят как есть. При любой ошибке уходит исходный звук, так что голосовой чат из-за аддона не замолчит.
 - **Профиль звука сервера** для игроков с аддоном:
   - `suggest` — они получают сообщение в чате и кнопку «Применить профиль сервера»;
-  - `enforce` — профиль сервера действует, пока они на нём играют (честная игра в PvP и на ивентах); их собственные настройки возвращаются при выходе.
+  - `enforce` — профиль сервера действует, пока они на нём играют (честная игра в PvP и на ивентах); их собственные настройки возвращаются при выходе. Сервер может закрепить только часть (`profile_locked`: кривая, стены, материалы, эффекты), а остальное оставить игроку.
+  - **Без взгляда сквозь стены:** `allow_monitor=false` выключает монитор, радар и игроков рядом в HUD у всех, для PvP.
 - **Точная дальность шёпота:** сервер передаёт настоящие дальности голоса и шёпота, поэтому кривая шёпота на графике точная.
 - **Состояние голосового чата у игроков рядом:** раз в секунду сервер сообщает каждому игроку с аддоном, у кого в радиусе голоса нет Simple Voice Chat, у кого он не подключён, кто выключил звук и кто в группе, — для монитора.
 - **Горячая перезагрузка:** изменения в файле настроек сервера подхватываются без перезапуска и отправляются подключённым игрокам.
@@ -424,6 +469,8 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
   | `/vcd preset export` / `/vcd preset import <код>` | Профиль сервера в виде кода профиля |
   | `/vcd walls 0-100\|off` | Сила стен для всех, в % |
   | `/vcd serverwalls on\|off` | Стены для игроков без аддона |
+  | `/vcd lock all\|none\|curve,walls,materials,effects` | Что игроки не могут менять, пока профиль закреплён |
+  | `/vcd monitor on\|off` | Монитор, радар и игроки рядом в HUD у игроков с аддоном |
   | `/vcd zones` | Все зоны |
   | `/vcd zone pos1` / `pos2`, `/vcd zone create <имя> [радиус]` | Создать зону-бокс по двум углам или вокруг себя |
   | `/vcd zone set <имя> <параметр> <значение\|default>` | `mode`, `preset`, `voice_range`, `whisper_range`, `range_multiplier`, `walls`, `echo`, `isolated`, `message`, `priority` |
@@ -436,26 +483,61 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Что где работает
 
+Аддон ставится на клиент (игру игрока), на сервер или туда и туда. Каждый вариант работает сам по себе.
+
+**🎮 Аддон у вас, на сервере его нет** (любой сервер с Simple Voice Chat)
+- ✅ Кривая громкости и пресеты: как затихают голоса *для вас*.
+- ✅ Стены, двери и стекло глушат голоса, голос проходит через дверные проёмы.
+- ✅ Эхо в пещерах и залах, глухие голоса под водой, дождь и гроза.
+- ✅ HUD голоса, монитор и радар со всеми игроками рядом.
+- ✅ Коды профиля, цвета для дальтоников, все настройки.
+- ⚠️ Разницу слышите только вы: остальные слышат как обычно.
+- ⚠️ Кривая шёпота на графике примерная (половина дальности), а монитор знает меньше о голосовом чате других игроков.
+- ❌ Нет звуковых зон, правил игры, профиля сервера и вкладки «Сервер»: для них нужен аддон на сервере.
+
+**🖥️ Аддон на сервере, у игроков его нет** (у них обычный Simple Voice Chat)
+- ✅ Голоса глушатся стенами для всех игроков: сервер делает это за них.
+- ✅ Звуковые зоны, которые меняют дальность голоса (сцена, библиотека), силу стен или изолируют место.
+- ✅ Правила игры: корточки, мёртвые, зрители, мегафон.
+- ✅ Команды `/vcd` для админов, сообщения на языке каждого игрока.
+- ✅ Можно предложить или потребовать аддон, со ссылкой на скачивание.
+- ❌ Нет выбора кривой, эха, воды, погоды, HUD и монитора: для них нужен аддон у игрока.
+
+**🤝 Аддон и там, и там** (всё)
+- ✅ Всё, что выше.
+- ✅ Сервер может передать свой профиль звука (предложить кнопкой или закрепить для честного PvP и ивентов), закрепить его целиком или частично и выключить монитор и радар.
+- ✅ Зоны задают ещё и постоянное эхо (собор) и показывают сообщение при входе.
+- ✅ Точная дальность шёпота на графике.
+- ✅ Монитор показывает состояние голосового чата у всех игроков рядом, со слов сервера.
+- ✅ У админов есть вкладка **«Сервер»**: зоны, правила и настройки кнопками.
+- Стены глушит сам клиент, а сервер этих игроков пропускает, так что голоса не глушатся дважды.
+
 | | Только клиент | Только сервер | Вместе |
 |---|---|---|---|
-| Кривая громкости | ✅ | — | ✅ (профиль сервера можно рекомендовать или закрепить) |
-| Приглушение стенами | ✅ у себя | ✅ для игроков без аддона | ✅ у себя; сервер этих игроков пропускает |
-| Экран настроек, монитор, HUD | ✅ | — | ✅ плюс статус сервера и состояние голосового чата у всех игроков рядом |
-| Эхо, вода, погода | ✅ | — | ✅ (могут входить в профиль сервера) |
-| Кривая шёпота на графике | примерная (½ дальности) | — | точная |
+| Кривая громкости, пресеты | ✅ | — | ✅ + профиль сервера |
+| Стены | ✅ для вас | ✅ для игроков без аддона | ✅ |
+| Эхо, вода, погода | ✅ | — | ✅ |
+| HUD, монитор, радар | ✅ | — | ✅ + состояние всех игроков |
+| Звуковые зоны: дальность, стены, изоляция | — | ✅ | ✅ |
+| Звуковые зоны: эхо, сообщение при входе | — | — | ✅ |
+| Правила игры (корточки, мёртвые, зрители, мегафон) | — | ✅ | ✅ |
+| Требование аддона, `/vcd` | — | ✅ | ✅ |
+| Вкладка «Сервер» в игре | — | — | ✅ (админы) |
+| Сервер закрепляет настройки, выключает монитор | — | — | ✅ |
+| Кривая шёпота на графике | примерная | — | точная |
 
 ### Версии и файлы
 
 | Загрузчик | Minecraft | Файл | Java | Simple Voice Chat |
 |---|---|---|---|---|
-| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-1.8.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-1.8.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-1.8.0.jar` | 17+ | версия для Bukkit |
-| Forge | 1.20.1 | `voice-physics-forge-1.8.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
-| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-1.8.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
-| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
-| Forge | 26.1 – 26.3 | `voice-physics-forge-1.8.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Fabric / Quilt** | 1.20 – 1.20.1 | `voice-physics-fabric-2.0.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| **Fabric / Quilt** | 1.21 – 1.21.11 | `voice-physics-fabric-2.0.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **Fabric** | 26.1 – 26.3 | `voice-physics-fabric-2.0.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| **Paper / Purpur / Spigot / Bukkit** (сервер) | 1.20.1 – 26.3 | `voice-physics-bukkit-2.0.0.jar` | 17+ | версия для Bukkit |
+| Forge | 1.20.1 | `voice-physics-forge-2.0.0+mc1.20.1.jar` | 17+ | 1.20.1-2.4.0+ |
+| NeoForge / Forge | 1.21 – 1.21.11 | `voice-physics-{neoforge,forge}-2.0.0+mc1.21.x.jar` | 21+ | 1.21-2.5.0+ |
+| **NeoForge** | 26.1 – 26.3 | `voice-physics-neoforge-2.0.0+mc26.x.jar` | 25+ | 2.6.0+ |
+| Forge | 26.1 – 26.3 | `voice-physics-forge-2.0.0+mc26.x.jar` | 25+ | 2.6.0+ |
 
 - **Fabric** — полная версия, на клиенте и на сервере. Нужен [Fabric API](https://modrinth.com/mod/fabric-api); [Mod Menu](https://modrinth.com/mod/modmenu) — по желанию.
 - **Paper / Purpur / Spigot / Bukkit** — серверная часть в виде плагина: стены для игроков без аддона и профиль сервера для игроков с ним. Заходить можно с любым клиентом: с аддоном для Fabric, без него или совсем без модов. Плагин собран против API 1.20.1 и в CI проверяется на каждом релизе Paper от 1.20.1 до 26.3: каждый класс, метод, поле и переопределение, которые он использует, разрешаются одинаково (Paper 1.20.5 проверить нельзя: снимок его API больше не скачивается).
@@ -479,7 +561,7 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 3. Стены для игроков без аддона включены по умолчанию. Чтобы передавать профиль, поставьте `profile_mode` в `suggest` или `enforce` и выберите `profile_preset`. У каждого ключа в файле есть комментарий на английском и русском, файл перечитывается автоматически.
 
 **Сервер (Paper / Purpur / Spigot / Bukkit)**
-1. Положите `voice-physics-bukkit-1.8.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
+1. Положите `voice-physics-bukkit-2.0.0.jar` в папку `plugins/` сервера, рядом с версией Simple Voice Chat для Bukkit.
 2. Запустите сервер один раз — он создаст `plugins/VoicechatAudioDistance/vc-audio-distance-server.properties`.
 3. Настройки те же, что на Fabric (см. ниже), файл тоже перечитывается автоматически.
 
@@ -532,6 +614,8 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 | Ключ | Значения | По умолчанию | Что делает |
 |---|---|---|---|
 | `profile_mode` | `off` / `suggest` / `enforce` | `off` | Свои настройки / предложить профиль / включить его, пока игрок здесь |
+| `profile_locked` | `all`, `none` или любые из `curve`, `walls`, `materials`, `effects` | `all` | При `enforce`: части, которые игроки не могут менять; остальное остаётся их собственным |
+| `allow_monitor` | `true` / `false` | `true` | `false`: нет монитора, радара и игроков рядом в HUD (нельзя видеть других сквозь стены) |
 | `profile_preset` | `vanilla` / `realistic` / `clear` / `stealth` / `custom` | `custom` | Профиль звука сервера; `custom` берёт значения `profile.*` |
 | `profile.*` | ключи кривой из файла клиента | как у клиента | Свой профиль: `distance_model`, `attenuation_factor`, `openal_reference_ratio`, `min_volume_fraction`, `whisper_multiplier` |
 

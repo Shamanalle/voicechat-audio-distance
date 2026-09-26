@@ -61,6 +61,13 @@ jobs:
             fi
           fi
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          # release, beta or alpha, from .github/publish.json; a beta or alpha gets it in the release name
+          channel=$(jq -r '.channel // "release"' .github/publish.json)
+          if [ "${channel}" = "release" ]; then
+            echo "name=${tag}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${tag} (${channel})" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Test & build
         run: ./gradlew build --no-daemon
@@ -73,7 +80,7 @@ jobs:
         with:
           tag_name: ${{ steps.meta.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.name }}
           files: build/libs/*.jar
           body_path: release_body.md
         env:

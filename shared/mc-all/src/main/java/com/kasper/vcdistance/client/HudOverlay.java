@@ -87,7 +87,8 @@ public final class HudOverlay {
         if (notice != null && now - flashNanos <= FLASH_NANOS) {
             lines.add(new Line(notice, 0, Palette.ACCENT_LINE));
         }
-        if (mode == HudMode.OFF) {
+        if (mode == HudMode.OFF || !AudioDistancePlugin.LINK.isMonitorAllowed()) {
+            // The server may turn off who is where (no seeing through walls in PvP); messages stay
             draw(c, lines, screenW, screenH, prefs);
             return;
         }
