@@ -34,6 +34,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class AdminCommands {
 
     public static final String NAME = "vcd";
+    /** Wall strength suggestions: off, then every 5%. */
+    static final String[] WALLS_STEPS = wallsSteps();
+
+    private static String[] wallsSteps() {
+        String[] steps = new String[21];
+        steps[0] = "off";
+        for (int i = 1; i <= 20; i++) {
+            steps[i] = String.valueOf(i * 5);
+        }
+        return steps;
+    }
+
     static final String[] SUBCOMMANDS = {"status", "reload", "profile", "preset", "walls", "serverwalls", "lock", "monitor", "zones", "zone",
             "rule", "group", "require", "debug", "help"};
     static final String[] MODES = {"off", "suggest", "enforce"};
@@ -172,7 +184,7 @@ public final class AdminCommands {
             String[] options = switch (args[0].toLowerCase(Locale.ROOT)) {
                 case "profile" -> MODES;
                 case "preset" -> PRESETS;
-                case "walls" -> new String[]{"off", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"};
+                case "walls" -> WALLS_STEPS;
                 case "serverwalls", "monitor" -> new String[]{"on", "off"};
                 case "lock" -> new String[]{"all", "none", "curve", "walls", "materials", "effects", "curve,walls"};
                 case "zone" -> ZONE_ACTIONS;

@@ -572,10 +572,10 @@ public abstract class SettingsScreen extends Screen {
                 "profile " + next(SERVER_MODES, mode));
         serverButton(tr("server.preset", presetName(preset)), "server.preset.tooltip", x2, y, third,
                 "preset " + next(SERVER_PRESETS, preset));
-        // Walls in 10% steps: − and + either side of the value
+        // Walls in 5% steps: − and + either side of the value
         int wallsPct = (int) Math.round(parse(walls) * 100.0);
-        int down = Math.max(0, (wallsPct + 9) / 10 * 10 - 10);
-        int up = Math.min(100, wallsPct / 10 * 10 + 10);
+        int down = Math.max(0, (wallsPct + 4) / 5 * 5 - 5);
+        int up = Math.min(100, wallsPct / 5 * 5 + 5);
         serverButton(Component.literal("−"), "server.walls.tooltip", x3, y, 20, down == 0 ? "walls off" : "walls " + down)
                 .active = wallsPct > 0;
         serverButton(tr("server.walls", wallsPct == 0 ? tr("off") : Component.literal(wallsPct + "%")), "server.walls.tooltip",

@@ -12,11 +12,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 #### Changed
 - **Edge volume reshapes the curve.** The whole fade is now fitted between 100% and the edge volume, so the curve comes down smoothly and reaches it exactly at the edge of the range. Before, the curve was cut off by it: the voice fell to the edge volume early, stayed flat, then stopped at the edge. The graph, the *Listen* preview and what you hear all follow the new shape. Presets with an edge volume (Realistic, Clear) are a little louder in the middle of the range.
+- **Wall strength in 5% steps** on the Server tab (was 10%); `/vcd walls` suggests every 5%.
 
 ### Русский
 
 #### Изменено
 - **Громкость на краю меняет форму кривой.** Теперь всё затухание укладывается между 100% и громкостью на краю, и кривая плавно доходит до неё ровно на границе слышимости. Раньше громкость на краю просто срезала кривую: голос рано падал до неё, шёл ровно, а на границе обрывался. График, кнопка «Прослушать» и то, что вы слышите, следуют новой форме. Пресеты с громкостью на краю («Реализм», «Чётко») стали чуть громче в середине дистанции.
+- **Сила стен с шагом 5%** на вкладке «Сервер» (было 10%); `/vcd walls` подсказывает каждые 5%.
 
 ## [2.0.2] - 2026-09-26
 
