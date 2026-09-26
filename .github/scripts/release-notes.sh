@@ -20,7 +20,7 @@ fi
 
 printf '%s\n\n---\n\n' "$section"
 cat <<'NOTES'
-**Which file do I need?** See [Versions and files](https://github.com/Shamanalle/voicechat-audio-distance#versions-and-files) in the README.
+**Which file do I need?** See [Versions and files](https://github.com/Shamanalle/voice-physics#versions-and-files) in the README.
 
-**Какой файл нужен?** См. раздел [Версии и файлы](https://github.com/Shamanalle/voicechat-audio-distance#версии-и-файлы) в README.
+**Какой файл нужен?** См. раздел [Версии и файлы](https://github.com/Shamanalle/voice-physics#версии-и-файлы) в README.
 NOTES

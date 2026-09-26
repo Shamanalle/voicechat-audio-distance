@@ -4,8 +4,8 @@
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-lightgrey.svg?logo=fabric&logoColor=white)](https://fabricmc.net/)
 [![Server](https://img.shields.io/badge/Server-Fabric%20%7C%20Paper%20%7C%20Purpur%20%7C%20Spigot-lightgrey.svg)](#versions-and-files)
 [![Simple Voice Chat](https://img.shields.io/badge/Simple%20Voice%20Chat-2.4%2B-orange.svg)](https://modrinth.com/plugin/simple-voice-chat)
-[![Build Status](https://github.com/Shamanalle/voicechat-audio-distance/actions/workflows/build.yml/badge.svg)](https://github.com/Shamanalle/voicechat-audio-distance/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/Shamanalle/voicechat-audio-distance?logo=github&color=brightgreen)](https://github.com/Shamanalle/voicechat-audio-distance/releases)
+[![Build Status](https://github.com/Shamanalle/voice-physics/actions/workflows/build.yml/badge.svg)](https://github.com/Shamanalle/voice-physics/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/Shamanalle/voice-physics?logo=github&color=brightgreen)](https://github.com/Shamanalle/voice-physics/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **[English](#english)** · **[Русский](#русский)**
@@ -346,8 +346,8 @@ Walls always come from section 1, whichever preset is chosen. Older files are re
 JDK 25 is required; the 1.20 and 1.21 modules are compiled with `--release 17` / `21`.
 
 ```bash
-git clone https://github.com/Shamanalle/voicechat-audio-distance.git
-cd voicechat-audio-distance
+git clone https://github.com/Shamanalle/voice-physics.git
+cd voice-physics
 ./gradlew :common:test   # audio, server, config and translation tests
 ./gradlew build          # every jar in build/libs/
 ```
@@ -688,8 +688,8 @@ zone.box.booth.isolated=true
 Нужен JDK 25; модули 1.20 и 1.21 собираются с `--release 17` / `21`.
 
 ```bash
-git clone https://github.com/Shamanalle/voicechat-audio-distance.git
-cd voicechat-audio-distance
+git clone https://github.com/Shamanalle/voice-physics.git
+cd voice-physics
 ./gradlew :common:test   # тесты звука, сервера, конфига и переводов
 ./gradlew build          # все JAR в build/libs/
 ```

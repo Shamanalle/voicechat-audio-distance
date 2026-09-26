@@ -12,8 +12,8 @@
 - Git.
 
 ```bash
-git clone https://github.com/Shamanalle/voicechat-audio-distance.git
-cd voicechat-audio-distance
+git clone https://github.com/Shamanalle/voice-physics.git
+cd voice-physics
 ./gradlew :common:test             # fast: audio, server, config, translations
 ./gradlew build                    # every target, jars in build/libs/
 ./gradlew :fabric-1.21:runClient   # or :fabric-1.20 / :fabric-26; runServer for the server side
@@ -91,8 +91,8 @@ A store is skipped with a warning while its project id or token is missing. Setu
 - Git.
 
 ```bash
-git clone https://github.com/Shamanalle/voicechat-audio-distance.git
-cd voicechat-audio-distance
+git clone https://github.com/Shamanalle/voice-physics.git
+cd voice-physics
 ./gradlew :common:test             # быстро: звук, сервер, конфиг, переводы
 ./gradlew build                    # все версии, JAR в build/libs/
 ./gradlew :fabric-1.21:runClient   # или :fabric-1.20 / :fabric-26; runServer для серверной части

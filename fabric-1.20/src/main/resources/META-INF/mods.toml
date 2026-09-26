@@ -1,13 +1,13 @@
 modLoader = "lowcodefml"
 loaderVersion = "[46,)"
 license = "MIT"
-issueTrackerURL = "https://github.com/Shamanalle/voicechat-audio-distance/issues"
+issueTrackerURL = "https://github.com/Shamanalle/voice-physics/issues"
 
 [[mods]]
 modId = "vc_audio_distance"
 version = "${version}"
 displayName = "Voice Physics (lite)"
-displayURL = "https://github.com/Shamanalle/voicechat-audio-distance"
+displayURL = "https://github.com/Shamanalle/voice-physics"
 logoFile = "assets/vc-audio-distance/icon.png"
 authors = "Shamanalle"
 displayTest = "IGNORE_ALL_VERSION"
