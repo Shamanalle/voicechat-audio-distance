@@ -14,6 +14,7 @@ import java.util.Map;
  * /vcd reload                                  re-read the settings file
  * /vcd profile off|suggest|enforce             how the profile is offered
  * /vcd preset vanilla|realistic|clear|stealth|custom
+ * /vcd preset export | import &lt;code&gt;             the profile as a code players can paste
  * /vcd walls 0-100|off                         wall strength for everyone, in %
  * /vcd serverwalls on|off                      walls for players without the addon
  * /vcd zones                                   worlds and regions with their own profile
@@ -24,7 +25,7 @@ public final class AdminCommands {
     public static final String NAME = "vcd";
     static final String[] SUBCOMMANDS = {"status", "reload", "profile", "preset", "walls", "serverwalls", "zones", "help"};
     static final String[] MODES = {"off", "suggest", "enforce"};
-    static final String[] PRESETS = {"vanilla", "realistic", "clear", "stealth", "custom"};
+    static final String[] PRESETS = {"vanilla", "realistic", "clear", "stealth", "custom", "export", "import"};
 
     /** What the platform provides to the command. */
     public interface Context {
@@ -77,8 +78,24 @@ public final class AdminCommands {
             }
             case "preset" -> {
                 String name = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "";
+                if (name.equals("export")) {
+                    out.add(m.get("preset_export"));
+                    out.add(ProfileCode.encode(settings.profileIn(null, AudioDistancePlugin.serverVoiceDistance() > 0.0
+                            ? AudioDistancePlugin.serverVoiceDistance() : AudioDistancePlugin.FALLBACK_DISTANCE)));
+                    break;
+                }
+                if (name.equals("import")) {
+                    // The code may have been split by the chat box; spaces are ignored
+                    String code = args.length > 2 ? String.join("", java.util.Arrays.copyOfRange(args, 2, args.length)) : "";
+                    if (!settings.importProfile(code)) {
+                        out.add(m.get("usage", "/vcd preset import VP1:..."));
+                        break;
+                    }
+                    saved(settings, ctx, out, m.get("preset_imported"));
+                    break;
+                }
                 if (!name.equals(ServerSettings.CUSTOM_PRESET) && ServerSettings.presetByName(name) == null) {
-                    out.add(m.get("usage", "/vcd preset vanilla|realistic|clear|stealth|custom"));
+                    out.add(m.get("usage", "/vcd preset vanilla|realistic|clear|stealth|custom|export|import <code>"));
                     break;
                 }
                 settings.setProfilePreset(name);
@@ -143,6 +160,7 @@ public final class AdminCommands {
         out.add(m.get("status.profile", settings.getProfileMode().getId(), settings.getProfilePreset(),
                 p.getModel().getId(), p.isReverbEnabled() ? pct(p.getReverbStrength()) : m.get("off")));
         out.add(m.get("status.zones", settings.zones().size()));
+        out.add(m.get("status.perf", String.format(Locale.ROOT, "%.2f", AudioDistancePlugin.SERVER_WALLS.perf().averageMs())));
     }
 
     private static void zones(ServerSettings settings, Messages m, List<String> out) {
@@ -229,6 +247,12 @@ public final class AdminCommands {
                         "Режим профиля: %s. Сохранено и отправлено игрокам с аддоном."}),
                 Map.entry("preset_set", new String[]{"Profile preset: %s. Saved and sent to players with the addon.",
                         "Пресет профиля: %s. Сохранено и отправлено игрокам с аддоном."}),
+                Map.entry("preset_export", new String[]{"The server's profile as a code (players paste it on the Distance tab, servers with /vcd preset import):",
+                        "Профиль сервера в виде кода (игроки вставляют его на вкладке «Дистанция», серверы - через /vcd preset import):"}),
+                Map.entry("preset_imported", new String[]{"Profile imported from the code (preset: custom). Saved and sent to players with the addon.",
+                        "Профиль загружен из кода (пресет: custom). Сохранено и отправлено игрокам с аддоном."}),
+                Map.entry("status.perf", new String[]{"Load of the walls for players without the addon: %s ms per tick",
+                        "Нагрузка стен для игроков без аддона: %s мс за тик"}),
                 Map.entry("walls_set", new String[]{"Walls: %s for everyone. Saved.", "Стены: %s для всех. Сохранено."}),
                 Map.entry("walls_off", new String[]{"Walls are off for everyone. Saved.", "Стены выключены для всех. Сохранено."}),
                 Map.entry("serverwalls_on", new String[]{"The server muffles walls for players without the addon. Saved.",
@@ -255,8 +279,8 @@ public final class AdminCommands {
                 Map.entry("help.reload", new String[]{"/vcd reload - re-read the settings file", "/vcd reload - перечитать файл настроек"}),
                 Map.entry("help.profile", new String[]{"/vcd profile off|suggest|enforce - how the profile is offered",
                         "/vcd profile off|suggest|enforce - как предлагать профиль"}),
-                Map.entry("help.preset", new String[]{"/vcd preset vanilla|realistic|clear|stealth|custom - the server's sound",
-                        "/vcd preset vanilla|realistic|clear|stealth|custom - звук сервера"}),
+                Map.entry("help.preset", new String[]{"/vcd preset vanilla|realistic|clear|stealth|custom - the server's sound; export | import <code> - as a code",
+                        "/vcd preset vanilla|realistic|clear|stealth|custom - звук сервера; export | import <код> - в виде кода"}),
                 Map.entry("help.walls", new String[]{"/vcd walls 0-100|off - wall strength for everyone, in %",
                         "/vcd walls 0-100|off - сила стен для всех, в %"}),
                 Map.entry("help.serverwalls", new String[]{"/vcd serverwalls on|off - walls for players without the addon",

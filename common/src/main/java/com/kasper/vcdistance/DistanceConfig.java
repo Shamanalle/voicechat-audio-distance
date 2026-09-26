@@ -21,8 +21,8 @@ public final class DistanceConfig {
 
     /** 3: the file is written with a comment for every key; 4: interface section; 5: echo, water, weather; 6: sound around corners;
      * 7: the HUD moves from the top left (under Simple Voice Chat's group list) to the top right;
-     * 8: more materials (metal, earth, soft, ice, other). */
-    private static final int CONFIG_VERSION = 8;
+     * 8: more materials (metal, earth, soft, ice, other); 9: HUD size, background, compact, colorblind colors. */
+    private static final int CONFIG_VERSION = 9;
     private static final String FILE_NAME = "vc-audio-distance.properties";
 
     // -------------------------------------------------------------------------
@@ -79,6 +79,10 @@ public final class DistanceConfig {
     private volatile HudMode hudMode = DEFAULT_HUD_MODE;
     private volatile HudCorner hudCorner = DEFAULT_HUD_CORNER;
     private volatile boolean welcomeShown;
+    private volatile double hudScale = DEFAULT_HUD_SCALE;
+    private volatile double hudBackground = DEFAULT_HUD_BACKGROUND;
+    private volatile boolean hudCompact;
+    private volatile boolean colorblind;
     /** The preset last picked ("" = own values) and the voice range it was fitted to. */
     private volatile String presetId = "";
     private volatile double presetRange;
@@ -271,6 +275,51 @@ public final class DistanceConfig {
         changed();
     }
 
+    public static final double DEFAULT_HUD_SCALE = 1.0;
+    public static final double HUD_SCALE_MIN = 0.5;
+    public static final double HUD_SCALE_MAX = 1.5;
+    public static final double DEFAULT_HUD_BACKGROUND = 0.55;
+
+    /** Size of the voice HUD, 0.5 - 1.5. */
+    public double getHudScale() {
+        return hudScale;
+    }
+
+    public void setHudScale(double scale) {
+        hudScale = clamp(scale, HUD_SCALE_MIN, HUD_SCALE_MAX);
+        changed();
+    }
+
+    /** Opacity of the HUD's background, 0 (none) - 1. */
+    public double getHudBackground() {
+        return hudBackground;
+    }
+
+    public void setHudBackground(double opacity) {
+        hudBackground = clamp(opacity, 0.0, 1.0);
+        changed();
+    }
+
+    /** One line per voice group instead of a line per voice. */
+    public boolean isHudCompact() {
+        return hudCompact;
+    }
+
+    public void setHudCompact(boolean compact) {
+        hudCompact = compact;
+        changed();
+    }
+
+    /** Colors told apart with red-green color blindness, and marks that differ in shape too. */
+    public boolean isColorblind() {
+        return colorblind;
+    }
+
+    public void setColorblind(boolean on) {
+        colorblind = on;
+        changed();
+    }
+
     /** The preset last picked, or {@code null} for own values. */
     public Preset getChosenPreset() {
         return Preset.byId(presetId);
@@ -295,6 +344,10 @@ public final class DistanceConfig {
         welcomeShown = other.welcomeShown;
         presetId = other.presetId;
         presetRange = other.presetRange;
+        hudScale = other.hudScale;
+        hudBackground = other.hudBackground;
+        hudCompact = other.hudCompact;
+        colorblind = other.colorblind;
         changed();
     }
 
@@ -392,6 +445,10 @@ public final class DistanceConfig {
         hudMode = HudMode.fromId(props.getProperty("hud_mode"), DEFAULT_HUD_MODE);
         hudCorner = HudCorner.fromId(props.getProperty("hud_corner"), DEFAULT_HUD_CORNER);
         welcomeShown = parseBoolean(props, "welcome_shown", false);
+        hudScale = clamp(parseDouble(props, "hud_scale", DEFAULT_HUD_SCALE), HUD_SCALE_MIN, HUD_SCALE_MAX);
+        hudBackground = clamp(parseDouble(props, "hud_background", DEFAULT_HUD_BACKGROUND), 0.0, 1.0);
+        hudCompact = parseBoolean(props, "hud_compact", false);
+        colorblind = parseBoolean(props, "colorblind", false);
         presetId = props.getProperty("preset", "").trim().toLowerCase(java.util.Locale.ROOT);
         presetRange = clamp(parseDouble(props, "preset_range", 0.0), 0.0, 10000.0);
         if (parseDouble(props, "config_version", 1) < 7 && hudCorner == HudCorner.TOP_LEFT) {
@@ -465,6 +522,17 @@ public final class DistanceConfig {
                 .comment("Corner of the voice HUD: top_left, top_right, bottom_left, bottom_right. Default top_right.",
                         "Угол экрана для HUD: top_left, top_right, bottom_left, bottom_right. По умолчанию top_right.")
                 .value("hud_corner", hudCorner.getId())
+                .comment("Size of the voice HUD, 0.5 - 1.5. Default 1.0.", "Размер HUD, 0.5 - 1.5. По умолчанию 1.0.")
+                .value("hud_scale", hudScale)
+                .comment("Opacity of the HUD's background, 0 (none) - 1. Default 0.55.",
+                        "Непрозрачность фона HUD, 0 (без фона) - 1. По умолчанию 0.55.")
+                .value("hud_background", hudBackground)
+                .comment("Compact HUD: one line for everyone talking. Default false.",
+                        "Компактный HUD: одна строка на всех говорящих. По умолчанию false.")
+                .value("hud_compact", hudCompact)
+                .comment("Colors for color blindness (blue / orange instead of green / red) and marks that differ in shape. Default false.",
+                        "Цвета для дальтоников (синий / оранжевый вместо зелёного / красного) и метки разной формы. По умолчанию false.")
+                .value("colorblind", colorblind)
                 .comment("The first-join hint was shown. / Подсказка при первом входе уже показана.")
                 .value("welcome_shown", welcomeShown)
                 .comment("The preset picked on the settings screen: default, realistic, high_audibility, atmospheric; empty = own values.",

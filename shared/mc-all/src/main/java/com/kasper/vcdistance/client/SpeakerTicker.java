@@ -88,13 +88,26 @@ public final class SpeakerTicker {
         // A server with another voice range: fit the chosen preset to it
         AudioDistancePlugin.followServerRange();
 
+        long start = System.nanoTime();
+        try {
+            work(active, now, config, configChanged);
+        } finally {
+            AudioDistancePlugin.CLIENT_PERF.add(System.nanoTime() - start);
+            AudioDistancePlugin.CLIENT_PERF.endTick();
+        }
+    }
+
+    private void work(List<SpeakerRegistry.Speaker> active, long now, DistanceConfig config, boolean configChanged) {
+        // On a slow machine (or a busy spot) the same work is spread over twice the time
+        int slow = AudioDistancePlugin.CLIENT_PERF.isBusy() ? 2 : 1;
+
         boolean tracing = AudioDistancePlugin.occlusionStatus() == AudioDistancePlugin.OcclusionStatus.ACTIVE;
         Vec3 listener = access.listenerPosition();
         double yaw = access.listenerYaw();
         updateNearby(listener);
-        updateEnvironment(listener);
-        int budget = MAX_TRACES_PER_TICK;
-        int pathBudget = PATHS_PER_TICK;
+        updateEnvironment(listener, slow);
+        int budget = MAX_TRACES_PER_TICK / slow;
+        int pathBudget = ticks % slow == 0 ? PATHS_PER_TICK : 0;
         boolean corners = config.isDiffractionEnabled();
         SoundPath.Grid grid = cachedGrid();
 
@@ -115,14 +128,14 @@ public final class SpeakerTicker {
                 if (!tracing) {
                     s.clearOcclusion();
                 } else if (budget > 0 && (configChanged || !s.isOcclusionKnown()
-                        || now - s.getLastTraceNanos() >= TRACE_INTERVAL_NANOS)) {
+                        || now - s.getLastTraceNanos() >= TRACE_INTERVAL_NANOS * slow)) {
                     s.setOcclusion(OcclusionTracer.trace(access::traceRay, listener, source), now);
                     budget--;
                 }
                 // Behind a wall: is there a doorway round it?
                 if (!tracing || !corners || s.getThickness() < MIN_WALL_FOR_PATH) {
                     s.clearPath();
-                } else if (pathBudget > 0 && now - s.getLastPathNanos() >= PATH_INTERVAL_NANOS) {
+                } else if (pathBudget > 0 && now - s.getLastPathNanos() >= PATH_INTERVAL_NANOS * slow) {
                     pathBudget--;
                     double direct = listener.distanceTo(source);
                     double limit = Math.min(Math.max(16.0, s.getMaxDistance()), direct * 2.0 + 12.0);
@@ -151,7 +164,7 @@ public final class SpeakerTicker {
     }
 
     /** Water and weather every tick, the echo of the room every half second. */
-    private void updateEnvironment(Vec3 listener) {
+    private void updateEnvironment(Vec3 listener, int slow) {
         try {
             ListenerEnvironment env = AudioDistancePlugin.ENVIRONMENT;
             if (listener == null) {
@@ -160,7 +173,7 @@ public final class SpeakerTicker {
             }
             env.update(access.isUnderWater(listener), access.weatherAt(listener));
             env.setPosition(listener.x, listener.y, listener.z);
-            if (ticks++ % ROOM_INTERVAL_TICKS == 0) {
+            if (ticks++ % (ROOM_INTERVAL_TICKS * slow) == 0) {
                 double[] hits = new double[RoomEstimate.DIRECTIONS.length];
                 for (int i = 0; i < hits.length; i++) {
                     double[] d = RoomEstimate.DIRECTIONS[i];

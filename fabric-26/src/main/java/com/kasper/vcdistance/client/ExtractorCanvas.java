@@ -38,4 +38,14 @@ public final class ExtractorCanvas implements Canvas {
     public int width(Component text) {
         return font.width(text);
     }
+
+    @Override
+    public boolean pushScale(float factor) {
+        return PoseScaler.push(graphics, factor);
+    }
+
+    @Override
+    public void popScale() {
+        PoseScaler.pop(graphics);
+    }
 }

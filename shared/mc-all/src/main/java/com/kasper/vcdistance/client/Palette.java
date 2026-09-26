@@ -19,17 +19,39 @@ public final class Palette {
     public static final int ACCENT_AREA = 0x554FD1C5;
     public static final int ACCENT_ZONE = 0x184FD1C5;
 
-    public static final int WHISPER = 0xFFB794F6;
     public static final int FLOOR = 0xFFF6C453;
-    public static final int WARN = 0xFFF6C453;
-    public static final int GOOD = 0xFF68D391;
-    public static final int MUFFLED = 0xFFF6995C;
-    public static final int BAD = 0xFFF56565;
+
+    // State colors: the usual set, or one told apart with red-green color blindness (see useColorblind)
+    public static int WHISPER = 0xFFB794F6;
+    public static int WARN = 0xFFF6C453;
+    public static int GOOD = 0xFF68D391;
+    public static int MUFFLED = 0xFFF6995C;
+    public static int BAD = 0xFFF56565;
 
     public static final int BADGE = 0xF0181D24;
     public static final int BADGE_BORDER = 0xFF4A5563;
 
     private Palette() {
+    }
+
+    /**
+     * Switches the state colors. The colorblind set follows Okabe and Ito: blue for talking,
+     * reddish purple for whispers, orange for walls, yellow and vermilion for problems.
+     */
+    public static void useColorblind(boolean on) {
+        if (on) {
+            GOOD = 0xFF56B4E9;
+            WHISPER = 0xFFCC79A7;
+            MUFFLED = 0xFFE69F00;
+            WARN = 0xFFF0E442;
+            BAD = 0xFFD55E00;
+        } else {
+            GOOD = 0xFF68D391;
+            WHISPER = 0xFFB794F6;
+            MUFFLED = 0xFFF6995C;
+            WARN = 0xFFF6C453;
+            BAD = 0xFFF56565;
+        }
     }
 
     /** Linear blend between two ARGB colors. */

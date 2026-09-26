@@ -6,6 +6,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Все заметные изменения проекта описываются в этом файле. Каждая версия описана сначала на английском, затем на русском.*
 
+## [1.7.0] - 2026-09-26
+
+### English
+
+#### Added
+- **Voice HUD settings** on the Monitor tab:
+  - size, 50–150%;
+  - background opacity, down to text only;
+  - a **compact** mode: one line for everyone talking, with the closest voice and how many more.
+- **Colors for color blindness.** A switch on the Monitor tab turns the HUD, the monitor and the radar to colors that stay apart with red-green color blindness: blue for talking, purple for whispers, orange for walls.
+- **Radar marks differ in shape** as well as color: a square for talking, a cross for whispering, a diamond behind a wall. The radar legend matches.
+- **Profile codes.**
+  - *Copy profile code* and *Paste profile code* on the Distance tab share your curve, walls, materials and effects as one line of text (`VP1:…`).
+  - Server admins can load a code with `/vcd preset import <code>` and give out the server's with `/vcd preset export`.
+- **Load meter.**
+  - The monitor shows how long the addon's own work takes per tick: walls, ways round and echo.
+  - Above 2 ms the addon spaces that work out by itself.
+  - `/vcd status` shows the same for the server's walls for players without the addon.
+
+#### Changed
+- In the HUD a quiet voice (between words) now has a hollow mark instead of a dimmed one.
+
+### Русский
+
+#### Добавлено
+- **Настройки HUD голоса** на вкладке «Монитор»:
+  - размер, 50–150%;
+  - прозрачность фона, вплоть до одного текста;
+  - **компактный** режим: одна строка на всех говорящих — ближайший голос и сколько ещё.
+- **Цвета для дальтоников.** Переключатель на вкладке «Монитор» переводит HUD, монитор и радар на цвета, которые различимы при красно-зелёном дальтонизме: синий — говорит, фиолетовый — шёпот, оранжевый — стены.
+- **Метки на радаре различаются формой**, а не только цветом: квадрат — говорит, крестик — шепчет, ромб — за стеной. Легенда радара такая же.
+- **Коды профиля.**
+  - Кнопки «Скопировать код профиля» и «Вставить код профиля» на вкладке «Дистанция» передают вашу кривую, стены, материалы и эффекты одной строкой текста (`VP1:…`).
+  - Админ сервера может загрузить код через `/vcd preset import <код>` и раздать код сервера через `/vcd preset export`.
+- **Счётчик нагрузки.**
+  - Монитор показывает, сколько времени за тик занимает работа самого аддона: стены, обход углов и эхо.
+  - Если больше 2 мс, аддон сам начинает делать её реже.
+  - `/vcd status` показывает то же для серверных стен для игроков без аддона.
+
+#### Изменено
+- В HUD тихий голос (между словами) теперь отмечен пустой меткой, а не тусклой.
+
 ## [1.6.0] - 2026-09-26
 
 ### English
