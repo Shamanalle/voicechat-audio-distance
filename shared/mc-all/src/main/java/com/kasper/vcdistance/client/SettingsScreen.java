@@ -9,6 +9,7 @@ import com.kasper.vcdistance.DistanceConfig;
 import com.kasper.vcdistance.EnvironmentEffects;
 import com.kasper.vcdistance.ListenerEnvironment;
 import com.kasper.vcdistance.RoomEstimate;
+import com.kasper.vcdistance.SoundBlend;
 import com.kasper.vcdistance.HudMode;
 import com.kasper.vcdistance.LinkProtocol;
 import com.kasper.vcdistance.NearbyPlayers;
@@ -1246,7 +1247,7 @@ public abstract class SettingsScreen extends Screen {
         // Corners: voices that come round a wall right now
         int round = 0;
         for (SpeakerRegistry.Speaker sp : AudioDistancePlugin.SPEAKERS.active(System.nanoTime())) {
-            if (sp.hasOpening()) {
+            if (sp.isHeardRound()) {
                 round++;
             }
         }
@@ -1515,8 +1516,11 @@ public abstract class SettingsScreen extends Screen {
                 distRight, rowY, Palette.TEXT_DIM);
 
         float lossDb = wallsActive ? s.getFilter().getDisplayLossDb() : 0.0F;
+        // Round a wall the voice is as loud as the longer way round
+        SoundBlend blend = wallsActive ? s.getBlend() : null;
+        double heardAt = blend != null ? s.getDistance() + blend.extraDistance() : s.getDistance();
         double gain = s.getDistance() >= 0.0
-                ? AudioDistancePlugin.curveGain(s.getDistance(), s.getMaxDistance(), s.isWhispering()) * OcclusionModel.dbToGain(-lossDb)
+                ? AudioDistancePlugin.curveGain(heardAt, s.getMaxDistance(), s.isWhispering()) * OcclusionModel.dbToGain(-lossDb)
                 : 0.0;
         Component pctText = Component.literal(pct(gain));
         int barRight = loudRight - c.width(Component.literal("100%")) - 4;

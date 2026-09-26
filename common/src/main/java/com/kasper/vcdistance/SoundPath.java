@@ -12,6 +12,9 @@ import java.util.PriorityQueue;
  * the voice reaches you through the doorway: a little further, much less muffled, and from the
  * doorway's direction.
  * <p>
+ * The path found on the block grid is pulled tight round its corners, so its length is the real
+ * way round and the angle it turns says how much the voice is muffled bending round the edges.
+ * <p>
  * The search is an A* over block cells with face and edge moves (no squeezing through a corner
  * where both sides are closed), bounded by a path length and a node budget, so it stays cheap.
  */
@@ -24,14 +27,18 @@ public final class SoundPath {
     }
 
     /**
-     * A path that was found.
+     * A path that was found, pulled tight round the corners it has to take.
      *
-     * @param length  length of the way around, in blocks
+     * @param length  length of the way around, in blocks, between the real end points
      * @param direct  straight-line distance, in blocks
-     * @param opening the point the sound seems to come from: the furthest point of the path the
-     *                listener can see directly (the doorway, for a voice in the next room)
+     * @param opening the point the sound seems to come from: the first corner of the way round, which
+     *                the listener sees directly (the doorway, for a voice in the next room)
+     * @param turn    how far the way turns in total, in radians (0 in plain sight, about 1.57 round a
+     *                right-angled corner, about 3.14 back round a wall)
+     * @param corners how many corners it goes round
      */
-    public record Result(double length, double direct, double openingX, double openingY, double openingZ) {
+    public record Result(double length, double direct, double openingX, double openingY, double openingZ,
+                         double turn, int corners) {
 
         /** How much further the way around is than the straight line. */
         public double detour() {
@@ -39,16 +46,18 @@ public final class SoundPath {
         }
 
         /**
-         * Muffling of the way around, in stone blocks: sound bending round an edge loses some
-         * highs, and more the longer the detour. Compare with the straight line's wall thickness.
+         * Muffling of the way around, in stone blocks: sound bending round an edge loses its highs, the
+         * more the sharper the bend (a slight bend hardly, a right angle like half a wall, back round a
+         * wall like a whole one). Compare with the straight line's wall thickness.
          */
         public double thickness() {
-            return BEND_THICKNESS + DETOUR_THICKNESS * detour();
+            return TURN_THICKNESS * turn / (Math.PI / 2.0) + DETOUR_THICKNESS * detour();
         }
     }
 
-    static final double BEND_THICKNESS = 0.3;
-    static final double DETOUR_THICKNESS = 0.05;
+    /** Muffling of a right-angled bend, in stone blocks. */
+    static final double TURN_THICKNESS = 0.6;
+    static final double DETOUR_THICKNESS = 0.02;
 
     /** 18 moves: 6 faces and 12 edges. */
     private static final int[][] MOVES = moves();
@@ -119,39 +128,68 @@ public final class SoundPath {
 
     private static Result result(Grid grid, Node end, double lx, double ly, double lz,
                                  double sx, double sy, double sz, double direct) {
-        List<Node> path = new ArrayList<>();
+        List<double[]> points = new ArrayList<>();
         for (Node n = end; n != null; n = n.parent) {
-            path.add(0, n);
+            points.add(0, new double[]{n.x + 0.5, n.y + 0.5, n.z + 0.5});
         }
-        // The furthest point along the path (from the listener) still in direct sight
-        double ox = sx;
-        double oy = sy;
-        double oz = sz;
-        if (!visible(grid, lx, ly, lz, sx, sy, sz)) {
-            ox = path.get(0).x + 0.5;
-            oy = path.get(0).y + 0.5;
-            oz = path.get(0).z + 0.5;
-            for (int i = path.size() - 1; i > 0; i--) {
-                Node n = path.get(i);
-                if (visible(grid, lx, ly, lz, n.x + 0.5, n.y + 0.5, n.z + 0.5)) {
-                    ox = n.x + 0.5;
-                    oy = n.y + 0.5;
-                    oz = n.z + 0.5;
-                    break;
-                }
+        // The real end points instead of their cells' centres
+        points.set(0, new double[]{lx, ly, lz});
+        if (points.size() == 1) {
+            points.add(new double[]{sx, sy, sz});
+        } else {
+            points.set(points.size() - 1, new double[]{sx, sy, sz});
+        }
+
+        // Pull the path tight: from each corner, go straight to the furthest point still in sight
+        List<double[]> tight = new ArrayList<>();
+        tight.add(points.get(0));
+        int i = 1;
+        while (i < points.size()) {
+            double[] anchor = tight.get(tight.size() - 1);
+            int j = i;
+            while (j + 1 < points.size() && visible(grid, anchor, points.get(j + 1))) {
+                j++;
+            }
+            tight.add(points.get(j));
+            i = j + 1;
+        }
+
+        double length = 0.0;
+        double turn = 0.0;
+        for (int k = 1; k < tight.size(); k++) {
+            length += dist(tight.get(k - 1), tight.get(k));
+            if (k + 1 < tight.size()) {
+                turn += angle(tight.get(k - 1), tight.get(k), tight.get(k + 1));
             }
         }
-        // Path length between the real end points: cells in between, plus the partial first and last cells
-        double length = end.g;
-        if (path.size() > 1) {
-            Node second = path.get(1);
-            Node beforeLast = path.get(path.size() - 2);
-            length += Math.sqrt(sq(second.x + 0.5 - lx) + sq(second.y + 0.5 - ly) + sq(second.z + 0.5 - lz))
-                    - Math.sqrt(sq(second.x - path.get(0).x) + sq(second.y - path.get(0).y) + sq(second.z - path.get(0).z));
-            length += Math.sqrt(sq(beforeLast.x + 0.5 - sx) + sq(beforeLast.y + 0.5 - sy) + sq(beforeLast.z + 0.5 - sz))
-                    - Math.sqrt(sq(end.x - beforeLast.x) + sq(end.y - beforeLast.y) + sq(end.z - beforeLast.z));
+        double[] opening = tight.size() > 2 ? tight.get(1) : tight.get(tight.size() - 1);
+        return new Result(Math.max(direct, length), direct, opening[0], opening[1], opening[2], turn,
+                Math.max(0, tight.size() - 2));
+    }
+
+    private static boolean visible(Grid grid, double[] a, double[] b) {
+        return visible(grid, a[0], a[1], a[2], b[0], b[1], b[2]);
+    }
+
+    /** How far the way turns at {@code b}, in radians. */
+    private static double angle(double[] a, double[] b, double[] c) {
+        double ux = b[0] - a[0];
+        double uy = b[1] - a[1];
+        double uz = b[2] - a[2];
+        double vx = c[0] - b[0];
+        double vy = c[1] - b[1];
+        double vz = c[2] - b[2];
+        double lu = Math.sqrt(ux * ux + uy * uy + uz * uz);
+        double lv = Math.sqrt(vx * vx + vy * vy + vz * vz);
+        if (lu < 1e-9 || lv < 1e-9) {
+            return 0.0;
         }
-        return new Result(Math.max(direct, length), direct, ox, oy, oz);
+        double cos = (ux * vx + uy * vy + uz * vz) / (lu * lv);
+        return Math.acos(Math.max(-1.0, Math.min(1.0, cos)));
+    }
+
+    private static double dist(double[] a, double[] b) {
+        return Math.sqrt(sq(a[0] - b[0]) + sq(a[1] - b[1]) + sq(a[2] - b[2]));
     }
 
     /** {@code true} when every block on the straight line is open. */

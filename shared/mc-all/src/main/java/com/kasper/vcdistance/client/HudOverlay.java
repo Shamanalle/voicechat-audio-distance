@@ -232,6 +232,9 @@ public final class HudOverlay {
         if (s.isWhispering()) {
             text = Component.empty().append(text).append(Component.literal(" · ")).append(Component.translatable("gui.vc-audio-distance.monitor.whisper"));
             color = Palette.WHISPER;
+        } else if (wallsActive && s.isHeardRound()) {
+            text = Component.empty().append(text).append(Component.literal(" · ")).append(hud("corner"));
+            color = Palette.MUFFLED;
         } else if (wallsActive && s.getFilter().getDisplayLossDb() > 1.0F) {
             text = Component.empty().append(text).append(Component.literal(" · ")).append(hud("walls"));
             color = Palette.MUFFLED;

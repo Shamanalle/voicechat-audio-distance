@@ -54,4 +54,48 @@ public class SpeakerRegistryTest {
         assertFalse(s.isOcclusionKnown());
         assertNull(registry.get(null));
     }
+
+    @Test
+    @DisplayName("A voice moving to a doorway pans there over ~0.15 s and settles back on the straight line")
+    void directionGlides() {
+        SpeakerRegistry.Speaker s = new SpeakerRegistry().onEntityFrame(UUID.randomUUID(), UUID.randomUUID(), false, 48F, new short[960]);
+        double[] ahead = {0, 0, 1};
+        double[] right = {1, 0, 0};
+        long t = 1_000_000_000L;
+        // In plain sight nothing is moved
+        assertNull(s.glideDirection(ahead, ahead, false, t));
+        // Round a wall: starts from the straight line, not at the doorway
+        double[] first = s.glideDirection(ahead, right, true, t);
+        assertArrayEquals(ahead, first, 1e-9);
+        double[] later = s.glideDirection(ahead, right, true, t + 50_000_000L);
+        assertTrue(later[0] > 0.1 && later[2] > 0.5, "part of the way after 50 ms");
+        double[] there = s.glideDirection(ahead, right, true, t + 1_000_000_000L);
+        assertEquals(1.0, there[0], 0.01);
+        // The way round is gone: glides back, then lets go
+        double[] back = null;
+        long now = t + 1_000_000_000L;
+        for (int i = 0; i < 100; i++) {
+            now += 20_000_000L;
+            back = s.glideDirection(ahead, ahead, false, now);
+            if (back == null) {
+                break;
+            }
+        }
+        assertNull(back);
+        assertNull(s.glideDirection(ahead, ahead, false, now + 20_000_000L));
+    }
+
+    @Test
+    @DisplayName("A way round is kept only when it bends; the path is cleared with it")
+    void pathKept() {
+        SpeakerRegistry.Speaker s = new SpeakerRegistry().onEntityFrame(UUID.randomUUID(), UUID.randomUUID(), false, 48F, new short[960]);
+        s.setPath(new SoundPath.Result(12.0, 8.0, 1, 2, 3, Math.PI / 2, 1), 5L);
+        assertTrue(s.hasOpening());
+        assertEquals(12.0, s.getPathLength(), 1e-9);
+        assertEquals(5L, s.getLastPathNanos());
+        s.setPath(new SoundPath.Result(8.0, 8.0, 1, 2, 3, 0.0, 0), 6L);
+        assertFalse(s.hasOpening());
+        assertTrue(Double.isNaN(s.getPathLength()));
+        assertFalse(s.isHeardRound());
+    }
 }

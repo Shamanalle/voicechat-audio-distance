@@ -22,6 +22,9 @@ public final class SpeakerRegistry {
     /** Sources are considered "talking" for the UI and the tracer within this window. */
     public static final long ACTIVE_WINDOW_NANOS = TimeUnit.MILLISECONDS.toNanos(600);
 
+    /** Time constant of the glide when a voice's direction changes (wall to doorway and back). */
+    static final double DIRECTION_GLIDE_SECONDS = 0.15;
+
     public enum Kind {
         ENTITY,
         LOCATIONAL
@@ -55,7 +58,12 @@ public final class SpeakerRegistry {
         private volatile double openingY;
         private volatile double openingZ;
         private volatile double pathThickness = Double.NaN;
+        private volatile double pathLength = Double.NaN;
         private volatile long lastPathNanos = Long.MIN_VALUE;
+        // The mix of the straight way and the way round (audio thread), and the direction the voice is heard from
+        private volatile SoundBlend blend;
+        private double[] heard;
+        private long heardNanos;
         // The space around the speaker (client tick); null: the listener's own
         private volatile RoomEstimate room;
         private volatile long lastRoomNanos = Long.MIN_VALUE;
@@ -128,7 +136,7 @@ public final class SpeakerRegistry {
             return weather;
         }
 
-        /** {@code true} while the voice reaches the listener round a wall, from {@link #getOpeningX()} etc. */
+        /** {@code true} while there is a way round the wall, from {@link #getOpeningX()} etc. */
         public boolean hasOpening() {
             return hasOpening;
         }
@@ -150,28 +158,84 @@ public final class SpeakerRegistry {
             return pathThickness;
         }
 
+        /** Length of the way round, in blocks, or NaN when there is none. */
+        public double getPathLength() {
+            return pathLength;
+        }
+
         public long getLastPathNanos() {
             return lastPathNanos;
         }
 
-        /** Records the way round ({@code path} null: none); the opening is used only when it beats the wall. */
-        public void setPath(SoundPath.Result path, boolean useOpening, long nowNanos) {
+        /** Records the way round a wall ({@code path} null: none). */
+        public void setPath(SoundPath.Result path, long nowNanos) {
             lastPathNanos = nowNanos;
-            if (path == null) {
-                pathThickness = Double.NaN;
-                hasOpening = false;
+            if (path == null || path.corners() == 0) {
+                clearPath();
                 return;
             }
-            pathThickness = path.thickness();
             openingX = path.openingX();
             openingY = path.openingY();
             openingZ = path.openingZ();
-            hasOpening = useOpening;
+            pathThickness = path.thickness();
+            pathLength = path.length();
+            hasOpening = true;
         }
 
         public void clearPath() {
-            pathThickness = Double.NaN;
             hasOpening = false;
+            pathThickness = Double.NaN;
+            pathLength = Double.NaN;
+        }
+
+        /** The mix of the straight way and the way round last applied to the voice, or null. */
+        public SoundBlend getBlend() {
+            return blend;
+        }
+
+        public void setBlend(SoundBlend blend) {
+            this.blend = blend;
+        }
+
+        /** {@code true} when most of the voice comes round a wall rather than through it. */
+        public boolean isHeardRound() {
+            SoundBlend b = blend;
+            return hasOpening && b != null && b.mostlyRound();
+        }
+
+        /**
+         * Glides the direction the voice is heard from towards {@code target} (unit vectors), so a
+         * voice moving from a wall to a doorway pans instead of jumping.
+         *
+         * @param direct straight towards the speaker
+         * @param target where it should be heard from now
+         * @return the direction to use, or {@code null} once it has settled back on the straight line
+         */
+        public synchronized double[] glideDirection(double[] direct, double[] target, boolean round, long nowNanos) {
+            if (heard == null) {
+                if (!round) {
+                    return null;
+                }
+                heard = direct.clone();
+                heardNanos = nowNanos;
+            }
+            double dt = Math.max(0.0, Math.min(0.5, (nowNanos - heardNanos) / 1e9));
+            heardNanos = nowNanos;
+            double a = 1.0 - Math.exp(-dt / DIRECTION_GLIDE_SECONDS);
+            double x = heard[0] + (target[0] - heard[0]) * a;
+            double y = heard[1] + (target[1] - heard[1]) * a;
+            double z = heard[2] + (target[2] - heard[2]) * a;
+            double len = Math.sqrt(x * x + y * y + z * z);
+            if (len < 1e-6) {
+                heard = target.clone();
+            } else {
+                heard = new double[]{x / len, y / len, z / len};
+            }
+            if (!round && heard[0] * target[0] + heard[1] * target[1] + heard[2] * target[2] > 0.99996) {
+                heard = null; // back on the straight line (within half a degree)
+                return null;
+            }
+            return heard.clone();
         }
 
         /** The space the speaker is in, or {@code null} when it is the listener's own (or not known yet). */
@@ -196,12 +260,6 @@ public final class SpeakerRegistry {
         /** Wall thickness on the straight line, in stone blocks. */
         public double getThickness() {
             return thickness;
-        }
-
-        /** What the voice goes through: the straight line or, when thinner, the way round a wall. */
-        public double getEffectiveThickness() {
-            double path = pathThickness;
-            return hasOpening && !Double.isNaN(path) ? Math.min(thickness, path) : thickness;
         }
 
         public boolean isOcclusionKnown() {

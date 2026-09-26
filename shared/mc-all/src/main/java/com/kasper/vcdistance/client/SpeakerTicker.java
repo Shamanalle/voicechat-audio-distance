@@ -26,11 +26,11 @@ public final class SpeakerTicker {
     private static final long SPEAKER_ROOM_INTERVAL_NANOS = TimeUnit.SECONDS.toNanos(1);
     /** A speaker this close and in plain sight shares the listener's space: no need to measure it. */
     private static final double SAME_ROOM_DISTANCE = 6.0;
-    /** A wall at least this thick (stone blocks) makes it worth looking for a way round. */
-    private static final double MIN_WALL_FOR_PATH = 0.4;
-    private static final long PATH_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(500);
+    /** A wall at least this thick (stone blocks) makes it worth looking for a way round: even a door frame. */
+    private static final double MIN_WALL_FOR_PATH = 0.15;
+    private static final long PATH_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(250);
     /** Ways round searched per tick, and how big each search may get. */
-    private static final int PATHS_PER_TICK = 1;
+    private static final int PATHS_PER_TICK = 2;
     private static final int PATH_NODES = 1200;
 
     private final WorldAccess access;
@@ -147,7 +147,7 @@ public final class SpeakerTicker {
                     double limit = Math.min(Math.max(16.0, s.getMaxDistance()), direct * 2.0 + 12.0);
                     SoundPath.Result path = SoundPath.find(grid, listener.x, listener.y, listener.z,
                             source.x, source.y, source.z, limit, PATH_NODES);
-                    s.setPath(path, path != null && path.thickness() < s.getThickness(), now);
+                    s.setPath(path, now);
                 }
                 // The speaker's own space, oldest first
                 if (now - s.getLastRoomNanos() >= SPEAKER_ROOM_INTERVAL_NANOS * slow
