@@ -1,8 +1,8 @@
 # Store pages / Страницы на площадках
 
-The Modrinth project page is `docs/modrinth.md`: the whole page, English then Russian. It tells players what the addon does; how it works belongs in the README. The *Modrinth page* workflow uploads the page and the summary below to Modrinth on every change pushed to `main` (it needs the `MODRINTH_TOKEN` secret with the *Write projects* scope). For CurseForge, paste the same text into the description field by hand.
+The Modrinth project page is `docs/modrinth.md`: the whole page, in English, with the Russian translation collapsed in a `<details>` block at the end. It is short and tells players what they get; settings, commands and details belong in the README. The *Modrinth page* workflow uploads the page and the summary below to Modrinth on every change pushed to `main` (it needs the `MODRINTH_TOKEN` secret with the *Write projects* scope). For CurseForge, paste the same text into the description field by hand.
 
-Страница проекта на Modrinth — это `docs/modrinth.md`: вся страница, сначала английская часть, потом русская. Она рассказывает игрокам, что умеет аддон; как он устроен, описывает README. Workflow *Modrinth page* выкладывает страницу и краткое описание ниже на Modrinth при каждом изменении в `main` (нужен секрет `MODRINTH_TOKEN` с правом *Write projects*). На CurseForge тот же текст вставляется в поле описания вручную.
+Страница проекта на Modrinth — это `docs/modrinth.md`: вся страница на английском, а русский перевод свёрнут в блок `<details>` в конце. Она короткая и рассказывает игрокам, что они получат; настройки, команды и подробности — в README. Workflow *Modrinth page* выкладывает страницу и краткое описание ниже на Modrinth при каждом изменении в `main` (нужен секрет `MODRINTH_TOKEN` с правом *Write projects*). На CurseForge тот же текст вставляется в поле описания вручную.
 
 ---
 
@@ -10,7 +10,7 @@ The Modrinth project page is `docs/modrinth.md`: the whole page, English then Ru
 
 **Name:** Simple Voice Chat: Voice Physics
 
-**Summary:** Voices that sound real: they fade with distance, echo in caves and sound muffled behind walls. A HUD shows who is talking and who hears you. Servers get sound zones, game rules and walls even for players without the addon.
+**Summary:** Voices that behave like sound: they fade with distance, get muffled by walls, come round corners and echo in caves. A HUD shows who is talking and who hears you. Servers get sound zones, game rules and walls even for players without the addon.
 
 **Categories:** Utility, Social, Game Mechanics
 
@@ -20,7 +20,7 @@ The Modrinth project page is `docs/modrinth.md`: the whole page, English then Ru
 
 **Название:** Simple Voice Chat: Voice Physics
 
-**Краткое описание** (на площадках только на английском, как выше). Перевод: Голоса как в жизни: затихают с расстоянием, отдаются эхом в пещерах и звучат глухо за стенами. HUD показывает, кто говорит и кто слышит вас. Серверу — звуковые зоны, правила игры и стены даже для игроков без аддона.
+**Краткое описание** (на площадках только на английском, как выше). Перевод: Голоса ведут себя как звук: затихают с расстоянием, глохнут за стенами, доносятся из-за угла и отдаются эхом в пещерах. HUD показывает, кто говорит и кто слышит вас. Серверу — звуковые зоны, правила игры и стены даже для игроков без аддона.
 
 **Категории:** Utility, Social, Game Mechanics
 
