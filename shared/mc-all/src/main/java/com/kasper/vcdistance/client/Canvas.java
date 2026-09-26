@@ -41,6 +41,18 @@ public interface Canvas {
         fill(x, y1, x + 1, y2, argb);
     }
 
+    /**
+     * Scales what is drawn until {@link #popScale}.
+     *
+     * @return {@code false} when this canvas cannot scale (then do not call popScale)
+     */
+    default boolean pushScale(float factor) {
+        return false;
+    }
+
+    default void popScale() {
+    }
+
     /** Dashed horizontal line: {@code dash} pixels on, {@code dash} off. */
     default void dashedHLine(int x1, int x2, int y, int dash, int argb) {
         for (int x = x1; x < x2; x += dash * 2) {

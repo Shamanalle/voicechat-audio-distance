@@ -14,6 +14,7 @@ import com.kasper.vcdistance.LinkProtocol;
 import com.kasper.vcdistance.NearbyPlayers;
 import com.kasper.vcdistance.OcclusionModel;
 import com.kasper.vcdistance.Preset;
+import com.kasper.vcdistance.ProfileCode;
 import com.kasper.vcdistance.SpeakerRegistry;
 import com.kasper.vcdistance.VoiceState;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -109,6 +110,12 @@ public abstract class SettingsScreen extends Screen {
     private int previewStep = -1;
     private int previewTicks;
     private Button listenButton;
+    private Button copyButton;
+    private Button pasteButton;
+    /** Short-lived result shown on the profile code buttons ("copied", "pasted", "not a code"). */
+    private String copyFeedback;
+    private String pasteFeedback;
+    private int codeFeedbackTicks;
     private int monitorTop;
 
     protected SettingsScreen(Screen parent) {
@@ -127,6 +134,11 @@ public abstract class SettingsScreen extends Screen {
 
     protected abstract boolean inWorld();
 
+    /** Text on the system clipboard, or "" (the API for this differs between versions). */
+    protected abstract String readClipboard();
+
+    protected abstract void writeClipboard(String text);
+
     // =========================================================================
     // Layout
     // =========================================================================
@@ -140,6 +152,8 @@ public abstract class SettingsScreen extends Screen {
         strengthSlider = null;
         reverbSlider = null;
         listenButton = null;
+        copyButton = null;
+        pasteButton = null;
         serverChip = false;
 
         int w = Math.min(this.width - 16, MAX_WIDTH);
@@ -243,7 +257,7 @@ public abstract class SettingsScreen extends Screen {
 
         // The graph keeps a readable shape instead of filling tall windows; the sliders follow it
         graphTop = contentTop + ROW + 2;
-        int room = contentBottom - graphTop - 6 - (ROW * 3 - GAP);
+        int room = contentBottom - graphTop - 6 - (ROW * 4 - GAP);
         graphBottom = graphTop + Math.min(room, Math.max(120, w * 2 / 5));
         int rows = graphBottom + 6;
 
@@ -280,6 +294,17 @@ public abstract class SettingsScreen extends Screen {
                 DistanceConfig.WHISPER_MIN, DistanceConfig.WHISPER_MAX, 0.05,
                 () -> shown().getWhisperMultiplier(), config::setWhisperMultiplier,
                 v -> tr("whisper", String.format(Locale.ROOT, "×%.2f", v))), "whisper.tooltip"));
+
+        // Share the profile as a line of text. Copying works while a server enforces its profile
+        // (it copies the server's), pasting does not.
+        int codeY = rows + ROW * 3;
+        if (codeY + 20 <= contentBottom) {
+            copyButton = Button.builder(tr(copyFeedback != null ? copyFeedback : "code.copy"), b -> copyCode())
+                    .bounds(left, codeY, colW, 20).tooltip(tip("code.copy.tooltip")).build();
+            addRenderableWidget(copyButton);
+            pasteButton = edit(Button.builder(tr(pasteFeedback != null ? pasteFeedback : "code.paste"), b -> pasteCode())
+                    .bounds(col2, codeY, colW, 20).tooltip(tip("code.paste.tooltip")).build());
+        }
     }
 
     private void initWalls() {
@@ -390,11 +415,74 @@ public abstract class SettingsScreen extends Screen {
             radarView = !radarView;
             b.setMessage(viewLabel());
         }).bounds(right - bw, contentTop, bw, 20).tooltip(tip("monitor.view.tooltip")).build());
-        monitorTop = contentTop + ROW + 2;
+
+        // HUD look: size, background, compact, colors
+        int qw = (w - GAP * 3) / 4;
+        int row2 = contentTop + ROW;
+        addRenderableWidget(withTip(new RangeSlider(left, row2, qw, 20,
+                DistanceConfig.HUD_SCALE_MIN, DistanceConfig.HUD_SCALE_MAX, 0.05,
+                prefs::getHudScale, prefs::setHudScale, v -> tr("hud.scale", pct(v))), "hud.scale.tooltip"));
+        addRenderableWidget(withTip(new RangeSlider(left + qw + GAP, row2, qw, 20, 0.0, 1.0, 0.05,
+                prefs::getHudBackground, prefs::setHudBackground, v -> tr("hud.background", pct(v))), "hud.background.tooltip"));
+        addRenderableWidget(Button.builder(onOff("hud.compact", prefs.isHudCompact()), b -> {
+            prefs.setHudCompact(!prefs.isHudCompact());
+            b.setMessage(onOff("hud.compact", prefs.isHudCompact()));
+        }).bounds(left + (qw + GAP) * 2, row2, qw, 20).tooltip(tip("hud.compact.tooltip")).build());
+        addRenderableWidget(Button.builder(colorsLabel(), b -> {
+            prefs.setColorblind(!prefs.isColorblind());
+            b.setMessage(colorsLabel());
+        }).bounds(right - qw, row2, qw, 20).tooltip(tip("colors.tooltip")).build());
+        monitorTop = contentTop + ROW * 2 + 2;
+    }
+
+    private Component colorsLabel() {
+        return tr("colors", tr(config.isColorblind() ? "colors.colorblind" : "colors.normal"));
     }
 
     private static Component viewLabel() {
         return tr("monitor.view", tr(radarView ? "monitor.view.radar" : "monitor.view.list"));
+    }
+
+    // =========================================================================
+    // Profile code
+    // =========================================================================
+
+    private void copyCode() {
+        try {
+            writeClipboard(ProfileCode.encode(shown()));
+            showCodeFeedback("code.copied", null);
+        } catch (Throwable t) {
+            DistanceConfig.LOGGER.debug("Could not copy the profile code: {}", t.toString());
+            showCodeFeedback("code.failed", null);
+        }
+    }
+
+    private void pasteCode() {
+        String text;
+        try {
+            text = readClipboard();
+        } catch (Throwable t) {
+            text = "";
+        }
+        if (ProfileCode.decode(text, config)) {
+            config.setChosenPreset(null, 0.0);
+            showCodeFeedback(null, "code.pasted");
+            rebuild();
+        } else {
+            showCodeFeedback(null, "code.invalid");
+        }
+    }
+
+    private void showCodeFeedback(String copy, String paste) {
+        copyFeedback = copy;
+        pasteFeedback = paste;
+        codeFeedbackTicks = 40;
+        if (copyButton != null) {
+            copyButton.setMessage(tr(copy != null ? copy : "code.copy"));
+        }
+        if (pasteButton != null) {
+            pasteButton.setMessage(tr(paste != null ? paste : "code.paste"));
+        }
     }
 
     // =========================================================================
@@ -437,6 +525,10 @@ public abstract class SettingsScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
+        if (codeFeedbackTicks > 0 && --codeFeedbackTicks == 0) {
+            showCodeFeedback(null, null);
+            codeFeedbackTicks = 0;
+        }
         if (previewStep < 0) {
             return;
         }
@@ -497,6 +589,7 @@ public abstract class SettingsScreen extends Screen {
 
     /** Draws everything that is not a widget. Called by the version subclass after the widgets. */
     protected void paint(Canvas c, int mouseX, int mouseY) {
+        Palette.useColorblind(config.isColorblind());
         refreshPresetButtons();
         if (serverChip) {
             c.text(this.title, left, 8, Palette.TEXT);
@@ -870,7 +963,11 @@ public abstract class SettingsScreen extends Screen {
                 ? tr("monitor.server.none")
                 : tr("monitor.server.addon", tr("monitor.server.mode." + serverProfile.mode().getId()));
         y += 11;
-        c.text(fit(c, serverLine, right - left - 12), left + 6, y, Palette.TEXT_MUTED);
+        // The addon's own cost per tick; it spaces its work out above PerfMeter.BUSY_MS
+        double ms = AudioDistancePlugin.CLIENT_PERF.averageMs();
+        Component perf = tr("monitor.perf", String.format(Locale.ROOT, "%.2f", ms));
+        c.right(perf, right - 6, y, AudioDistancePlugin.CLIENT_PERF.isBusy() ? Palette.WARN : Palette.TEXT_MUTED);
+        c.text(fit(c, serverLine, right - left - 18 - c.width(perf)), left + 6, y, Palette.TEXT_MUTED);
 
         long now = System.nanoTime();
         List<NearbyPlayers.Row> rows = NearbyPlayers.rows(AudioDistancePlugin.SPEAKERS.active(now),
@@ -965,11 +1062,28 @@ public abstract class SettingsScreen extends Screen {
             int py = cy - (int) Math.round(Math.cos(a) * r);
             int color;
             if (row.isTalking()) {
+                // Shape as well as color: square talking, cross whispering, diamond behind a wall
                 SpeakerRegistry.Speaker s = row.speaker();
-                color = s.isWhispering() ? Palette.WHISPER
-                        : (wallsActive && s.getFilter().getDisplayLossDb() > 1.0F ? Palette.MUFFLED : Palette.GOOD);
-                c.fill(px - 3, py - 3, px + 4, py + 4, 0xFF000000);
-                c.fill(px - 2, py - 2, px + 3, py + 3, color);
+                boolean muffled = wallsActive && s.getFilter().getDisplayLossDb() > 1.0F;
+                color = s.isWhispering() ? Palette.WHISPER : (muffled ? Palette.MUFFLED : Palette.GOOD);
+                if (s.isWhispering()) {
+                    c.fill(px - 4, py - 1, px + 5, py + 2, 0xFF000000);
+                    c.fill(px - 1, py - 4, px + 2, py + 5, 0xFF000000);
+                    c.fill(px - 3, py, px + 4, py + 1, color);
+                    c.fill(px, py - 3, px + 1, py + 4, color);
+                } else if (muffled) {
+                    for (int d = -3; d <= 3; d++) {
+                        int half = 3 - Math.abs(d);
+                        c.fill(px - half - 1, py + d, px + half + 2, py + d + 1, 0xFF000000);
+                    }
+                    for (int d = -2; d <= 2; d++) {
+                        int half = 2 - Math.abs(d);
+                        c.fill(px - half, py + d, px + half + 1, py + d + 1, color);
+                    }
+                } else {
+                    c.fill(px - 3, py - 3, px + 4, py + 4, 0xFF000000);
+                    c.fill(px - 2, py - 2, px + 3, py + 3, color);
+                }
             } else {
                 color = stateColor(row.state());
                 c.fill(px - 2, py - 2, px + 3, py + 3, 0xFF000000);
@@ -1010,7 +1124,18 @@ public abstract class SettingsScreen extends Screen {
                 Palette.ACCENT, Palette.WHISPER};
         int y = bottom - labels.length * 11;
         for (int i = 0; i < labels.length; i++) {
-            if (i == 3) {
+            // The same shapes as on the radar
+            int mx = x + 2;
+            int my = y + 4;
+            if (i == 1) {
+                c.fill(mx - 2, my, mx + 3, my + 1, colors[i]);
+                c.fill(mx, my - 2, mx + 1, my + 3, colors[i]);
+            } else if (i == 2) {
+                for (int d = -2; d <= 2; d++) {
+                    int half = 2 - Math.abs(d);
+                    c.fill(mx - half, my + d, mx + half + 1, my + d + 1, colors[i]);
+                }
+            } else if (i == 3) {
                 c.frame(x, y + 2, x + 5, y + 7, 0x00000000, colors[i]);
             } else if (i >= 4) {
                 c.hLine(x, x + 6, y + 4, Palette.withAlpha(colors[i], 0xC0));
