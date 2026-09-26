@@ -156,14 +156,14 @@ public class AudioPhysicsTest {
     @Test
     @DisplayName("Realism and stealth keep their full-volume zone in blocks, within limits of the range")
     void testPresetZoneInBlocks() {
-        // Realism: 8 blocks, between 5% and 35% of the range
-        assertEquals(8.0, Preset.REALISTIC.referenceFor(48) * 48, EPSILON);
-        assertEquals(8.0, Preset.REALISTIC.referenceFor(32) * 32, EPSILON);
-        assertEquals(0.35, Preset.REALISTIC.referenceFor(16), EPSILON);
+        // Realism: 12 blocks, between 5% and 40% of the range
+        assertEquals(12.0, Preset.REALISTIC.referenceFor(48) * 48, EPSILON);
+        assertEquals(12.0, Preset.REALISTIC.referenceFor(32) * 32, EPSILON);
+        assertEquals(0.40, Preset.REALISTIC.referenceFor(16), EPSILON);
         assertEquals(0.05, Preset.REALISTIC.referenceFor(500), EPSILON);
-        // Stealth: 5 blocks, at most a quarter of the range
-        assertEquals(5.0, Preset.ATMOSPHERIC.referenceFor(48) * 48, EPSILON);
-        assertEquals(0.25, Preset.ATMOSPHERIC.referenceFor(12), EPSILON);
+        // Stealth: 7 blocks, at most 30% of the range
+        assertEquals(7.0, Preset.ATMOSPHERIC.referenceFor(48) * 48, EPSILON);
+        assertEquals(0.30, Preset.ATMOSPHERIC.referenceFor(16), EPSILON);
         // Loudness at a given distance in blocks does not depend on the range (1/r in blocks)
         double at12of48 = AudioPhysics.calculateGain(12.0 / 48, AttenuationModel.REALISTIC_INVERSE, 0.7, 0.0, Preset.REALISTIC.referenceFor(48));
         double at12of96 = AudioPhysics.calculateGain(12.0 / 96, AttenuationModel.REALISTIC_INVERSE, 0.7, 0.0, Preset.REALISTIC.referenceFor(96));

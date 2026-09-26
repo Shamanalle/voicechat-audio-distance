@@ -80,11 +80,11 @@ English, Russian, Ukrainian, German, Spanish, Brazilian Portuguese and Chinese (
 
 #### Presets (client)
 - **Vanilla** — exactly like Simple Voice Chat: full volume over half the range, then a straight fade.
-- **Realistic** — natural 1/r falloff with walls; full volume up to about 8 blocks.
+- **Realistic** — natural 1/r falloff with walls; full volume up to about 12 blocks.
 - **Clear** — everyone stays understandable, for events; full volume up to about 24 blocks.
-- **Stealth** — hide-and-seek, horror; only people within about 5 blocks are loud.
+- **Stealth** — hide-and-seek, horror; only people within about 7 blocks are loud.
 
-Realistic, Clear and Stealth set the full-volume zone in blocks, kept within sensible limits of the server's voice range (Realistic: 5–35% of it, Clear: 30–80%, Stealth: 5–25%). A voice at a given distance therefore sounds the same on servers with different ranges. When you join a server with another range, the preset you picked is fitted to it, unless you changed the values yourself. The preset that matches your current settings is highlighted.
+Realistic, Clear and Stealth set the full-volume zone in blocks, kept within sensible limits of the server's voice range (Realistic: 5–40% of it, Clear: 30–80%, Stealth: 5–30%). A voice at a given distance therefore sounds the same on servers with different ranges. When you join a server with another range, the preset you picked is fitted to it, unless you changed the values yourself. The preset that matches your current settings is highlighted.
 
 #### Server side (optional)
 Available as part of the Fabric mod or as a plugin for **Paper, Purpur, Spigot and Bukkit**. Both work the same way and work with the same client.
@@ -313,11 +313,11 @@ The project layout is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 #### Пресеты (клиент)
 - **Ваниль** — ровно как Simple Voice Chat: полная громкость на половине дальности, дальше ровный спад.
-- **Реализм** — естественный спад 1/r со стенами; полная громкость примерно до 8 блоков.
+- **Реализм** — естественный спад 1/r со стенами; полная громкость примерно до 12 блоков.
 - **Чётко** — всех хорошо слышно, для ивентов; полная громкость примерно до 24 блоков.
-- **Стелс** — прятки, хорроры; громко слышно только тех, кто ближе 5 блоков.
+- **Стелс** — прятки, хорроры; громко слышно только тех, кто ближе 7 блоков.
 
-«Реализм», «Чётко» и «Стелс» задают зону полной громкости в блоках, в разумных пределах от дальности голоса сервера («Реализм» — 5–35% от неё, «Чётко» — 30–80%, «Стелс» — 5–25%). Поэтому голос на одном и том же расстоянии звучит одинаково на серверах с разной дальностью. Когда вы заходите на сервер с другой дальностью, выбранный пресет подгоняется под неё, если вы не меняли значения сами. Пресет, совпадающий с текущими настройками, подсвечивается.
+«Реализм», «Чётко» и «Стелс» задают зону полной громкости в блоках, в разумных пределах от дальности голоса сервера («Реализм» — 5–40% от неё, «Чётко» — 30–80%, «Стелс» — 5–30%). Поэтому голос на одном и том же расстоянии звучит одинаково на серверах с разной дальностью. Когда вы заходите на сервер с другой дальностью, выбранный пресет подгоняется под неё, если вы не меняли значения сами. Пресет, совпадающий с текущими настройками, подсвечивается.
 
 #### Серверная часть (по желанию)
 Есть в составе мода для Fabric и в виде плагина для **Paper, Purpur, Spigot и Bukkit**. Оба варианта работают одинаково и с тем же клиентом.
