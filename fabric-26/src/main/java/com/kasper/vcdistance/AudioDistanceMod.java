@@ -1,6 +1,7 @@
 package com.kasper.vcdistance;
 
 import com.kasper.vcdistance.server.AdminPermission;
+import com.kasper.vcdistance.server.ServerBridge;
 import com.kasper.vcdistance.server.ServerThickness;
 import com.kasper.vcdistance.server.VcdCommand;
 import com.kasper.vcdistance.server.ServerZones;
@@ -32,14 +33,14 @@ public class AudioDistanceMod implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(this::onServerTick);
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 VcdCommand.register(dispatcher, AdminPermission::isAdmin, AudioDistanceMod::resendProfiles));
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            AudioDistancePlugin.SERVER_WALLS.forgetPlayer(handler.player.getUUID());
-            AudioDistancePlugin.ZONES.forget(handler.player.getUUID());
-        });
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> ServerHooks.joined(handler.player.getUUID()));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> ServerHooks.left(handler.player.getUUID()));
     }
 
     private void onServerTick(MinecraftServer server) {
         AudioDistancePlugin.SERVER_WALLS.tick(thickness);
+        // Players for the voice rules, and the addon requirement
+        ServerBridge.tick(server);
         ++ticks;
         if (ticks % AudioDistancePlugin.NEARBY_INTERVAL_TICKS == 0) {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {

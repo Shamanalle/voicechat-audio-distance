@@ -56,7 +56,9 @@ public abstract class SettingsScreen extends Screen {
         WALLS("tab.walls"),
         MATERIALS("tab.materials"),
         EFFECTS("tab.effects"),
-        MONITOR("tab.monitor");
+        MONITOR("tab.monitor"),
+        /** Only for server admins, when the server has the addon. */
+        SERVER("tab.server");
 
         private final String key;
 
@@ -116,6 +118,10 @@ public abstract class SettingsScreen extends Screen {
     private String copyFeedback;
     private String pasteFeedback;
     private int codeFeedbackTicks;
+    /** Server tab: the zone picked in the list, and the last reply shown. */
+    private static String selectedZone;
+    private int seenAdminReplies = -1;
+    private int serverListTop;
     private int monitorTop;
 
     protected SettingsScreen(Screen parent) {
@@ -160,7 +166,12 @@ public abstract class SettingsScreen extends Screen {
         left = (this.width - w) / 2;
         right = left + w;
 
-        Tab[] tabs = Tab.values();
+        // The Server tab only for admins of a server with the addon
+        boolean admin = AudioDistancePlugin.LINK.isAdmin();
+        if (tab == Tab.SERVER && !admin) {
+            tab = Tab.DISTANCE;
+        }
+        Tab[] tabs = admin ? Tab.values() : java.util.Arrays.copyOf(Tab.values(), Tab.values().length - 1);
         int tabW = (w - GAP * (tabs.length - 1)) / tabs.length;
         for (int i = 0; i < tabs.length; i++) {
             Tab t = tabs[i];
@@ -194,6 +205,7 @@ public abstract class SettingsScreen extends Screen {
             case MATERIALS -> initMaterials();
             case EFFECTS -> initEffects();
             case MONITOR -> initMonitor();
+            case SERVER -> initServer();
         }
 
         initServerChip(w);
@@ -444,6 +456,237 @@ public abstract class SettingsScreen extends Screen {
     }
 
     // =========================================================================
+    // Server tab (admins)
+    // =========================================================================
+
+    private static final String[] SERVER_MODES = {"off", "suggest", "enforce"};
+    private static final String[] SERVER_PRESETS = {"custom", "vanilla", "realistic", "clear", "stealth"};
+    private static final String[] SERVER_WALLS = {"0", "0.3", "0.6", "0.85", "1"};
+    private static final String[] SERVER_REQUIRE = {"off", "suggest", "warn", "kick"};
+    private static final String[] SERVER_SNEAK = {"1", "0.7", "0.5", "0.3"};
+    private static final String[] ZONE_RANGE = {"-", "0.4", "2", "3"};
+    private static final String[] ZONE_WALLS = {"-", "0", "0.5", "1"};
+    private static final String[] ZONE_ECHO = {"-", "off", "0.5", "0.9"};
+    private static final String MEGAPHONE = "minecraft:goat_horn";
+
+    private static java.util.Properties serverState() {
+        LinkProtocol.AdminReply reply = AudioDistancePlugin.LINK.adminReply();
+        return reply == null ? null : reply.state();
+    }
+
+    /** The value after {@code current} in {@code values}, comparing numbers as numbers. */
+    private static String next(String[] values, String current) {
+        for (int i = 0; i < values.length; i++) {
+            if (same(values[i], current)) {
+                return values[(i + 1) % values.length];
+            }
+        }
+        return values[0];
+    }
+
+    private static boolean same(String a, String b) {
+        if (a == null || b == null) {
+            return a == b;
+        }
+        try {
+            return Math.abs(Double.parseDouble(a) - Double.parseDouble(b)) < 0.005;
+        } catch (NumberFormatException e) {
+            return a.equalsIgnoreCase(b);
+        }
+    }
+
+    private Button serverButton(Component label, String tooltip, int x, int y, int w, String command) {
+        Button b = Button.builder(label, btn -> AudioDistancePlugin.LINK.sendAdmin(command)).bounds(x, y, w, 20).build();
+        if (tooltip != null) {
+            b.setTooltip(tip(tooltip));
+        }
+        addRenderableWidget(b);
+        return b;
+    }
+
+    private static Component presetName(String name) {
+        return switch (name == null ? "custom" : name) {
+            case "vanilla" -> Component.translatable(Preset.VANILLA.getTranslationKey());
+            case "realistic" -> Component.translatable(Preset.REALISTIC.getTranslationKey());
+            case "clear" -> Component.translatable(Preset.CLEAR.getTranslationKey());
+            case "stealth" -> Component.translatable(Preset.ATMOSPHERIC.getTranslationKey());
+            default -> tr("server.preset.custom");
+        };
+    }
+
+    private static Component yesNo(String bool) {
+        boolean on = Boolean.parseBoolean(bool);
+        return tr(on ? "on" : "off");
+    }
+
+    private void initServer() {
+        java.util.Properties st = serverState();
+        int w = right - left;
+        int third = (w - GAP * 2) / 3;
+        int x2 = left + third + GAP;
+        int x3 = right - third;
+        int y = contentTop;
+        if (st == null) {
+            serverListTop = y;
+            return;
+        }
+        String mode = st.getProperty("profile_mode", "off");
+        String preset = st.getProperty("profile_preset", "custom");
+        String walls = st.getProperty("walls_strength", "0");
+        serverButton(tr("server.profile", tr("server.mode." + mode)), "server.profile.tooltip", left, y, third,
+                "profile " + next(SERVER_MODES, mode));
+        serverButton(tr("server.preset", presetName(preset)), "server.preset.tooltip", x2, y, third,
+                "preset " + next(SERVER_PRESETS, preset));
+        String wallsNext = next(SERVER_WALLS, walls);
+        serverButton(tr("server.walls", same(walls, "0") ? tr("off") : Component.literal(pct(parse(walls)))), "server.walls.tooltip",
+                x3, y, third, "walls " + (same(wallsNext, "0") ? "off" : wallsNext));
+
+        y += ROW;
+        boolean serverWalls = "true".equalsIgnoreCase(st.getProperty("server_walls"));
+        String require = st.getProperty("require_addon", "off");
+        String megaphone = st.getProperty("megaphone_item", "");
+        serverButton(tr("server.server_walls", yesNo(String.valueOf(serverWalls))), "server.server_walls.tooltip", left, y, third,
+                "serverwalls " + (serverWalls ? "off" : "on"));
+        serverButton(tr("server.require", tr("server.require." + require)), "server.require.tooltip", x2, y, third,
+                "require " + next(SERVER_REQUIRE, require));
+        serverButton(tr("server.megaphone", megaphone.isEmpty() ? tr("off") : Component.translatable("item.minecraft.goat_horn")),
+                "server.megaphone.tooltip", x3, y, third, "rule megaphone " + (megaphone.isEmpty() ? MEGAPHONE : "off"));
+
+        y += ROW;
+        String sneak = st.getProperty("sneak_range_multiplier", "1");
+        String dead = st.getProperty("dead_players_silent", "false");
+        String spectators = st.getProperty("spectators_hear_only_spectators", "false");
+        serverButton(tr("server.sneak", pct(parse(sneak))), "server.sneak.tooltip", left, y, third,
+                "rule sneak " + next(SERVER_SNEAK, sneak));
+        serverButton(tr("server.dead", yesNo(dead)), "server.dead.tooltip", x2, y, third,
+                "rule dead " + ("true".equalsIgnoreCase(dead) ? "off" : "on"));
+        serverButton(tr("server.spectators", yesNo(spectators)), "server.spectators.tooltip", x3, y, third,
+                "rule spectators " + ("true".equalsIgnoreCase(spectators) ? "off" : "on"));
+
+        // Zones: a list to pick from, the picked zone's settings under it
+        y += ROW + 4;
+        java.util.List<String[]> zones = new java.util.ArrayList<>();
+        for (int i = 0; st.getProperty("zone." + i) != null; i++) {
+            zones.add(st.getProperty("zone." + i).split("\\|", -1));
+        }
+        int used = zones.size() + 1;
+        java.util.Set<String> names = new java.util.HashSet<>();
+        for (String[] z : zones) {
+            names.add(z[1]);
+        }
+        while (names.contains("zone-" + used)) {
+            used++;
+        }
+        int createW = this.font.width(tr("server.zone.create")) + 16;
+        serverButton(tr("server.zone.create"), "server.zone.create.tooltip", right - createW, y, createW,
+                "zone create zone-" + used + " 8");
+        y += ROW;
+        serverListTop = y;
+
+        String[] picked = null;
+        for (String[] z : zones) {
+            if (z.length >= 11 && z[1].equals(selectedZone)) {
+                picked = z;
+            }
+        }
+        int controlsY = contentBottom - 20 - 12;
+        int listBottom = picked != null ? controlsY - 4 : contentBottom - 12;
+        for (String[] z : zones) {
+            if (z.length < 11 || y + 18 > listBottom) {
+                break;
+            }
+            String name = z[1];
+            Button b = Button.builder(zoneLabel(z), btn -> {
+                selectedZone = name;
+                rebuild();
+            }).bounds(left, y, w, 18).build();
+            b.active = !name.equals(selectedZone);
+            addRenderableWidget(b);
+            y += 20;
+        }
+        if (picked != null) {
+            String name = picked[1];
+            int fifth = (w - GAP * 4) / 5;
+            int x = left;
+            serverButton(tr("server.zone.range", "-".equals(picked[6]) ? tr("server.default") : Component.literal("×" + picked[6])),
+                    "server.zone.range.tooltip", x, controlsY, fifth,
+                    "zone set " + name + " range_multiplier " + zoneValue(next(ZONE_RANGE, picked[6])));
+            x += fifth + GAP;
+            serverButton(tr("server.zone.walls", "-".equals(picked[7]) ? tr("server.default") : Component.literal(pct(parse(picked[7])))),
+                    "server.zone.walls.tooltip", x, controlsY, fifth,
+                    "zone set " + name + " walls " + zoneValue(next(ZONE_WALLS, picked[7])));
+            x += fifth + GAP;
+            serverButton(tr("server.zone.echo", "-".equals(picked[8]) ? tr("server.default")
+                            : "off".equals(picked[8]) ? tr("off") : Component.literal(pct(parse(picked[8])))),
+                    "server.zone.echo.tooltip", x, controlsY, fifth,
+                    "zone set " + name + " echo " + zoneValue(next(ZONE_ECHO, picked[8])));
+            x += fifth + GAP;
+            boolean isolated = "true".equalsIgnoreCase(picked[9]);
+            serverButton(tr("server.zone.isolated", yesNo(picked[9])), "server.zone.isolated.tooltip", x, controlsY, fifth,
+                    "zone set " + name + " isolated " + (isolated ? "off" : "on"));
+            serverButton(tr("server.zone.delete"), null, right - fifth, controlsY, fifth, "zone delete " + name);
+        }
+    }
+
+    private static String zoneValue(String v) {
+        return "-".equals(v) ? "default" : v;
+    }
+
+    private static double parse(String v) {
+        try {
+            return Double.parseDouble(v);
+        } catch (NumberFormatException | NullPointerException e) {
+            return 0.0;
+        }
+    }
+
+    /** "Box stage · range ×2 · isolated" for the zone list. */
+    private static Component zoneLabel(String[] z) {
+        java.util.List<Component> parts = new java.util.ArrayList<>();
+        if (!"-".equals(z[6])) {
+            parts.add(tr("server.zone.range", Component.literal("×" + z[6])));
+        }
+        if (!"-".equals(z[4])) {
+            parts.add(tr("server.zone.voice", z[4]));
+        }
+        if (!"-".equals(z[7])) {
+            parts.add(tr("server.zone.walls", Component.literal(pct(parse(z[7])))));
+        }
+        if (!"-".equals(z[8])) {
+            parts.add(tr("server.zone.echo", "off".equals(z[8]) ? tr("off") : Component.literal(pct(parse(z[8])))));
+        }
+        if ("true".equalsIgnoreCase(z[9])) {
+            parts.add(tr("server.zone.isolated_short"));
+        }
+        if (!"-".equals(z[3])) {
+            parts.add(presetName(z[3]));
+        }
+        Component label = Component.empty().append(tr("server.kind." + z[0])).append(Component.literal(" " + z[1]));
+        for (Component p : parts) {
+            label = Component.empty().append(label).append(Component.literal(" · ")).append(p);
+        }
+        return label;
+    }
+
+    private void paintServer(Canvas c) {
+        LinkProtocol.AdminReply reply = AudioDistancePlugin.LINK.adminReply();
+        if (reply == null) {
+            c.centered(tr("server.loading"), (left + right) / 2, (contentTop + contentBottom) / 2 - 4, Palette.TEXT_DIM);
+            return;
+        }
+        java.util.Properties st = reply.state();
+        c.text(tr("server.zones"), left, serverListTop - ROW + 6, Palette.TEXT_DIM);
+        if (st.getProperty("zone.0") == null) {
+            c.text(fit(c, tr("server.zones.none"), right - left), left, serverListTop + 4, Palette.TEXT_MUTED);
+        }
+        // The server's answer to the last change ("Saved ..."), or a hint
+        java.util.List<String> lines = reply.lines();
+        Component status = lines.isEmpty() || lines.get(0).startsWith("Voice Physics")
+                ? tr("server.hint") : Component.literal(lines.get(lines.size() - 1));
+        c.text(fit(c, status, right - left), left, contentBottom - 9, Palette.TEXT_MUTED);
+    }
+
+    // =========================================================================
     // Profile code
     // =========================================================================
 
@@ -525,6 +768,10 @@ public abstract class SettingsScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
+        if (tab == Tab.SERVER && AudioDistancePlugin.LINK.adminReplyCount() != seenAdminReplies) {
+            seenAdminReplies = AudioDistancePlugin.LINK.adminReplyCount();
+            rebuild();
+        }
         if (codeFeedbackTicks > 0 && --codeFeedbackTicks == 0) {
             showCodeFeedback(null, null);
             codeFeedbackTicks = 0;
@@ -547,6 +794,10 @@ public abstract class SettingsScreen extends Screen {
         previewStep = -1;
         tab = t;
         lastTab = t;
+        if (t == Tab.SERVER) {
+            // Fresh settings from the server; the tab fills in when the reply arrives
+            AudioDistancePlugin.LINK.sendAdmin("status");
+        }
         rebuild();
     }
 
@@ -615,6 +866,7 @@ public abstract class SettingsScreen extends Screen {
             }
             case EFFECTS -> paintEffects(c);
             case MONITOR -> paintMonitor(c, mouseX, mouseY);
+            case SERVER -> paintServer(c);
         }
     }
 

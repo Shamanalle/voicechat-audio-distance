@@ -5,11 +5,13 @@ import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.events.EntitySoundPacketEvent;
 import de.maxhenkel.voicechat.api.events.LocationalSoundPacketEvent;
+import de.maxhenkel.voicechat.api.events.MicrophonePacketEvent;
 import de.maxhenkel.voicechat.api.events.SoundPacketEvent;
 import de.maxhenkel.voicechat.api.opus.OpusDecoder;
 import de.maxhenkel.voicechat.api.opus.OpusEncoder;
 import de.maxhenkel.voicechat.api.packets.EntitySoundPacket;
 import de.maxhenkel.voicechat.api.packets.LocationalSoundPacket;
+import de.maxhenkel.voicechat.api.packets.MicrophonePacket;
 
 import java.util.Map;
 import java.util.Set;
@@ -99,8 +101,15 @@ public final class ServerWalls {
     private volatile long lastPruneNanos = System.nanoTime();
     private volatile boolean loggedFailure;
 
+    private final ServerPlayers players;
+
     public ServerWalls(ServerSettings settings) {
+        this(settings, new ServerPlayers());
+    }
+
+    public ServerWalls(ServerSettings settings, ServerPlayers players) {
         this.settings = settings;
+        this.players = players;
     }
 
     // -------------------------------------------------------------------------
@@ -159,16 +168,132 @@ public final class ServerWalls {
             return;
         }
         long start = System.nanoTime();
+        // The server's voice rules first: the voice may not reach this listener at all, or carry another range
+        float distance = p.getDistance();
+        boolean retarget = false;
+        if (!resending.get() && SoundPacketEvent.SOURCE_PROXIMITY.equals(event.getSource())) {
+            ServerRange.Decision rule = voiceRule(p.getEntityUuid(), event.getReceiverConnection(), p.isWhispering());
+            if (rule != null && !rule.hears()) {
+                perf.add(System.nanoTime() - start);
+                event.cancel();
+                return;
+            }
+            if (rule != null && Math.abs(rule.distance() - distance) > 0.01) {
+                distance = (float) rule.distance();
+                retarget = true;
+            }
+        }
         byte[] processed = process(event, p.getChannelId(), p.getSequenceNumber(), p.getOpusEncodedData(),
                 p.getEntityUuid(), null);
         perf.add(System.nanoTime() - start);
-        if (processed == null) {
+        if (processed == null && !retarget) {
             return;
         }
-        resend(event, () -> event.getVoicechat().sendEntitySoundPacketTo(event.getReceiverConnection(),
-                p.entitySoundPacketBuilder()
-                        .opusEncodedData(processed)
-                        .build()));
+        byte[] audio = processed != null ? processed : p.getOpusEncodedData();
+        EntitySoundPacket rebuilt = rebuild(p, audio, retarget ? distance : Float.NaN);
+        if (rebuilt == null) {
+            return; // this Simple Voice Chat cannot change the range: the original packet goes out
+        }
+        resend(event, () -> event.getVoicechat().sendEntitySoundPacketTo(event.getReceiverConnection(), rebuilt));
+    }
+
+    /** The packet with new audio and, unless NaN, a new range; {@code null} when the range cannot be set. */
+    private EntitySoundPacket rebuild(EntitySoundPacket p, byte[] audio, float distance) {
+        if (Float.isNaN(distance)) {
+            return p.entitySoundPacketBuilder().opusEncodedData(audio).build();
+        }
+        try {
+            return p.entitySoundPacketBuilder().opusEncodedData(audio).distance(distance).build();
+        } catch (Throwable t) {
+            // Simple Voice Chat before 2.6 has no distance on the builder
+            return audio == p.getOpusEncodedData() ? null : p.entitySoundPacketBuilder().opusEncodedData(audio).build();
+        }
+    }
+
+    /**
+     * What the server's voice rules say about {@code speaker}'s voice reaching this receiver, or
+     * {@code null} when there are no rules or either player is unknown.
+     */
+    private ServerRange.Decision voiceRule(UUID speaker, VoicechatConnection receiver, boolean whispering) {
+        if (!settings.hasVoiceRules() || speaker == null || receiver == null || receiver.getPlayer() == null) {
+            return null;
+        }
+        ServerPlayers.Info from = players.get(speaker);
+        ServerPlayers.Info to = players.get(receiver.getPlayer().getUuid());
+        if (from == null || to == null) {
+            return null;
+        }
+        return ServerRange.decide(settings, from, to, whispering, voiceRange(), whisperRange());
+    }
+
+    /**
+     * A voice that carries further than Simple Voice Chat's own range (a stage zone, a megaphone):
+     * the players beyond Simple Voice Chat's range but within the voice's get it from here.
+     */
+    public void onMicrophone(MicrophonePacketEvent event) {
+        MicrophonePacket packet = event.getPacket();
+        VoicechatConnection sender = event.getSenderConnection();
+        if (packet == null || sender == null || sender.getPlayer() == null || sender.isInGroup()
+                || !settings.hasVoiceRules()) {
+            return;
+        }
+        long start = System.nanoTime();
+        try {
+            UUID id = sender.getPlayer().getUuid();
+            ServerPlayers.Info speaker = players.get(id);
+            if (speaker == null) {
+                return;
+            }
+            boolean whispering = packet.isWhispering();
+            double own = whispering ? whisperRange() : voiceRange();
+            double range = ServerRange.rangeOf(settings, speaker, whispering, voiceRange(), whisperRange());
+            if (range <= own + 0.01) {
+                return;
+            }
+            VoicechatServerApi voicechat = event.getVoicechat();
+            EntitySoundPacket out = null;
+            for (ServerPlayers.Info other : players.all()) {
+                double d = other.distanceTo(speaker);
+                if (other.id().equals(id) || d <= own || d > range
+                        || !ServerRange.decide(settings, speaker, other, whispering, voiceRange(), whisperRange()).hears()) {
+                    continue;
+                }
+                VoicechatConnection c = voicechat.getConnectionOf(other.id());
+                if (c == null || !c.isConnected() || c.isDisabled()) {
+                    continue;
+                }
+                if (out == null) {
+                    out = packet.entitySoundPacketBuilder()
+                            .channelId(id)
+                            .entityUuid(id)
+                            .whispering(whispering)
+                            .distance((float) range)
+                            .opusEncodedData(packet.getOpusEncodedData())
+                            .build();
+                }
+                EntitySoundPacket send = out;
+                resending.set(Boolean.TRUE);
+                try {
+                    voicechat.sendEntitySoundPacketTo(c, send);
+                } finally {
+                    resending.set(Boolean.FALSE);
+                }
+            }
+        } catch (Throwable t) {
+            logFailure(t);
+        } finally {
+            perf.add(System.nanoTime() - start);
+        }
+    }
+
+    private static double voiceRange() {
+        double v = AudioDistancePlugin.serverVoiceDistance();
+        return v > 0.0 ? v : AudioDistancePlugin.FALLBACK_DISTANCE;
+    }
+
+    private static double whisperRange() {
+        double w = AudioDistancePlugin.serverWhisperDistance();
+        return w > 0.0 ? w : voiceRange() / 2.0;
     }
 
     public void onLocationalSound(LocationalSoundPacketEvent event) {
@@ -231,7 +356,8 @@ public final class ServerWalls {
 
         synchronized (pair) {
             double thickness = pair.thickness;
-            double strength = profile.getOcclusionStrength();
+            // A zone can make walls stronger or weaker for the listeners in it
+            double strength = settings.wallsStrengthIn(settings.zoneOf(players.get(listener)));
             double muffle = Double.isNaN(thickness) ? 0.0 : OcclusionModel.muffle(thickness, strength);
             double loss = Double.isNaN(thickness) ? 0.0 : OcclusionModel.lossDb(thickness, strength);
             boolean wanted = muffle > 0.002 || loss > 0.05;

@@ -48,6 +48,20 @@ public record RoomEstimate(double enclosure, double meanFree, double decaySecond
         return new RoomEstimate(enclosure, meanFree, Math.min(Reverb.MAX_DECAY_SECONDS, decay), Math.min(1.0, wet));
     }
 
+    /**
+     * The echo a server's zone sets ({@code zone.<kind>.<name>.echo}): a closed space whose size
+     * grows with {@code size} (0 - 1); 0 is no echo at all.
+     */
+    public static RoomEstimate forced(double size) {
+        double s = Math.max(0.0, Math.min(1.0, size));
+        if (s <= 0.0) {
+            return OPEN;
+        }
+        double meanFree = 2.0 + 18.0 * s;
+        double decay = Reverb.MIN_DECAY_SECONDS + meanFree * 0.09;
+        return new RoomEstimate(1.0, meanFree, Math.min(Reverb.MAX_DECAY_SECONDS, decay), Math.min(1.0, 0.25 + 0.75 * s));
+    }
+
     /** Glides towards {@code target} so the echo changes smoothly as the player walks. */
     public RoomEstimate towards(RoomEstimate target, double amount) {
         double a = Math.max(0.0, Math.min(1.0, amount));

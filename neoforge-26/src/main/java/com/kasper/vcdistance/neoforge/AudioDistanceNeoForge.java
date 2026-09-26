@@ -1,8 +1,10 @@
 package com.kasper.vcdistance.neoforge;
 
 import com.kasper.vcdistance.AudioDistancePlugin;
+import com.kasper.vcdistance.ServerHooks;
 import com.kasper.vcdistance.Zone;
 import com.kasper.vcdistance.server.AdminPermission;
+import com.kasper.vcdistance.server.ServerBridge;
 import com.kasper.vcdistance.server.ServerThickness;
 import com.kasper.vcdistance.server.ServerZones;
 import com.kasper.vcdistance.server.VcdCommand;
@@ -39,10 +41,8 @@ public final class AudioDistanceNeoForge {
         NeoForge.EVENT_BUS.addListener(this::onServerTick);
         NeoForge.EVENT_BUS.addListener((RegisterCommandsEvent e) ->
                 VcdCommand.register(e.getDispatcher(), AdminPermission::isAdmin, AudioDistanceNeoForge::resendProfiles));
-        NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent e) -> {
-            AudioDistancePlugin.SERVER_WALLS.forgetPlayer(e.getEntity().getUUID());
-            AudioDistancePlugin.ZONES.forget(e.getEntity().getUUID());
-        });
+        NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedInEvent e) -> ServerHooks.joined(e.getEntity().getUUID()));
+        NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedOutEvent e) -> ServerHooks.left(e.getEntity().getUUID()));
         if (dist.isClient()) {
             NeoClient.init(modBus, container);
         }
@@ -51,6 +51,7 @@ public final class AudioDistanceNeoForge {
     private void onServerTick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
         AudioDistancePlugin.SERVER_WALLS.tick(thickness);
+        ServerBridge.tick(server);
         ++ticks;
         if (ticks % AudioDistancePlugin.NEARBY_INTERVAL_TICKS == 0) {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {

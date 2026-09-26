@@ -21,6 +21,8 @@ import java.util.UUID;
  *     server's real voice and whisper distances.</li>
  *     <li>{@code nearby} (server to client, about once a second): the voice chat state of the
  *     players within voice range, for the monitor.</li>
+ *     <li>{@code admin} (client to server) and {@code admin_reply} (server to client): the Server tab
+ *     for server admins, which runs the same commands as {@code /vcd}.</li>
  * </ul>
  * Payloads are plain {@link Properties} text, so both sides tolerate unknown or missing keys.
  * On the wire each payload is one Minecraft string (VarInt byte length, then UTF-8), which is what
@@ -33,6 +35,10 @@ public final class LinkProtocol {
     public static final String HELLO = "hello";
     public static final String PROFILE = "profile";
     public static final String NEARBY = "nearby";
+    /** Client to server: a {@code /vcd} command from the Server tab (the server checks the player's rights). */
+    public static final String ADMIN = "admin";
+    /** Server to client: the command's reply and the server's settings, for the Server tab. */
+    public static final String ADMIN_REPLY = "admin_reply";
     /** Most players one {@code nearby} message lists (the closest ones); keeps it far below {@link #MAX_LENGTH}. */
     public static final int MAX_NEARBY = 64;
     /** Upper bound for a payload string; profiles are well under 2 KB. */
@@ -45,8 +51,15 @@ public final class LinkProtocol {
     }
 
     /** What a client learns from a server that has the addon. */
+    /**
+     * @param zone        the zone's name, or {@code null} outside zones
+     * @param zoneMessage what to show on entering the zone instead of its name, or {@code null}
+     * @param echo        {@code null} = measure the room as usual, otherwise the echo size (0 - 1) the zone sets
+     * @param admin       the player may change the server's settings (the Server tab is shown)
+     */
     public record ServerProfile(ServerSettings.ProfileMode mode, DistanceConfig config,
-                                double voiceDistance, double whisperDistance, boolean serverWalls, String zone) {
+                                double voiceDistance, double whisperDistance, boolean serverWalls, String zone,
+                                String zoneMessage, Double echo, boolean admin) {
 
         /** Whisper range as a share of the voice range, for the distance graph. */
         public double whisperShare() {
@@ -79,6 +92,11 @@ public final class LinkProtocol {
 
     /** The profile as it applies in {@code zone} ({@code null}: the server's main profile). */
     public static String profile(ServerSettings settings, Zone zone, double voiceDistance, double whisperDistance) {
+        return profile(settings, zone, voiceDistance, whisperDistance, false);
+    }
+
+    /** As above, telling the client whether its player is a server admin. */
+    public static String profile(ServerSettings settings, Zone zone, double voiceDistance, double whisperDistance, boolean admin) {
         Properties p = new Properties();
         p.setProperty("protocol", String.valueOf(VERSION));
         p.setProperty("mode", settings.modeIn(zone).getId());
@@ -87,6 +105,15 @@ public final class LinkProtocol {
         p.setProperty("server_walls", String.valueOf(settings.isServerWalls()));
         if (zone != null) {
             p.setProperty("zone", zone.name());
+            if (zone.rules().enterMessage() != null) {
+                p.setProperty("zone_message", zone.rules().enterMessage());
+            }
+            if (zone.rules().echo() != null) {
+                p.setProperty("zone_echo", DistanceConfig.format(zone.rules().echo()));
+            }
+        }
+        if (admin) {
+            p.setProperty("admin", "true");
         }
         settings.profileIn(zone, voiceDistance).writeTo(p, PROFILE_PREFIX);
         return write(p);
@@ -106,7 +133,68 @@ public final class LinkProtocol {
                 DistanceConfig.parseDouble(p, "voice_distance", 0.0),
                 DistanceConfig.parseDouble(p, "whisper_distance", 0.0),
                 DistanceConfig.parseBoolean(p, "server_walls", false),
-                p.getProperty("zone"));
+                p.getProperty("zone"),
+                p.getProperty("zone_message"),
+                p.getProperty("zone_echo") == null ? null
+                        : DistanceConfig.clamp(DistanceConfig.parseDouble(p, "zone_echo", 0.0), 0.0, 1.0),
+                DistanceConfig.parseBoolean(p, "admin", false));
+    }
+
+    /** The addon version in a hello message ("1.8.0+mc26.x"), or "" when missing. */
+    public static String helloVersion(String text) {
+        Properties p = read(text);
+        String v = p == null ? null : p.getProperty("mod_version");
+        return v == null ? "" : v.trim();
+    }
+
+    /** A command from the Server tab, as typed after {@code /vcd}. */
+    public static String adminRequest(String command) {
+        Properties p = new Properties();
+        p.setProperty("protocol", String.valueOf(VERSION));
+        p.setProperty("command", command == null ? "" : command);
+        return write(p);
+    }
+
+    /** @return the command, or {@code null} when the text is not an admin request */
+    public static String parseAdminRequest(String text) {
+        Properties p = read(text);
+        if (p == null || DistanceConfig.parseDouble(p, "protocol", -1) < 1) {
+            return null;
+        }
+        return p.getProperty("command");
+    }
+
+    /** What the Server tab shows: the reply lines and the server's settings ({@link ServerSettings#writeState}). */
+    public record AdminReply(java.util.List<String> lines, Properties state) {
+    }
+
+    public static String adminReply(java.util.List<String> lines, ServerSettings settings) {
+        Properties p = new Properties();
+        p.setProperty("protocol", String.valueOf(VERSION));
+        for (int i = 0; i < lines.size(); i++) {
+            p.setProperty("line." + i, lines.get(i));
+        }
+        settings.writeState(p, "state.");
+        return write(p);
+    }
+
+    /** @return the reply, or {@code null} when the text is not one */
+    public static AdminReply parseAdminReply(String text) {
+        Properties p = read(text);
+        if (p == null || DistanceConfig.parseDouble(p, "protocol", -1) < 1) {
+            return null;
+        }
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        for (int i = 0; p.getProperty("line." + i) != null; i++) {
+            lines.add(p.getProperty("line." + i));
+        }
+        Properties state = new Properties();
+        for (String key : p.stringPropertyNames()) {
+            if (key.startsWith("state.")) {
+                state.setProperty(key.substring("state.".length()), p.getProperty(key));
+            }
+        }
+        return new AdminReply(lines, state);
     }
 
     /** @param states voice chat state per player UUID, closest first; only the first {@link #MAX_NEARBY} are sent */

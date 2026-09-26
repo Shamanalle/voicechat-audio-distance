@@ -4,11 +4,10 @@ import com.kasper.vcdistance.AudioDistancePlugin;
 import com.kasper.vcdistance.Zone;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.util.List;
 
 /**
- * Sound zones on a Fabric server: worlds are dimensions ("minecraft:the_nether", also matched by
- * "the_nether"). There are no WorldGuard regions on Fabric.
+ * Sound zones on a Fabric or NeoForge server: worlds are dimensions ("minecraft:the_nether", also
+ * matched by "the_nether") and boxes; there are no WorldGuard regions here.
  */
 public final class ServerZones {
 
@@ -17,11 +16,10 @@ public final class ServerZones {
 
     /** The zone a player is in, or {@code null} for the server's main profile. */
     public static Zone of(ServerPlayer player) {
-        var zones = AudioDistancePlugin.SERVER_SETTINGS.zones();
-        if (zones.isEmpty()) {
+        if (AudioDistancePlugin.SERVER_SETTINGS.zones().isEmpty()) {
             return null;
         }
-        return Zone.resolve(zones, dimensionId(String.valueOf(player.level().dimension())), List.of());
+        return ServerBridge.zoneOf(player);
     }
 
     /**

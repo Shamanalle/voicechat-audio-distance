@@ -21,6 +21,17 @@ public final class ModClientNetworking {
             String text = buf.readUtf(LinkProtocol.MAX_LENGTH);
             AudioDistancePlugin.LINK.onNearby(text);
         });
+        ClientPlayNetworking.registerGlobalReceiver(ModNetworking.ADMIN_REPLY, (client, handler, buf, responseSender) -> {
+            String text = buf.readUtf(LinkProtocol.MAX_LENGTH);
+            AudioDistancePlugin.LINK.onAdminReply(text);
+        });
+        AudioDistancePlugin.LINK.setAdminSender(text -> {
+            if (ClientPlayNetworking.canSend(ModNetworking.ADMIN)) {
+                FriendlyByteBuf buf = PacketByteBufs.create();
+                buf.writeUtf(text, LinkProtocol.MAX_LENGTH);
+                ClientPlayNetworking.send(ModNetworking.ADMIN, buf);
+            }
+        });
     }
 
     /** @return {@code true} once the hello was sent (the server has the addon) */

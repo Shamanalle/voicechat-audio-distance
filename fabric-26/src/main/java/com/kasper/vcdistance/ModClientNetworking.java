@@ -15,6 +15,13 @@ public final class ModClientNetworking {
                 (payload, context) -> AudioDistancePlugin.LINK.onProfile(payload.text()));
         ClientPlayNetworking.registerGlobalReceiver(ModNetworking.Nearby.TYPE,
                 (payload, context) -> AudioDistancePlugin.LINK.onNearby(payload.text()));
+        ClientPlayNetworking.registerGlobalReceiver(ModNetworking.AdminReply.TYPE,
+                (payload, context) -> AudioDistancePlugin.LINK.onAdminReply(payload.text()));
+        AudioDistancePlugin.LINK.setAdminSender(text -> {
+            if (ClientPlayNetworking.canSend(ModNetworking.Admin.TYPE)) {
+                ClientPlayNetworking.send(new ModNetworking.Admin(text));
+            }
+        });
     }
 
     /** @return {@code true} once the hello was sent (the server has the addon) */

@@ -86,10 +86,10 @@ public class ServerToolsTest {
         link.onProfile(LinkProtocol.profile(s, null, 48, 24));
         assertNull(link.consumeZoneNotice());
         link.onProfile(LinkProtocol.profile(s, s.zones().get("world:world_nether"), 48, 24));
-        assertEquals("world_nether", link.consumeZoneNotice());
+        assertEquals("world_nether", link.consumeZoneNotice().name());
         assertNull(link.consumeZoneNotice());
         link.onProfile(LinkProtocol.profile(s, null, 48, 24));
-        assertEquals("", link.consumeZoneNotice());
+        assertEquals("", link.consumeZoneNotice().name());
     }
 
     @Test
@@ -154,7 +154,7 @@ public class ServerToolsTest {
         assertTrue(bad.get(0).startsWith("Использование"), bad.toString());
         assertEquals(5, resent.get());
         assertTrue(AdminCommands.run("help", s, ctx).size() > 5);
-        assertTrue(AdminCommands.run("zones", s, ctx).get(0).startsWith("Зон нет"));
+        assertTrue(AdminCommands.run("zones", s, ctx).get(0).startsWith("Зон пока нет"));
 
         assertEquals(List.of("preset", "profile"), AdminCommands.suggest("pr").stream().sorted().toList());
         assertEquals(List.of("stealth"), AdminCommands.suggest("preset st"));

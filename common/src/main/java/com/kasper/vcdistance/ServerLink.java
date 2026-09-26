@@ -19,8 +19,21 @@ public final class ServerLink {
 
     private volatile LinkProtocol.ServerProfile profile;
     private volatile boolean noticePending;
-    private volatile String zoneNotice;
+    private volatile ZoneNotice zoneNotice;
     private volatile Nearby nearby;
+    /** Sends an {@code admin} message to the server; set by the version's client networking. */
+    private volatile java.util.function.Consumer<String> adminSender;
+    private volatile LinkProtocol.AdminReply adminReply;
+    private volatile int adminReplies;
+
+    /**
+     * A zone just entered or left.
+     *
+     * @param name    the zone's name, or "" when a zone was left
+     * @param message the zone's own entry message, or {@code null}
+     */
+    public record ZoneNotice(String name, String message) {
+    }
 
     private record Nearby(Map<UUID, VoiceState> states, long receivedNanos) {
         boolean fresh(long nowNanos) {
@@ -42,7 +55,8 @@ public final class ServerLink {
         String before = previous == null ? null : previous.zone();
         if (!java.util.Objects.equals(before, p.zone())) {
             // Entering a zone names it; leaving one says the main profile is back ("")
-            zoneNotice = p.zone() != null ? p.zone() : (before != null ? "" : null);
+            zoneNotice = p.zone() != null ? new ZoneNotice(p.zone(), p.zoneMessage())
+                    : (before != null ? new ZoneNotice("", null) : null);
         }
     }
 
@@ -114,12 +128,61 @@ public final class ServerLink {
     }
 
     /**
-     * @return the zone just entered, "" when a zone was just left, or {@code null}; once per change
+     * @return the zone just entered or left, or {@code null}; once per change
      */
-    public String consumeZoneNotice() {
-        String z = zoneNotice;
+    public ZoneNotice consumeZoneNotice() {
+        ZoneNotice z = zoneNotice;
         zoneNotice = null;
         return z;
+    }
+
+    /** The echo the server's zone sets (0 - 1, 0 = none), or {@code null} to measure the room as usual. */
+    public Double zoneEcho() {
+        LinkProtocol.ServerProfile p = profile;
+        return p == null ? null : p.echo();
+    }
+
+    /** Whether the server says this player may change its settings (the Server tab is shown). */
+    public boolean isAdmin() {
+        LinkProtocol.ServerProfile p = profile;
+        return p != null && p.admin() && adminSender != null;
+    }
+
+    public void setAdminSender(java.util.function.Consumer<String> sender) {
+        adminSender = sender;
+    }
+
+    /** Sends a {@code /vcd} command (without the "/vcd") from the Server tab; the reply comes back later. */
+    public boolean sendAdmin(String command) {
+        java.util.function.Consumer<String> sender = adminSender;
+        if (sender == null || !isAdmin()) {
+            return false;
+        }
+        try {
+            sender.accept(LinkProtocol.adminRequest(command));
+            return true;
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    /** Handles an {@code admin_reply} message from the server. */
+    public void onAdminReply(String text) {
+        LinkProtocol.AdminReply r = LinkProtocol.parseAdminReply(text);
+        if (r != null) {
+            adminReply = r;
+            adminReplies++;
+        }
+    }
+
+    /** The last reply to the Server tab, or {@code null}. */
+    public LinkProtocol.AdminReply adminReply() {
+        return adminReply;
+    }
+
+    /** Counts replies, so the Server tab can tell a new one arrived. */
+    public int adminReplyCount() {
+        return adminReplies;
     }
 
     /** Called when leaving a server. */
@@ -128,5 +191,6 @@ public final class ServerLink {
         noticePending = false;
         zoneNotice = null;
         nearby = null;
+        adminReply = null;
     }
 }

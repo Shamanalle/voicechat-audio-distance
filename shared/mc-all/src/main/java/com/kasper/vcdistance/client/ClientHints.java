@@ -45,11 +45,13 @@ public final class ClientHints {
 
     /** Shows the sound zone the server just put the player in (or that they left it). */
     public static void tickZoneNotice() {
-        String zone = AudioDistancePlugin.LINK.consumeZoneNotice();
+        com.kasper.vcdistance.ServerLink.ZoneNotice zone = AudioDistancePlugin.LINK.consumeZoneNotice();
         if (zone != null) {
-            HudOverlay.flash(zone.isEmpty()
+            HudOverlay.flash(zone.name().isEmpty()
                     ? Component.translatable("gui.vc-audio-distance.hud.zone_left")
-                    : Component.translatable("gui.vc-audio-distance.hud.zone", zone));
+                    : zone.message() != null
+                    ? Component.literal(zone.message())
+                    : Component.translatable("gui.vc-audio-distance.hud.zone", zone.name()));
         }
     }
 
